@@ -18,18 +18,18 @@ func NewGroupChatIdFromString(value string) *GroupChatId {
 	return &GroupChatId{value: value}
 }
 
-func (g GroupChatId) GetValue() string {
+func (g *GroupChatId) GetValue() string {
 	return g.value
 }
 
-func (g GroupChatId) GetTypeName() string {
+func (g *GroupChatId) GetTypeName() string {
 	return "group-chat"
 }
 
-func (g GroupChatId) AsString() string {
+func (g *GroupChatId) AsString() string {
 	return fmt.Sprintf("%s-%s", g.GetTypeName(), g.GetValue())
 }
 
-func (g GroupChatId) String() string {
+func (g *GroupChatId) String() string {
 	return g.AsString()
 }
