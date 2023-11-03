@@ -1,7 +1,7 @@
 package events
 
 import (
-	"cqrs-es-example-go/domain"
+	"cqrs-es-example-go/domain/models"
 	"fmt"
 	esa "github.com/j5ik2o/event-store-adapter-go"
 	"time"
@@ -9,12 +9,12 @@ import (
 
 type GroupChatDeleted struct {
 	id          string
-	aggregateId domain.GroupChatId
+	aggregateId models.GroupChatId
 	seqNr       uint64
 	occurredAt  uint64
 }
 
-func NewGroupChatDeleted(id string, aggregateId domain.GroupChatId, seqNr uint64) *GroupChatDeleted {
+func NewGroupChatDeleted(id string, aggregateId models.GroupChatId, seqNr uint64) *GroupChatDeleted {
 	now := time.Now()
 	occurredAt := uint64(now.UnixNano() / 1e6)
 	return &GroupChatDeleted{id, aggregateId, seqNr, occurredAt}

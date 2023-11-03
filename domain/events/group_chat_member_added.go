@@ -1,7 +1,7 @@
 package events
 
 import (
-	"cqrs-es-example-go/domain"
+	"cqrs-es-example-go/domain/models"
 	"fmt"
 	esa "github.com/j5ik2o/event-store-adapter-go"
 	"github.com/oklog/ulid/v2"
@@ -10,14 +10,14 @@ import (
 
 type GroupChatMemberAdded struct {
 	id          string
-	aggregateId domain.GroupChatId
+	aggregateId models.GroupChatId
 	seqNr       uint64
-	member      domain.Member
-	executorId  domain.UserAccountId
+	member      models.Member
+	executorId  models.UserAccountId
 	occurredAt  uint64
 }
 
-func NewGroupChatMemberAdded(aggregateId domain.GroupChatId, seqNr uint64, member domain.Member, executorId domain.UserAccountId) *GroupChatMemberAdded {
+func NewGroupChatMemberAdded(aggregateId models.GroupChatId, seqNr uint64, member models.Member, executorId models.UserAccountId) *GroupChatMemberAdded {
 	id := ulid.Make()
 	now := time.Now()
 	occurredAt := uint64(now.UnixNano() / 1e6)
@@ -40,11 +40,11 @@ func (g *GroupChatMemberAdded) GetSeqNr() uint64 {
 	return g.seqNr
 }
 
-func (g *GroupChatMemberAdded) GetMember() domain.Member {
+func (g *GroupChatMemberAdded) GetMember() models.Member {
 	return g.member
 }
 
-func (g *GroupChatMemberAdded) GetExecutorId() domain.UserAccountId {
+func (g *GroupChatMemberAdded) GetExecutorId() models.UserAccountId {
 	return g.executorId
 }
 

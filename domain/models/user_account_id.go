@@ -1,12 +1,20 @@
-package domain
+package models
 
-import "fmt"
+import (
+	"fmt"
+	"github.com/oklog/ulid/v2"
+)
 
 type UserAccountId struct {
 	value string
 }
 
-func NewUserAccountId(value string) *UserAccountId {
+func NewUserAccountId() *UserAccountId {
+	id := ulid.Make()
+	return &UserAccountId{value: id.String()}
+}
+
+func NewUserAccountIdFromString(value string) *UserAccountId {
 	return &UserAccountId{value: value}
 }
 

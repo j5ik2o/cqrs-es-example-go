@@ -1,6 +1,8 @@
-package domain
+package models
 
-import "github.com/samber/mo"
+import (
+	"github.com/samber/mo"
+)
 
 type Members struct {
 	members []Member

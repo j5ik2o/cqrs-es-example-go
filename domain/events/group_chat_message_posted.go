@@ -1,7 +1,7 @@
 package events
 
 import (
-	"cqrs-es-example-go/domain"
+	"cqrs-es-example-go/domain/models"
 	"fmt"
 	esa "github.com/j5ik2o/event-store-adapter-go"
 	"time"
@@ -9,14 +9,14 @@ import (
 
 type GroupChatPosted struct {
 	id          string
-	aggregateId domain.GroupChatId
+	aggregateId models.GroupChatId
 	seqNr       uint64
-	message     domain.Message
-	executorId  domain.UserAccountId
+	message     models.Message
+	executorId  models.UserAccountId
 	occurredAt  uint64
 }
 
-func NewGroupChatPosted(id string, aggregateId domain.GroupChatId, seqNr uint64, message domain.Message, executorId domain.UserAccountId) *GroupChatPosted {
+func NewGroupChatPosted(id string, aggregateId models.GroupChatId, seqNr uint64, message models.Message, executorId models.UserAccountId) *GroupChatPosted {
 	now := time.Now()
 	occurredAt := uint64(now.UnixNano() / 1e6)
 	return &GroupChatPosted{id, aggregateId, seqNr, message, executorId, occurredAt}
@@ -42,11 +42,11 @@ func (g *GroupChatPosted) IsCreated() bool {
 	return true
 }
 
-func (g *GroupChatPosted) GetMessage() domain.Message {
+func (g *GroupChatPosted) GetMessage() models.Message {
 	return g.message
 }
 
-func (g *GroupChatPosted) GetExecutorId() domain.UserAccountId {
+func (g *GroupChatPosted) GetExecutorId() models.UserAccountId {
 	return g.executorId
 }
 
