@@ -9,9 +9,9 @@ type GroupChatId struct {
 	value string
 }
 
-func NewGroupChatId() GroupChatId {
+func NewGroupChatId() *GroupChatId {
 	id := ulid.Make()
-	return GroupChatId{value: id.String()}
+	return &GroupChatId{value: id.String()}
 }
 
 func NewGroupChatIdFromString(value string) *GroupChatId {

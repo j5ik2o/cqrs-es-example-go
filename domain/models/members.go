@@ -5,28 +5,28 @@ import (
 )
 
 type Members struct {
-	members []Member
+	members []*Member
 }
 
-func NewMembers(administratorId UserAccountId) *Members {
+func NewMembers(administratorId *UserAccountId) *Members {
 	return &Members{
-		members: []Member{
-			*NewMember(*NewMemberId(), administratorId, AdminRole),
+		members: []*Member{
+			NewMember(NewMemberId(), administratorId, AdminRole),
 		},
 	}
 }
 
-func (m *Members) AddMember(userAccountId UserAccountId) *Members {
-	newMembers := make([]Member, len(m.members))
+func (m *Members) AddMember(userAccountId *UserAccountId) *Members {
+	newMembers := make([]*Member, len(m.members))
 	copy(newMembers, m.members)
-	newMembers = append(m.members, *NewMember(*NewMemberId(), userAccountId, MemberRole))
+	newMembers = append(newMembers, NewMember(NewMemberId(), userAccountId, MemberRole))
 	return &Members{
 		members: newMembers,
 	}
 }
 
-func (m *Members) RemoveMember(userAccountId UserAccountId) *Members {
-	newMembers := make([]Member, 0, len(m.members))
+func (m *Members) RemoveMember(userAccountId *UserAccountId) *Members {
+	newMembers := make([]*Member, 0, len(m.members))
 	for _, member := range m.members {
 		if member.userAccountId != userAccountId {
 			newMembers = append(newMembers, member)
@@ -40,13 +40,13 @@ func (m *Members) RemoveMember(userAccountId UserAccountId) *Members {
 func (m *Members) GetAdministrator() *Member {
 	for _, member := range m.members {
 		if member.role == AdminRole {
-			return &member
+			return member
 		}
 	}
 	return nil
 }
 
-func (m *Members) IsAdministrator(userAccountId UserAccountId) bool {
+func (m *Members) IsAdministrator(userAccountId *UserAccountId) bool {
 	for _, member := range m.members {
 		if member.userAccountId == userAccountId && member.role == AdminRole {
 			return true
@@ -55,7 +55,7 @@ func (m *Members) IsAdministrator(userAccountId UserAccountId) bool {
 	return false
 }
 
-func (m *Members) IsMember(userAccountId UserAccountId) bool {
+func (m *Members) IsMember(userAccountId *UserAccountId) bool {
 	for _, member := range m.members {
 		if member.userAccountId == userAccountId {
 			return true
@@ -64,24 +64,26 @@ func (m *Members) IsMember(userAccountId UserAccountId) bool {
 	return false
 }
 
-func (m *Members) FindByMemberId(memberId MemberId) mo.Option[*Member] {
+func (m *Members) FindByMemberId(memberId *MemberId) mo.Option[*Member] {
 	for _, member := range m.members {
 		if member.id == memberId {
-			return mo.Some(&member)
+			return mo.Some(member)
 		}
 	}
 	return mo.None[*Member]()
 }
 
-func (m *Members) FindByUserAccountId(userAccountId UserAccountId) mo.Option[*Member] {
+func (m *Members) FindByUserAccountId(userAccountId *UserAccountId) mo.Option[*Member] {
 	for _, member := range m.members {
 		if member.userAccountId == userAccountId {
-			return mo.Some(&member)
+			return mo.Some(member)
 		}
 	}
 	return mo.None[*Member]()
 }
 
-func (m *Members) ToArray() []Member {
-	return m.members
+func (m *Members) ToArray() []*Member {
+	copiedMembers := make([]*Member, len(m.members))
+	copy(copiedMembers, m.members)
+	return copiedMembers
 }

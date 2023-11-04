@@ -1,12 +1,12 @@
 package models
 
 type Member struct {
-	id            MemberId
-	userAccountId UserAccountId
+	id            *MemberId
+	userAccountId *UserAccountId
 	role          Role
 }
 
-func NewMember(id MemberId, userAccountId UserAccountId, role Role) *Member {
+func NewMember(id *MemberId, userAccountId *UserAccountId, role Role) *Member {
 	return &Member{
 		id:            id,
 		userAccountId: userAccountId,
