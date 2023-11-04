@@ -18,10 +18,10 @@ type GroupChatMemberAdded struct {
 }
 
 func NewGroupChatMemberAdded(aggregateId *models.GroupChatId, seqNr uint64, member *models.Member, executorId *models.UserAccountId) *GroupChatMemberAdded {
-	id := ulid.Make()
+	id := ulid.Make().String()
 	now := time.Now()
 	occurredAt := uint64(now.UnixNano() / 1e6)
-	return &GroupChatMemberAdded{id: id.String(), aggregateId: aggregateId, seqNr: seqNr, member: member, executorId: executorId, occurredAt: occurredAt}
+	return &GroupChatMemberAdded{id, aggregateId, seqNr, member, executorId, occurredAt}
 }
 
 func (g *GroupChatMemberAdded) GetId() string {

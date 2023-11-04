@@ -4,6 +4,7 @@ import (
 	"cqrs-es-example-go/domain/models"
 	"fmt"
 	esa "github.com/j5ik2o/event-store-adapter-go"
+	"github.com/oklog/ulid/v2"
 	"time"
 )
 
@@ -16,7 +17,8 @@ type GroupChatPosted struct {
 	occurredAt  uint64
 }
 
-func NewGroupChatPosted(id string, aggregateId *models.GroupChatId, seqNr uint64, message *models.Message, executorId *models.UserAccountId) *GroupChatPosted {
+func NewGroupChatPosted(aggregateId *models.GroupChatId, seqNr uint64, message *models.Message, executorId *models.UserAccountId) *GroupChatPosted {
+	id := ulid.Make().String()
 	now := time.Now()
 	occurredAt := uint64(now.UnixNano() / 1e6)
 	return &GroupChatPosted{id, aggregateId, seqNr, message, executorId, occurredAt}

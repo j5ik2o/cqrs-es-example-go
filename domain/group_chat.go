@@ -70,6 +70,10 @@ func (g *GroupChat) WithVersion(version uint64) esa.Aggregate {
 	return &GroupChat{id: g.id, seqNr: g.seqNr, version: version}
 }
 
+func (g *GroupChat) WithDeleted() *GroupChat {
+	return NewGroupChatFrom(g.id, g.name, g.members, g.seqNr, g.version, true)
+}
+
 func (g *GroupChat) AddMember(memberId *models.MemberId, userAccountId *models.UserAccountId, role models.Role, executorId *models.UserAccountId) mo.Result[GroupChatWithEventPair] {
 	if g.deleted {
 		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatAddMemberErr("The group chat is deleted"))
@@ -119,5 +123,19 @@ func (g *GroupChat) Rename(name *models.GroupChatName, executorId *models.UserAc
 	newState.seqNr += 1
 	renamed := events.NewGroupChatRenamed(newState.id, newState.seqNr, name, executorId)
 	pair := gt.New2[*GroupChat, events.GroupChatEvent](newState, renamed)
+	return mo.Ok[GroupChatWithEventPair](GroupChatWithEventPair(pair))
+}
+
+func (g *GroupChat) Delete(executorId *models.UserAccountId) mo.Result[GroupChatWithEventPair] {
+	if g.deleted {
+		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatAddMemberErr("The group chat is deleted"))
+	}
+	if !g.members.IsAdministrator(executorId) {
+		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatAddMemberErr("executorId is not a newMember of the group chat"))
+	}
+	newState := g.WithDeleted()
+	newState.seqNr += 1
+	deleted := events.NewGroupChatDeleted(newState.id, newState.seqNr, executorId)
+	pair := gt.New2[*GroupChat, events.GroupChatEvent](newState, deleted)
 	return mo.Ok[GroupChatWithEventPair](GroupChatWithEventPair(pair))
 }

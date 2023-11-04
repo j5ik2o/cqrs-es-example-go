@@ -4,18 +4,20 @@ import (
 	"cqrs-es-example-go/domain/models"
 	"fmt"
 	esa "github.com/j5ik2o/event-store-adapter-go"
+	"github.com/oklog/ulid/v2"
 	"time"
 )
 
 type GroupChatDeleted struct {
 	id          string
-	aggregateId models.GroupChatId
+	aggregateId *models.GroupChatId
 	seqNr       uint64
 	executorId  *models.UserAccountId
 	occurredAt  uint64
 }
 
-func NewGroupChatDeleted(id string, aggregateId models.GroupChatId, seqNr uint64, executorId *models.UserAccountId) *GroupChatDeleted {
+func NewGroupChatDeleted(aggregateId *models.GroupChatId, seqNr uint64, executorId *models.UserAccountId) *GroupChatDeleted {
+	id := ulid.Make().String()
 	now := time.Now()
 	occurredAt := uint64(now.UnixNano() / 1e6)
 	return &GroupChatDeleted{id, aggregateId, seqNr, executorId, occurredAt}
@@ -30,7 +32,7 @@ func (g *GroupChatDeleted) GetTypeName() string {
 }
 
 func (g *GroupChatDeleted) GetAggregateId() esa.AggregateId {
-	return &g.aggregateId
+	return g.aggregateId
 }
 
 func (g *GroupChatDeleted) GetSeqNr() uint64 {

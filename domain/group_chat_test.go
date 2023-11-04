@@ -77,3 +77,25 @@ func TestGroupChat_Rename(t *testing.T) {
 	require.Equal(t, groupChat.id, tuple.V2.GetAggregateId())
 	require.Equal(t, groupChat.seqNr+1, tuple.V2.GetSeqNr())
 }
+
+func TestGroupChat_Delete(t *testing.T) {
+	// Given
+	adminId := models.NewUserAccountId()
+	groupChatName := models.NewGroupChatName("test")
+	members := models.NewMembers(adminId)
+	groupChat := NewGroupChat(groupChatName, members)
+
+	// When
+	result := groupChat.Delete(adminId)
+
+	// Then
+	require.True(t, result.IsOk())
+	tuple, _ := result.Get()
+
+	require.Equal(t, groupChat.id, tuple.V1.id)
+	require.Equal(t, groupChat.seqNr+1, tuple.V1.seqNr)
+	require.True(t, tuple.V1.IsDeleted())
+
+	require.Equal(t, groupChat.id, tuple.V2.GetAggregateId())
+	require.Equal(t, groupChat.seqNr+1, tuple.V2.GetSeqNr())
+}

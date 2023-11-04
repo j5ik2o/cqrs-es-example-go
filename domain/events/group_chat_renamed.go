@@ -18,10 +18,10 @@ type GroupChatRenamed struct {
 }
 
 func NewGroupChatRenamed(aggregateId *models.GroupChatId, seqNr uint64, name *models.GroupChatName, executorId *models.UserAccountId) *GroupChatRenamed {
-	id := ulid.Make()
+	id := ulid.Make().String()
 	now := time.Now()
 	occurredAt := uint64(now.UnixNano() / 1e6)
-	return &GroupChatRenamed{id: id.String(), aggregateId: aggregateId, name: name, seqNr: seqNr, executorId: executorId, occurredAt: occurredAt}
+	return &GroupChatRenamed{id, aggregateId, name, seqNr, executorId, occurredAt}
 }
 
 func (g *GroupChatRenamed) GetId() string {
