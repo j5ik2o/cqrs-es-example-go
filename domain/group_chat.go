@@ -12,10 +12,10 @@ import (
 
 type GroupChat struct {
 	id      *models.GroupChatId
-	seqNr   uint64
-	version uint64
 	name    *models.GroupChatName
 	members *models.Members
+	seqNr   uint64
+	version uint64
 	deleted bool
 }
 
@@ -23,11 +23,11 @@ func NewGroupChat(name *models.GroupChatName, members *models.Members) *GroupCha
 	id := models.NewGroupChatId()
 	seqNr := uint64(1)
 	version := uint64(1)
-	return &GroupChat{id, seqNr, version, name, members, false}
+	return &GroupChat{id, name, members, seqNr, version, false}
 }
 
-func NewGroupChatFrom(id *models.GroupChatId, seqNr uint64, version uint64, name *models.GroupChatName, members *models.Members, deleted bool) *GroupChat {
-	return &GroupChat{id, seqNr, version, name, members, deleted}
+func NewGroupChatFrom(id *models.GroupChatId, name *models.GroupChatName, members *models.Members, seqNr uint64, version uint64, deleted bool) *GroupChat {
+	return &GroupChat{id, name, members, seqNr, version, deleted}
 }
 
 func (g *GroupChat) GetId() esa.AggregateId {
@@ -50,6 +50,18 @@ func (g *GroupChat) String() string {
 	return fmt.Sprintf("id: %s, seqNr: %d, version: %d", g.id, g.seqNr, g.version)
 }
 
+func (g *GroupChat) IsDeleted() bool {
+	return g.deleted
+}
+
+func (g *GroupChat) WithMembers(members *models.Members) *GroupChat {
+	return NewGroupChatFrom(g.id, g.name, members, g.seqNr, g.version, g.deleted)
+}
+
+func (g *GroupChat) GetMembers() *models.Members {
+	return g.members
+}
+
 func (g *GroupChat) AddMember(memberId *models.MemberId, userAccountId *models.UserAccountId, role models.Role, executorId *models.UserAccountId) mo.Result[GroupChatWithEventPair] {
 	if g.deleted {
 		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatAddMemberErr("The group chat is deleted"))
@@ -61,12 +73,9 @@ func (g *GroupChat) AddMember(memberId *models.MemberId, userAccountId *models.U
 		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatAddMemberErr("userAccountId is already a newMember of the group chat"))
 	}
 	newMember := models.NewMember(memberId, userAccountId, role)
-	newState := NewGroupChatFrom(g.id, g.seqNr+1, g.version+1, g.name, g.members.AddMember(userAccountId), g.deleted)
-	memberAdded := events.NewGroupChatMemberAdded(g.id, newState.seqNr, newMember, userAccountId)
+	newState := g.WithMembers(g.members.AddMember(userAccountId))
+	newState.seqNr += 1
+	memberAdded := events.NewGroupChatMemberAdded(newState.id, newState.seqNr, newMember, userAccountId)
 	pair := gt.New2[*GroupChat, events.GroupChatEvent](newState, memberAdded)
 	return mo.Ok[GroupChatWithEventPair](GroupChatWithEventPair(pair))
-}
-
-func (g *GroupChat) GetMembers() *models.Members {
-	return g.members
 }
