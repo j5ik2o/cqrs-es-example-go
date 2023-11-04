@@ -9,14 +9,14 @@ import (
 
 type GroupChatPosted struct {
 	id          string
-	aggregateId models.GroupChatId
+	aggregateId *models.GroupChatId
 	seqNr       uint64
-	message     models.Message
-	executorId  models.UserAccountId
+	message     *models.Message
+	executorId  *models.UserAccountId
 	occurredAt  uint64
 }
 
-func NewGroupChatPosted(id string, aggregateId models.GroupChatId, seqNr uint64, message models.Message, executorId models.UserAccountId) *GroupChatPosted {
+func NewGroupChatPosted(id string, aggregateId *models.GroupChatId, seqNr uint64, message *models.Message, executorId *models.UserAccountId) *GroupChatPosted {
 	now := time.Now()
 	occurredAt := uint64(now.UnixNano() / 1e6)
 	return &GroupChatPosted{id, aggregateId, seqNr, message, executorId, occurredAt}
@@ -31,23 +31,23 @@ func (g *GroupChatPosted) GetTypeName() string {
 }
 
 func (g *GroupChatPosted) GetAggregateId() esa.AggregateId {
-	return &g.aggregateId
+	return g.aggregateId
 }
 
 func (g *GroupChatPosted) GetSeqNr() uint64 {
 	return g.seqNr
 }
 
-func (g *GroupChatPosted) IsCreated() bool {
-	return true
-}
-
-func (g *GroupChatPosted) GetMessage() models.Message {
+func (g *GroupChatPosted) GetMessage() *models.Message {
 	return g.message
 }
 
-func (g *GroupChatPosted) GetExecutorId() models.UserAccountId {
+func (g *GroupChatPosted) GetExecutorId() *models.UserAccountId {
 	return g.executorId
+}
+
+func (g *GroupChatPosted) IsCreated() bool {
+	return false
 }
 
 func (g *GroupChatPosted) GetOccurredAt() uint64 {

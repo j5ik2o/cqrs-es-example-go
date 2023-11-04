@@ -12,13 +12,14 @@ type GroupChatCreated struct {
 	aggregateId models.GroupChatId
 	name        string
 	seqNr       uint64
+	executorId  *models.UserAccountId
 	occurredAt  uint64
 }
 
-func NewGroupChatCreated(id string, aggregateId models.GroupChatId, name string, seqNr uint64) *GroupChatCreated {
+func NewGroupChatCreated(id string, aggregateId models.GroupChatId, name string, seqNr uint64, executorId *models.UserAccountId) *GroupChatCreated {
 	now := time.Now()
 	occurredAt := uint64(now.UnixNano() / 1e6)
-	return &GroupChatCreated{id, aggregateId, name, seqNr, occurredAt}
+	return &GroupChatCreated{id, aggregateId, name, seqNr, executorId, occurredAt}
 }
 
 func (g *GroupChatCreated) GetId() string {
@@ -39,6 +40,10 @@ func (g *GroupChatCreated) GetName() string {
 
 func (g *GroupChatCreated) GetSeqNr() uint64 {
 	return g.seqNr
+}
+
+func (g *GroupChatCreated) GetExecutorId() *models.UserAccountId {
+	return g.executorId
 }
 
 func (g *GroupChatCreated) IsCreated() bool {

@@ -25,7 +25,7 @@ func (m *Members) AddMember(userAccountId *UserAccountId) *Members {
 	}
 }
 
-func (m *Members) RemoveMember(userAccountId *UserAccountId) *Members {
+func (m *Members) RemoveMemberByUserAccountId(userAccountId *UserAccountId) *Members {
 	newMembers := make([]*Member, 0, len(m.members))
 	for _, member := range m.members {
 		if member.userAccountId != userAccountId {

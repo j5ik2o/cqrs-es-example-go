@@ -8,6 +8,6 @@ func NewGroupChatName(value string) *GroupChatName {
 	return &GroupChatName{value}
 }
 
-func (g GroupChatName) Sting() string {
+func (g GroupChatName) String() string {
 	return g.value
 }
