@@ -82,7 +82,7 @@ func (m *Members) FindByUserAccountId(userAccountId *UserAccountId) mo.Option[*M
 	return mo.None[*Member]()
 }
 
-func (m *Members) ToArray() []*Member {
+func (m *Members) ToSlice() []*Member {
 	copiedMembers := make([]*Member, len(m.members))
 	copy(copiedMembers, m.members)
 	return copiedMembers
