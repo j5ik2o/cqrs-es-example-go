@@ -3,19 +3,20 @@ package models
 import "github.com/samber/mo"
 
 type Messages struct {
-	values map[MessageId]*Message
+	values map[*MessageId]*Message
 }
 
 func NewMessages() *Messages {
-	return &Messages{values: map[MessageId]*Message{}}
+	return &Messages{values: map[*MessageId]*Message{}}
 }
 
-func NewMessagesFromMap(values map[MessageId]*Message) *Messages {
+func NewMessagesFromMap(values map[*MessageId]*Message) *Messages {
 	return &Messages{values: values}
 }
 
 func (m *Messages) Add(message *Message) mo.Option[*Messages] {
-	if m.Contains(message.GetId()) {
+	_, ok := m.values[message.GetId()]
+	if ok {
 		return mo.None[*Messages]()
 	}
 	newMap := m.ToMap()
@@ -23,8 +24,9 @@ func (m *Messages) Add(message *Message) mo.Option[*Messages] {
 	return mo.Some(NewMessagesFromMap(newMap))
 }
 
-func (m *Messages) Remove(id MessageId) mo.Option[*Messages] {
-	if !m.Contains(id) {
+func (m *Messages) Remove(id *MessageId) mo.Option[*Messages] {
+	_, ok := m.values[id]
+	if !ok {
 		return mo.None[*Messages]()
 	}
 	newMap := m.ToMap()
@@ -32,20 +34,21 @@ func (m *Messages) Remove(id MessageId) mo.Option[*Messages] {
 	return mo.Some(NewMessagesFromMap(newMap))
 }
 
-func (m *Messages) Contains(id MessageId) bool {
+func (m *Messages) Contains(id *MessageId) bool {
 	_, ok := m.values[id]
 	return ok
 }
 
-func (m *Messages) Get(id MessageId) mo.Option[*Message] {
-	if !m.Contains(id) {
+func (m *Messages) Get(id *MessageId) mo.Option[*Message] {
+	_, ok := m.values[id]
+	if !ok {
 		return mo.None[*Message]()
 	}
 	return mo.Some[*Message](m.values[id])
 }
 
-func (m *Messages) ToMap() map[MessageId]*Message {
-	result := map[MessageId]*Message{}
+func (m *Messages) ToMap() map[*MessageId]*Message {
+	result := map[*MessageId]*Message{}
 	for k, v := range m.values {
 		result[k] = v
 	}

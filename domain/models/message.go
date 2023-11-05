@@ -1,16 +1,16 @@
 package models
 
 type Message struct {
-	id       MessageId
+	id       *MessageId
 	text     string
-	senderId uint64
+	senderId *UserAccountId
 }
 
-func NewMessage(id MessageId, text string, senderId uint64) *Message {
-	return &Message{id: id, text: text, senderId: senderId}
+func NewMessage(id *MessageId, text string, senderId *UserAccountId) *Message {
+	return &Message{id, text, senderId}
 }
 
-func (m *Message) GetId() MessageId {
+func (m *Message) GetId() *MessageId {
 	return m.id
 }
 
@@ -18,6 +18,6 @@ func (m *Message) GetText() string {
 	return m.text
 }
 
-func (m *Message) GetSenderId() uint64 {
+func (m *Message) GetSenderId() *UserAccountId {
 	return m.senderId
 }

@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-type GroupChatPosted struct {
+type GroupChatMessagePosted struct {
 	id          string
 	aggregateId *models.GroupChatId
 	seqNr       uint64
@@ -17,46 +17,46 @@ type GroupChatPosted struct {
 	occurredAt  uint64
 }
 
-func NewGroupChatPosted(aggregateId *models.GroupChatId, seqNr uint64, message *models.Message, executorId *models.UserAccountId) *GroupChatPosted {
+func NewGroupChatMessagePosted(aggregateId *models.GroupChatId, seqNr uint64, message *models.Message, executorId *models.UserAccountId) *GroupChatMessagePosted {
 	id := ulid.Make().String()
 	now := time.Now()
 	occurredAt := uint64(now.UnixNano() / 1e6)
-	return &GroupChatPosted{id, aggregateId, seqNr, message, executorId, occurredAt}
+	return &GroupChatMessagePosted{id, aggregateId, seqNr, message, executorId, occurredAt}
 }
 
-func (g *GroupChatPosted) GetId() string {
+func (g *GroupChatMessagePosted) GetId() string {
 	return g.id
 }
 
-func (g *GroupChatPosted) GetTypeName() string {
+func (g *GroupChatMessagePosted) GetTypeName() string {
 	return "group-chat-posted"
 }
 
-func (g *GroupChatPosted) GetAggregateId() esa.AggregateId {
+func (g *GroupChatMessagePosted) GetAggregateId() esa.AggregateId {
 	return g.aggregateId
 }
 
-func (g *GroupChatPosted) GetSeqNr() uint64 {
+func (g *GroupChatMessagePosted) GetSeqNr() uint64 {
 	return g.seqNr
 }
 
-func (g *GroupChatPosted) GetMessage() *models.Message {
+func (g *GroupChatMessagePosted) GetMessage() *models.Message {
 	return g.message
 }
 
-func (g *GroupChatPosted) GetExecutorId() *models.UserAccountId {
+func (g *GroupChatMessagePosted) GetExecutorId() *models.UserAccountId {
 	return g.executorId
 }
 
-func (g *GroupChatPosted) IsCreated() bool {
+func (g *GroupChatMessagePosted) IsCreated() bool {
 	return false
 }
 
-func (g *GroupChatPosted) GetOccurredAt() uint64 {
+func (g *GroupChatMessagePosted) GetOccurredAt() uint64 {
 	return g.occurredAt
 }
 
-func (g *GroupChatPosted) String() string {
+func (g *GroupChatMessagePosted) String() string {
 	return fmt.Sprintf("%s{ id: %s, aggregateId: %s seqNr: %d, occurredAt: %d}",
 		g.GetTypeName(), g.id, g.aggregateId, g.seqNr, g.occurredAt)
 }
