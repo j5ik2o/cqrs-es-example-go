@@ -13,3 +13,15 @@ func NewMember(id *MemberId, userAccountId *UserAccountId, role Role) *Member {
 		role:          role,
 	}
 }
+
+func (m *Member) GetId() *MemberId {
+	return m.id
+}
+
+func (m *Member) GetUserAccountId() *UserAccountId {
+	return m.userAccountId
+}
+
+func (m *Member) GetRole() Role {
+	return m.role
+}

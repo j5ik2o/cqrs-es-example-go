@@ -103,13 +103,13 @@ func (g *GroupChat) AddMember(memberId *models.MemberId, userAccountId *models.U
 
 func (g *GroupChat) RemoveMemberByUserAccountId(userAccountId *models.UserAccountId, executorId *models.UserAccountId) mo.Result[GroupChatWithEventPair] {
 	if g.deleted {
-		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatAddMemberErr("The group chat is deleted"))
+		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatRemoveMemberErr("The group chat is deleted"))
 	}
 	if !g.members.IsAdministrator(executorId) {
-		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatAddMemberErr("executorId is not a newMember of the group chat"))
+		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatRemoveMemberErr("executorId is not a newMember of the group chat"))
 	}
 	if g.members.IsMember(userAccountId) {
-		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatAddMemberErr("userAccountId is already a newMember of the group chat"))
+		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatRemoveMemberErr("userAccountId is already a newMember of the group chat"))
 	}
 	newState := g.WithMembers(g.members.RemoveMemberByUserAccountId(userAccountId))
 	newState.seqNr += 1
@@ -156,13 +156,35 @@ func (g *GroupChat) PostMessage(message *models.Message, executorId *models.User
 	if !g.members.IsMember(executorId) {
 		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatPostMessageErr("executorId is not a newMember of the group chat"))
 	}
-	newMessages, isSome := g.messages.Add(message).Get()
-	if !isSome {
+	newMessages, exists := g.messages.Add(message).Get()
+	if !exists {
 		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatPostMessageErr("message is already posted"))
 	}
 	newState := g.WithMessages(newMessages)
 	newState.seqNr += 1
 	messagePosted := events.NewGroupChatMessagePosted(newState.id, newState.seqNr, message, executorId)
 	pair := gt.New2[*GroupChat, events.GroupChatEvent](newState, messagePosted)
+	return mo.Ok[GroupChatWithEventPair](GroupChatWithEventPair(pair))
+}
+
+func (g *GroupChat) DeleteMessage(messageId *models.MessageId, executorId *models.UserAccountId) mo.Result[GroupChatWithEventPair] {
+	if g.deleted {
+		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatDeleteMessageErr("The group chat is deleted"))
+	}
+	if !g.members.IsMember(executorId) {
+		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatPostMessageErr("executorId is not a newMember of the group chat"))
+	}
+	message, exists := g.messages.Get(messageId).Get()
+	if !exists {
+		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatDeleteMessageErr("message is not found"))
+	}
+	member := g.members.FindByUserAccountId(message.GetSenderId()).MustGet()
+	if member.GetUserAccountId() != executorId {
+		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatDeleteMessageErr("User is not the sender of the message"))
+	}
+	newState := g.WithMessages(g.messages.Remove(messageId).MustGet())
+	newState.seqNr += 1
+	messageDeleted := events.NewGroupChatMessageDeleted(newState.id, newState.seqNr, messageId, executorId)
+	pair := gt.New2[*GroupChat, events.GroupChatEvent](newState, messageDeleted)
 	return mo.Ok[GroupChatWithEventPair](GroupChatWithEventPair(pair))
 }

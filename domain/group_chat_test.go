@@ -122,3 +122,23 @@ func TestGroupChat_PostMessage(t *testing.T) {
 	require.True(t, tuple.V1.GetMessages().Get(messageId).IsPresent())
 	require.Equal(t, message, tuple.V1.GetMessages().Get(messageId).MustGet())
 }
+
+func TestGroupChat_DeleteMessage(t *testing.T) {
+	// Given
+	adminId := models.NewUserAccountId()
+	groupChatName := models.NewGroupChatName("test")
+	userAccountId := models.NewUserAccountId()
+	members := models.NewMembers(adminId).AddMember(userAccountId)
+	groupChat := NewGroupChat(groupChatName).WithMembers(members)
+	messageId := models.NewMessageId()
+	message := models.NewMessage(messageId, "test", userAccountId)
+	result1 := groupChat.PostMessage(message, adminId)
+	tuple := result1.MustGet()
+
+	// When
+	result2 := tuple.V1.DeleteMessage(messageId, userAccountId)
+
+	// Then
+	require.True(t, result2.IsOk())
+
+}
