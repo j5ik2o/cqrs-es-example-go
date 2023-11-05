@@ -14,7 +14,7 @@ type GroupChat struct {
 	id       *models.GroupChatId
 	name     *models.GroupChatName
 	members  *models.Members
-	messages *models.Metssages
+	messages *models.Messages
 	seqNr    uint64
 	version  uint64
 	deleted  bool
