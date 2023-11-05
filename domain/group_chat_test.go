@@ -119,5 +119,6 @@ func TestGroupChat_PostMessage(t *testing.T) {
 
 	require.Equal(t, groupChat.id, tuple.V1.id)
 	require.Equal(t, groupChat.seqNr+1, tuple.V1.seqNr)
-	// require.True(t, tuple.V1.GetMessages().Get(messageId).IsPresent())
+	require.True(t, tuple.V1.GetMessages().Get(messageId).IsPresent())
+	require.Equal(t, message, tuple.V1.GetMessages().Get(messageId).MustGet())
 }

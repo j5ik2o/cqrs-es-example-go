@@ -14,9 +14,13 @@ func NewMessagesFromMap(values map[*MessageId]*Message) *Messages {
 	return &Messages{values: values}
 }
 
+func (m *Messages) Contains(id *MessageId) bool {
+	_, ok := m.values[id]
+	return ok
+}
+
 func (m *Messages) Add(message *Message) mo.Option[*Messages] {
-	_, ok := m.values[message.GetId()]
-	if ok {
+	if m.Contains(message.GetId()) {
 		return mo.None[*Messages]()
 	}
 	newMap := m.ToMap()
@@ -25,8 +29,7 @@ func (m *Messages) Add(message *Message) mo.Option[*Messages] {
 }
 
 func (m *Messages) Remove(id *MessageId) mo.Option[*Messages] {
-	_, ok := m.values[id]
-	if !ok {
+	if !m.Contains(id) {
 		return mo.None[*Messages]()
 	}
 	newMap := m.ToMap()
@@ -34,14 +37,8 @@ func (m *Messages) Remove(id *MessageId) mo.Option[*Messages] {
 	return mo.Some(NewMessagesFromMap(newMap))
 }
 
-func (m *Messages) Contains(id *MessageId) bool {
-	_, ok := m.values[id]
-	return ok
-}
-
 func (m *Messages) Get(id *MessageId) mo.Option[*Message] {
-	_, ok := m.values[id]
-	if !ok {
+	if !m.Contains(id) {
 		return mo.None[*Message]()
 	}
 	return mo.Some[*Message](m.values[id])

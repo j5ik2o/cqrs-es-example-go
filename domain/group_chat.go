@@ -43,6 +43,10 @@ func (g *GroupChat) GetMembers() *models.Members {
 	return g.members
 }
 
+func (g *GroupChat) GetMessages() *models.Messages {
+	return g.messages
+}
+
 func (g *GroupChat) GetSeqNr() uint64 {
 	return g.seqNr
 }
