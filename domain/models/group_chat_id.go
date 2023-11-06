@@ -23,7 +23,7 @@ func (g *GroupChatId) GetValue() string {
 }
 
 func (g *GroupChatId) GetTypeName() string {
-	return "group-chat"
+	return "GroupChat"
 }
 
 func (g *GroupChatId) AsString() string {
@@ -32,4 +32,8 @@ func (g *GroupChatId) AsString() string {
 
 func (g *GroupChatId) String() string {
 	return g.AsString()
+}
+
+func ConvertGroupChatIdFromJSON(value map[string]interface{}) *GroupChatId {
+	return NewGroupChatIdFromString(value["Value"].(string))
 }

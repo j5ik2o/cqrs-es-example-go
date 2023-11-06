@@ -10,8 +10,7 @@ func TestGroupChat_AddMember(t *testing.T) {
 	// Given
 	adminId := models.NewUserAccountId()
 	groupChatName := models.NewGroupChatName("test")
-	members := models.NewMembers(adminId)
-	groupChat := NewGroupChat(groupChatName).WithMembers(members)
+	groupChat, _ := NewGroupChat(groupChatName, adminId, adminId)
 	memberId := models.NewMemberId()
 	userAccountId := models.NewUserAccountId()
 
@@ -34,8 +33,7 @@ func TestGroupChat_RemoveMemberByUserAccountId(t *testing.T) {
 	// Given
 	adminId := models.NewUserAccountId()
 	groupChatName := models.NewGroupChatName("test")
-	members := models.NewMembers(adminId)
-	groupChat := NewGroupChat(groupChatName).WithMembers(members)
+	groupChat, _ := NewGroupChat(groupChatName, adminId, adminId)
 	memberId := models.NewMemberId()
 	userAccountId := models.NewUserAccountId()
 	result := groupChat.AddMember(memberId, userAccountId, models.MemberRole, adminId)
@@ -58,8 +56,7 @@ func TestGroupChat_Rename(t *testing.T) {
 	// Given
 	adminId := models.NewUserAccountId()
 	groupChatName := models.NewGroupChatName("test")
-	members := models.NewMembers(adminId)
-	groupChat := NewGroupChat(groupChatName).WithMembers(members)
+	groupChat, _ := NewGroupChat(groupChatName, adminId, adminId)
 
 	// When
 	result := groupChat.Rename(models.NewGroupChatName("test2"), adminId)
@@ -78,8 +75,7 @@ func TestGroupChat_Delete(t *testing.T) {
 	// Given
 	adminId := models.NewUserAccountId()
 	groupChatName := models.NewGroupChatName("test")
-	members := models.NewMembers(adminId)
-	groupChat := NewGroupChat(groupChatName).WithMembers(members)
+	groupChat, _ := NewGroupChat(groupChatName, adminId, adminId)
 
 	// When
 	result := groupChat.Delete(adminId)
@@ -99,8 +95,8 @@ func TestGroupChat_PostMessage(t *testing.T) {
 	adminId := models.NewUserAccountId()
 	groupChatName := models.NewGroupChatName("test")
 	userAccountId := models.NewUserAccountId()
-	members := models.NewMembers(adminId).AddMember(userAccountId)
-	groupChat := NewGroupChat(groupChatName).WithMembers(members)
+	groupChat, _ := NewGroupChat(groupChatName, adminId, adminId)
+	groupChat = groupChat.AddMember(models.NewMemberId(), userAccountId, models.MemberRole, adminId).MustGet().V1
 	messageId := models.NewMessageId()
 	message := models.NewMessage(messageId, "test", userAccountId)
 
@@ -121,8 +117,8 @@ func TestGroupChat_DeleteMessage(t *testing.T) {
 	adminId := models.NewUserAccountId()
 	groupChatName := models.NewGroupChatName("test")
 	userAccountId := models.NewUserAccountId()
-	members := models.NewMembers(adminId).AddMember(userAccountId)
-	groupChat := NewGroupChat(groupChatName).WithMembers(members)
+	groupChat, _ := NewGroupChat(groupChatName, adminId, adminId)
+	groupChat = groupChat.AddMember(models.NewMemberId(), userAccountId, models.MemberRole, adminId).MustGet().V1
 	messageId := models.NewMessageId()
 	message := models.NewMessage(messageId, "test", userAccountId)
 	result1 := groupChat.PostMessage(message, userAccountId)

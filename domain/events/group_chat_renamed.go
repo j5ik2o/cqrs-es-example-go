@@ -17,10 +17,14 @@ type GroupChatRenamed struct {
 	occurredAt  uint64
 }
 
-func NewGroupChatRenamed(aggregateId *models.GroupChatId, seqNr uint64, name *models.GroupChatName, executorId *models.UserAccountId) *GroupChatRenamed {
+func NewGroupChatRenamed(aggregateId *models.GroupChatId, name *models.GroupChatName, seqNr uint64, executorId *models.UserAccountId) *GroupChatRenamed {
 	id := ulid.Make().String()
 	now := time.Now()
 	occurredAt := uint64(now.UnixNano() / 1e6)
+	return &GroupChatRenamed{id, aggregateId, name, seqNr, executorId, occurredAt}
+}
+
+func NewGroupChatRenamedFrom(id string, aggregateId *models.GroupChatId, name *models.GroupChatName, seqNr uint64, executorId *models.UserAccountId, occurredAt uint64) *GroupChatRenamed {
 	return &GroupChatRenamed{id, aggregateId, name, seqNr, executorId, occurredAt}
 }
 
@@ -29,7 +33,7 @@ func (g *GroupChatRenamed) GetId() string {
 }
 
 func (g *GroupChatRenamed) GetTypeName() string {
-	return "group-chat-renamed"
+	return "GroupChatRenamed"
 }
 
 func (g *GroupChatRenamed) GetAggregateId() esa.AggregateId {

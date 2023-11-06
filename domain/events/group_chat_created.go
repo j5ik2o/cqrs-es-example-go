@@ -4,22 +4,29 @@ import (
 	"cqrs-es-example-go/domain/models"
 	"fmt"
 	esa "github.com/j5ik2o/event-store-adapter-go"
+	"github.com/oklog/ulid/v2"
 	"time"
 )
 
 type GroupChatCreated struct {
 	id          string
-	aggregateId models.GroupChatId
-	name        string
+	aggregateId *models.GroupChatId
+	name        *models.GroupChatName
+	members     *models.Members
 	seqNr       uint64
 	executorId  *models.UserAccountId
 	occurredAt  uint64
 }
 
-func NewGroupChatCreated(id string, aggregateId models.GroupChatId, name string, seqNr uint64, executorId *models.UserAccountId) *GroupChatCreated {
+func NewGroupChatCreated(aggregateId *models.GroupChatId, name *models.GroupChatName, members *models.Members, seqNr uint64, executorId *models.UserAccountId) *GroupChatCreated {
+	id := ulid.Make().String()
 	now := time.Now()
 	occurredAt := uint64(now.UnixNano() / 1e6)
-	return &GroupChatCreated{id, aggregateId, name, seqNr, executorId, occurredAt}
+	return &GroupChatCreated{id, aggregateId, name, members, seqNr, executorId, occurredAt}
+}
+
+func NewGroupChatCreatedFrom(id string, aggregateId *models.GroupChatId, name *models.GroupChatName, members *models.Members, seqNr uint64, executorId *models.UserAccountId, occurredAt uint64) *GroupChatCreated {
+	return &GroupChatCreated{id, aggregateId, name, members, seqNr, executorId, occurredAt}
 }
 
 func (g *GroupChatCreated) GetId() string {
@@ -27,14 +34,14 @@ func (g *GroupChatCreated) GetId() string {
 }
 
 func (g *GroupChatCreated) GetTypeName() string {
-	return "group-chat-created"
+	return "GroupChatCreated"
 }
 
 func (g *GroupChatCreated) GetAggregateId() esa.AggregateId {
-	return &g.aggregateId
+	return g.aggregateId
 }
 
-func (g *GroupChatCreated) GetName() string {
+func (g *GroupChatCreated) GetName() *models.GroupChatName {
 	return g.name
 }
 

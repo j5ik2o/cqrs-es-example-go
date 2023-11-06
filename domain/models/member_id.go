@@ -15,6 +15,10 @@ func NewMemberIdFromString(value string) *MemberId {
 	return &MemberId{value: value}
 }
 
+func ConvertMemberIdFromJSON(value map[string]interface{}) *MemberId {
+	return NewMemberIdFromString(value["Value"].(string))
+}
+
 func (m *MemberId) GetValue() string {
 	return m.value
 }

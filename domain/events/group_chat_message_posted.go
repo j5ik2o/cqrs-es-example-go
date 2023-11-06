@@ -11,17 +11,21 @@ import (
 type GroupChatMessagePosted struct {
 	id          string
 	aggregateId *models.GroupChatId
-	seqNr       uint64
 	message     *models.Message
+	seqNr       uint64
 	executorId  *models.UserAccountId
 	occurredAt  uint64
 }
 
-func NewGroupChatMessagePosted(aggregateId *models.GroupChatId, seqNr uint64, message *models.Message, executorId *models.UserAccountId) *GroupChatMessagePosted {
+func NewGroupChatMessagePosted(aggregateId *models.GroupChatId, message *models.Message, seqNr uint64, executorId *models.UserAccountId) *GroupChatMessagePosted {
 	id := ulid.Make().String()
 	now := time.Now()
 	occurredAt := uint64(now.UnixNano() / 1e6)
-	return &GroupChatMessagePosted{id, aggregateId, seqNr, message, executorId, occurredAt}
+	return &GroupChatMessagePosted{id, aggregateId, message, seqNr, executorId, occurredAt}
+}
+
+func NewGroupChatMessagePostedFrom(id string, aggregateId *models.GroupChatId, message *models.Message, seqNr uint64, executorId *models.UserAccountId, occurredAt uint64) *GroupChatMessagePosted {
+	return &GroupChatMessagePosted{id, aggregateId, message, seqNr, executorId, occurredAt}
 }
 
 func (g *GroupChatMessagePosted) GetId() string {
@@ -29,7 +33,7 @@ func (g *GroupChatMessagePosted) GetId() string {
 }
 
 func (g *GroupChatMessagePosted) GetTypeName() string {
-	return "group-chat-posted"
+	return "GroupChatMessagePosted"
 }
 
 func (g *GroupChatMessagePosted) GetAggregateId() esa.AggregateId {

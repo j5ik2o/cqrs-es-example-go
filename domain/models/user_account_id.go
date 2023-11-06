@@ -18,6 +18,10 @@ func NewUserAccountIdFromString(value string) *UserAccountId {
 	return &UserAccountId{value: value}
 }
 
+func ConvertUserAccountIdFromJSON(value map[string]interface{}) *UserAccountId {
+	return NewUserAccountIdFromString(value["Value"].(string))
+}
+
 func (u *UserAccountId) GetValue() string {
 	return u.value
 }

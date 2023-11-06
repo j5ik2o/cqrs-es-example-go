@@ -23,12 +23,16 @@ func NewGroupChatDeleted(aggregateId *models.GroupChatId, seqNr uint64, executor
 	return &GroupChatDeleted{id, aggregateId, seqNr, executorId, occurredAt}
 }
 
+func NewGroupChatDeletedFrom(id string, aggregateId *models.GroupChatId, seqNr uint64, executorId *models.UserAccountId, occurredAt uint64) *GroupChatDeleted {
+	return &GroupChatDeleted{id, aggregateId, seqNr, executorId, occurredAt}
+}
+
 func (g *GroupChatDeleted) GetId() string {
 	return g.id
 }
 
 func (g *GroupChatDeleted) GetTypeName() string {
-	return "group-chat-deleted"
+	return "GroupChatDeleted"
 }
 
 func (g *GroupChatDeleted) GetAggregateId() esa.AggregateId {

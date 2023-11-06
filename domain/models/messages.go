@@ -14,6 +14,15 @@ func NewMessagesFromMap(values map[*MessageId]*Message) *Messages {
 	return &Messages{values: values}
 }
 
+func ConvertMessagesFromJSON(value map[string]interface{}) *Messages {
+	values := value["Values"].([]map[string]interface{})
+	m := NewMessages()
+	for _, v := range values {
+		m = m.Add(ConvertMessageFromJSON(v)).MustGet()
+	}
+	return m
+}
+
 func (m *Messages) Contains(id *MessageId) bool {
 	_, ok := m.values[id]
 	return ok

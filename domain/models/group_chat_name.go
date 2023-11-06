@@ -8,6 +8,10 @@ func NewGroupChatName(value string) *GroupChatName {
 	return &GroupChatName{value}
 }
 
+func ConvertGroupChatNameFromJSON(value map[string]interface{}) *GroupChatName {
+	return NewGroupChatName(value["Value"].(string))
+}
+
 func (g GroupChatName) String() string {
 	return g.value
 }
