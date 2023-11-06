@@ -105,7 +105,7 @@ func TestGroupChat_PostMessage(t *testing.T) {
 	message := models.NewMessage(messageId, "test", userAccountId)
 
 	// When
-	result := groupChat.PostMessage(message, adminId)
+	result := groupChat.PostMessage(message, userAccountId)
 
 	// Then
 	require.True(t, result.IsOk())
@@ -125,7 +125,7 @@ func TestGroupChat_DeleteMessage(t *testing.T) {
 	groupChat := NewGroupChat(groupChatName).WithMembers(members)
 	messageId := models.NewMessageId()
 	message := models.NewMessage(messageId, "test", userAccountId)
-	result1 := groupChat.PostMessage(message, adminId)
+	result1 := groupChat.PostMessage(message, userAccountId)
 	tuple1 := result1.MustGet()
 
 	// When
