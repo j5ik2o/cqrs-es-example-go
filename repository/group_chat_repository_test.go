@@ -134,6 +134,7 @@ func TestGroupChatRepositoryImpl_FindById(t *testing.T) {
 			return nil, fmt.Errorf("unknown event type")
 		}
 	}
+
 	aggregateConverter := func(m map[string]interface{}) (esa.Aggregate, error) {
 		groupChatId := models.ConvertGroupChatIdFromJSON(m["Id"].(map[string]interface{}))
 		name := models.ConvertGroupChatNameFromJSON(m["Name"].(map[string]interface{}))
@@ -153,6 +154,7 @@ func TestGroupChatRepositoryImpl_FindById(t *testing.T) {
 		eventConverter, aggregateConverter,
 		esa.WithEventSerializer(&EventSerializer{}),
 		esa.WithSnapshotSerializer(&SnapshotSerializer{}))
+
 	if err != nil {
 		t.Fatal(err)
 	}

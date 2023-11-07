@@ -53,3 +53,13 @@ prepare:
 update:
 	$(GOMOD) tidy
 	$(GOMOD) download
+
+cmd-gql-init:
+	@echo "Generating GraphQL code..."
+	@go run github.com/99designs/gqlgen init --config command/gqlgen.yml
+	$(GOMOD) tidy
+
+cmd-gql-gen:
+	@echo "Generating GraphQL code..."
+	@go run github.com/99designs/gqlgen generate --config command/gqlgen.yml
+	$(GOMOD) tidy
