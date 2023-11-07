@@ -28,6 +28,17 @@ func NewGroupChatMemberAddedFrom(id string, aggregateId *models.GroupChatId, mem
 	return &GroupChatMemberAdded{id, aggregateId, member, seqNr, executorId, occurredAt}
 }
 
+func (g *GroupChatMemberAdded) ToJSON() map[string]interface{} {
+	return map[string]interface{}{
+		"Id":          g.id,
+		"AggregateId": g.aggregateId.ToJSON(),
+		"Member":      g.member.ToJSON(),
+		"SeqNr":       g.seqNr,
+		"ExecutorId":  g.executorId.ToJSON(),
+		"OccurredAt":  g.occurredAt,
+	}
+}
+
 func (g *GroupChatMemberAdded) GetId() string {
 	return g.id
 }

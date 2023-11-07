@@ -27,6 +27,16 @@ func NewGroupChatDeletedFrom(id string, aggregateId *models.GroupChatId, seqNr u
 	return &GroupChatDeleted{id, aggregateId, seqNr, executorId, occurredAt}
 }
 
+func (g *GroupChatDeleted) ToJSON() map[string]interface{} {
+	return map[string]interface{}{
+		"Id":          g.id,
+		"AggregateId": g.aggregateId.ToJSON(),
+		"SeqNr":       g.seqNr,
+		"ExecutorId":  g.executorId.ToJSON(),
+		"OccurredAt":  g.occurredAt,
+	}
+}
+
 func (g *GroupChatDeleted) GetId() string {
 	return g.id
 }

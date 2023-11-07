@@ -8,4 +8,5 @@ import (
 type GroupChatEvent interface {
 	esa.Event
 	GetExecutorId() *models.UserAccountId
+	ToJSON() map[string]interface{}
 }

@@ -15,11 +15,21 @@ func NewMember(id *MemberId, userAccountId *UserAccountId, role Role) *Member {
 }
 
 func ConvertMemberFromJSON(value map[string]interface{}) *Member {
+	roleValue := value["Role"]
+	role := Role(roleValue.(float64))
 	return NewMember(
 		ConvertMemberIdFromJSON(value["Id"].(map[string]interface{})),
 		ConvertUserAccountIdFromJSON(value["UserAccountId"].(map[string]interface{})),
-		Role(value["Role"].(int)),
+		role,
 	)
+}
+
+func (m *Member) ToJSON() map[string]interface{} {
+	return map[string]interface{}{
+		"Id":            m.id.ToJSON(),
+		"UserAccountId": m.userAccountId.ToJSON(),
+		"Role":          m.role,
+	}
 }
 
 func (m *Member) GetId() *MemberId {

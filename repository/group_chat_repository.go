@@ -39,10 +39,10 @@ func (g *GroupChatRepositoryImpl) FindById(id *models.GroupChatId) mo.Result[*do
 	if result.Empty() {
 		return mo.Err[*domain.GroupChat](fmt.Errorf("not found"))
 	} else {
-		events, err := g.eventStore.GetEventsByIdSinceSeqNr(id, result.Aggregate().GetSeqNr()+1)
+		eventsByIdSinceSeqNr, err := g.eventStore.GetEventsByIdSinceSeqNr(id, result.Aggregate().GetSeqNr()+1)
 		if err != nil {
 			return mo.Err[*domain.GroupChat](err)
 		}
-		return mo.Ok[*domain.GroupChat](domain.ReplayGroupChat(events, result.Aggregate().(*domain.GroupChat)))
+		return mo.Ok[*domain.GroupChat](domain.ReplayGroupChat(eventsByIdSinceSeqNr, result.Aggregate().(*domain.GroupChat)))
 	}
 }

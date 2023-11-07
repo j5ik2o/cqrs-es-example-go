@@ -22,6 +22,12 @@ func ConvertUserAccountIdFromJSON(value map[string]interface{}) *UserAccountId {
 	return NewUserAccountIdFromString(value["Value"].(string))
 }
 
+func (u *UserAccountId) ToJSON() map[string]interface{} {
+	return map[string]interface{}{
+		"Value": u.value,
+	}
+}
+
 func (u *UserAccountId) GetValue() string {
 	return u.value
 }

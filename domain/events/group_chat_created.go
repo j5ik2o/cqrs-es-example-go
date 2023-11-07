@@ -29,6 +29,18 @@ func NewGroupChatCreatedFrom(id string, aggregateId *models.GroupChatId, name *m
 	return &GroupChatCreated{id, aggregateId, name, members, seqNr, executorId, occurredAt}
 }
 
+func (g *GroupChatCreated) ToJSON() map[string]interface{} {
+	return map[string]interface{}{
+		"Id":          g.id,
+		"AggregateId": g.aggregateId.ToJSON(),
+		"Name":        g.name.ToJSON(),
+		"Members":     g.members.ToJSON(),
+		"SeqNr":       g.seqNr,
+		"ExecutorId":  g.executorId.ToJSON(),
+		"OccurredAt":  g.occurredAt,
+	}
+}
+
 func (g *GroupChatCreated) GetId() string {
 	return g.id
 }
@@ -43,6 +55,10 @@ func (g *GroupChatCreated) GetAggregateId() esa.AggregateId {
 
 func (g *GroupChatCreated) GetName() *models.GroupChatName {
 	return g.name
+}
+
+func (g *GroupChatCreated) GetMembers() *models.Members {
+	return g.members
 }
 
 func (g *GroupChatCreated) GetSeqNr() uint64 {

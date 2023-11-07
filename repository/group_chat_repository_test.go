@@ -47,6 +47,8 @@ func TestGroupChatRepositoryImpl_FindById(t *testing.T) {
 	err = common.CreateSnapshotTable(t, ctx, dynamodbClient, snapshotTableName, snapshotAidIndexName)
 	require.Nil(t, err)
 
+	// time.Sleep(5 * time.Second)
+
 	eventConverter := func(m map[string]interface{}) (esa.Event, error) {
 		eventId := m["Id"].(string)
 		groupChatId := models.ConvertGroupChatIdFromJSON(m["AggregateId"].(map[string]interface{}))
@@ -144,7 +146,13 @@ func TestGroupChatRepositoryImpl_FindById(t *testing.T) {
 		return result, nil
 	}
 
-	eventStore, err := esa.NewEventStore(dynamodbClient, journalTableName, journalAidIndexName, snapshotTableName, snapshotAidIndexName, 32, eventConverter, aggregateConverter)
+	eventStore, err := esa.NewEventStore(
+		dynamodbClient,
+		journalTableName, snapshotTableName, journalAidIndexName, snapshotAidIndexName,
+		32,
+		eventConverter, aggregateConverter,
+		esa.WithEventSerializer(&EventSerializer{}),
+		esa.WithSnapshotSerializer(&SnapshotSerializer{}))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -152,5 +160,9 @@ func TestGroupChatRepositoryImpl_FindById(t *testing.T) {
 	adminId := models.NewUserAccountId()
 	groupChat, event := domain.NewGroupChat(models.NewGroupChatName("test"), adminId, adminId)
 	err = repository.StoreEventWithSnapshot(event, groupChat)
-	require.Nil(t, err)
+	require.NoError(t, err)
+
+	groupChat2 := repository.FindById(groupChat.GetGroupChatId()).MustGet()
+	require.NotNil(t, groupChat2)
+	assert.Equal(t, groupChat.GetId(), groupChat2.GetId())
 }

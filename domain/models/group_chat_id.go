@@ -18,6 +18,12 @@ func NewGroupChatIdFromString(value string) *GroupChatId {
 	return &GroupChatId{value: value}
 }
 
+func (g *GroupChatId) ToJSON() map[string]interface{} {
+	return map[string]interface{}{
+		"Value": g.value,
+	}
+}
+
 func (g *GroupChatId) GetValue() string {
 	return g.value
 }

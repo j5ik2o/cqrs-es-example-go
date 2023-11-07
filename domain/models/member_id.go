@@ -19,6 +19,12 @@ func ConvertMemberIdFromJSON(value map[string]interface{}) *MemberId {
 	return NewMemberIdFromString(value["Value"].(string))
 }
 
+func (m *MemberId) ToJSON() map[string]interface{} {
+	return map[string]interface{}{
+		"Value": m.value,
+	}
+}
+
 func (m *MemberId) GetValue() string {
 	return m.value
 }

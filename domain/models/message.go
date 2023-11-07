@@ -18,6 +18,14 @@ func ConvertMessageFromJSON(value map[string]interface{}) *Message {
 	)
 }
 
+func (m *Message) ToJSON() map[string]interface{} {
+	return map[string]interface{}{
+		"Id":       m.id.ToJSON(),
+		"Text":     m.text,
+		"SenderId": m.senderId.ToJSON(),
+	}
+}
+
 func (m *Message) GetId() *MessageId {
 	return m.id
 }

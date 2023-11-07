@@ -62,15 +62,27 @@ func NewGroupChat(name *models.GroupChatName, administratorId *models.UserAccoun
 		events.NewGroupChatCreated(id, name, members, seqNr, executorId)
 }
 
-func NewGroupChatCreatedFrom(id *models.GroupChatId, name *models.GroupChatName, members *models.Members, seqNr uint64, executorId *models.UserAccountId) *GroupChat {
-	return &GroupChat{id, name, members, models.NewMessages(), seqNr, 1, false}
-}
-
 func NewGroupChatFrom(id *models.GroupChatId, name *models.GroupChatName, members *models.Members, messages *models.Messages, seqNr uint64, version uint64, deleted bool) *GroupChat {
 	return &GroupChat{id, name, members, messages, seqNr, version, deleted}
 }
 
+func (g *GroupChat) ToJSON() map[string]interface{} {
+	return map[string]interface{}{
+		"Id":       g.id.ToJSON(),
+		"Name":     g.name.ToJSON(),
+		"Members":  g.members.ToJSON(),
+		"Messages": g.messages.ToJSON(),
+		"SeqNr":    g.seqNr,
+		"Version":  g.version,
+		"Deleted":  g.deleted,
+	}
+}
+
 func (g *GroupChat) GetId() esa.AggregateId {
+	return g.id
+}
+
+func (g *GroupChat) GetGroupChatId() *models.GroupChatId {
 	return g.id
 }
 
