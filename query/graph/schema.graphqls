@@ -1,0 +1,174 @@
+# GraphQL schema example
+#
+# https://gqlgen.com/getting-started/
+
+
+"""
+グループチャットリードモデル
+
+NOTE: リードモデルはDTOとして利用されるものです。
+特段振る舞いのようなものはありません。
+"""
+type GroupChat {
+	"""
+	グループチャットID
+	"""
+	id: String!
+	"""
+	グループチャット名
+	"""
+	name: String!
+	"""
+	管理者ID
+	"""
+	ownerId: String!
+	"""
+	作成日時
+	"""
+	createdAt: NaiveDateTime!
+}
+
+
+
+"""
+メンバーリードモデル
+"""
+type Member {
+	"""
+	メンバーID
+	"""
+	id: String!
+	"""
+	グループチャットID
+	"""
+	groupChatId: String!
+	"""
+	アカウントID
+	"""
+	accountId: String!
+	"""
+	ロール
+	"""
+	role: String!
+	"""
+	作成日時
+	"""
+	createdAt: NaiveDateTime!
+}
+
+"""
+メッセージリードモデル
+"""
+type Message {
+	"""
+	メッセージID
+	"""
+	id: String!
+	"""
+	グループチャットID
+	"""
+	groupChatId: String!
+	"""
+	アカウントID
+	"""
+	accountId: String!
+	"""
+	メッセージ本文
+	"""
+	text: String!
+	"""
+	作成日時
+	"""
+	createdAt: NaiveDateTime!
+}
+
+"""
+ISO 8601 combined date and time without timezone.
+
+# Examples
+
+* `2015-07-01T08:59:60.123`,
+"""
+scalar NaiveDateTime
+
+type QueryRoot {
+	"""
+	指定されたグループチャットIDのグループチャットを取得する。
+
+	# 引数
+	- `group_chat_id` - グループチャットID
+	- `account_id` - 閲覧アカウントID
+
+	# 戻り値
+	- `GroupChat` - グループチャット
+	"""
+	getGroupChat(groupChatId: String!, accountId: String!): GroupChat!
+	"""
+	指定されたアカウントIDが参加するグループチャット一覧を取得する。
+
+	# 引数
+	- `account_id` - 閲覧アカウントID
+
+	# 戻り値
+	- `Vec<GroupChat>` - グループチャット一覧
+	"""
+	getGroupChats(accountId: String!): [GroupChat!]!
+	"""
+	指定されたアカウントIDのメンバーを取得する
+
+	# 引数
+	- `group_chat_id` - グループチャットID
+	- `account_id` - 閲覧アカウントID
+
+	# 戻り値
+	- `Member` - [Member]
+	"""
+	getMember(groupChatId: String!, accountId: String!): Member!
+	"""
+	指定されたグループチャットIDのメンバー一覧を取得する
+
+	# 引数
+	- `group_chat_id` - グループチャットID
+	- `account_id` - 閲覧アカウントID
+
+	# 戻り値
+	- `Vec<Member>` - メンバー一覧
+	"""
+	getMembers(groupChatId: String!, accountId: String!): [Member!]!
+	"""
+	指定されたメッセージIDのメッセージを取得する
+
+	# 引数
+	- `message_id` - メッセージID
+	- `account_id` - 閲覧アカウントID
+
+	# 戻り値
+	- `Message` - メッセージ
+	"""
+	getMessage(messageId: String!, accountId: String!): Message!
+	"""
+	指定されたグループチャットIDのメッセージ一覧を取得する
+
+	# 引数
+	- `group_chat_id` - グループチャットID
+	- `account_id` - 閲覧アカウントID
+
+	# 戻り値
+	- `Vec<Message>` - メッセージ一覧
+	"""
+	getMessages(groupChatId: String!, accountId: String!): [Message!]!
+}
+
+
+"""
+https://github.com/async-graphql/examples/blob/c8219078a4b7aa6d84d22e9b79f033088897be4b/poem/subscription-redis/src/main.rs
+"""
+type SubscriptionRoot {
+	groupChats(groupChatId: String!): String!
+}
+
+schema {
+	query: QueryRoot
+	subscription: SubscriptionRoot
+}
+
