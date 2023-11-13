@@ -1,7 +1,7 @@
 package main
 
 import (
-	"cqrs-es-example-go/command/graph"
+	"cqrs-es-example-go/query/graph"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"log"
 	"net/http"
