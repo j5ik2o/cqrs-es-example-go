@@ -149,7 +149,7 @@ func (g *GroupChat) AddMember(memberId *models.MemberId, userAccountId *models.U
 	newState.seqNr += 1
 	memberAdded := events.NewGroupChatMemberAdded(newState.id, newMember, newState.seqNr, userAccountId)
 	pair := gt.New2[*GroupChat, events.GroupChatEvent](newState, memberAdded)
-	return mo.Ok[GroupChatWithEventPair](GroupChatWithEventPair(pair))
+	return mo.Ok(GroupChatWithEventPair(pair))
 }
 
 func (g *GroupChat) RemoveMemberByUserAccountId(userAccountId *models.UserAccountId, executorId *models.UserAccountId) mo.Result[GroupChatWithEventPair] {
@@ -166,7 +166,7 @@ func (g *GroupChat) RemoveMemberByUserAccountId(userAccountId *models.UserAccoun
 	newState.seqNr += 1
 	memberRemoved := events.NewGroupChatMemberRemoved(newState.id, userAccountId, newState.seqNr, executorId)
 	pair := gt.New2[*GroupChat, events.GroupChatEvent](newState, memberRemoved)
-	return mo.Ok[GroupChatWithEventPair](GroupChatWithEventPair(pair))
+	return mo.Ok(GroupChatWithEventPair(pair))
 }
 
 func (g *GroupChat) Rename(name *models.GroupChatName, executorId *models.UserAccountId) mo.Result[GroupChatWithEventPair] {
@@ -183,7 +183,7 @@ func (g *GroupChat) Rename(name *models.GroupChatName, executorId *models.UserAc
 	newState.seqNr += 1
 	renamed := events.NewGroupChatRenamed(newState.id, name, newState.seqNr, executorId)
 	pair := gt.New2[*GroupChat, events.GroupChatEvent](newState, renamed)
-	return mo.Ok[GroupChatWithEventPair](GroupChatWithEventPair(pair))
+	return mo.Ok(GroupChatWithEventPair(pair))
 }
 
 func (g *GroupChat) Delete(executorId *models.UserAccountId) mo.Result[GroupChatWithEventPair] {
@@ -197,7 +197,7 @@ func (g *GroupChat) Delete(executorId *models.UserAccountId) mo.Result[GroupChat
 	newState.seqNr += 1
 	deleted := events.NewGroupChatDeleted(newState.id, newState.seqNr, executorId)
 	pair := gt.New2[*GroupChat, events.GroupChatEvent](newState, deleted)
-	return mo.Ok[GroupChatWithEventPair](GroupChatWithEventPair(pair))
+	return mo.Ok(GroupChatWithEventPair(pair))
 }
 
 func (g *GroupChat) PostMessage(message *models.Message, executorId *models.UserAccountId) mo.Result[GroupChatWithEventPair] {
@@ -221,7 +221,7 @@ func (g *GroupChat) PostMessage(message *models.Message, executorId *models.User
 	newState.seqNr += 1
 	messagePosted := events.NewGroupChatMessagePosted(newState.id, message, newState.seqNr, executorId)
 	pair := gt.New2[*GroupChat, events.GroupChatEvent](newState, messagePosted)
-	return mo.Ok[GroupChatWithEventPair](GroupChatWithEventPair(pair))
+	return mo.Ok(GroupChatWithEventPair(pair))
 }
 
 func (g *GroupChat) DeleteMessage(messageId *models.MessageId, executorId *models.UserAccountId) mo.Result[GroupChatWithEventPair] {
@@ -243,5 +243,5 @@ func (g *GroupChat) DeleteMessage(messageId *models.MessageId, executorId *model
 	newState.seqNr += 1
 	messageDeleted := events.NewGroupChatMessageDeleted(newState.id, messageId, newState.seqNr, executorId)
 	pair := gt.New2[*GroupChat, events.GroupChatEvent](newState, messageDeleted)
-	return mo.Ok[GroupChatWithEventPair](GroupChatWithEventPair(pair))
+	return mo.Ok(GroupChatWithEventPair(pair))
 }
