@@ -39,14 +39,14 @@ func (g *GroupChatController) CreateGroupChat(c *gin.Context) {
 		return
 	}
 
-	groupChatName, err := ValidateGroupChatName(jsonRequestBody.Name)
+	groupChatName, err := ValidateGroupChatName(jsonRequestBody.Name).Get()
 	if err != nil {
 		response := CreateGroupChatResponseErrorBody{Message: err.Error()}
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
-	executorId, err := ValidateUserAccountId(jsonRequestBody.ExecutorId)
+	executorId, err := ValidateUserAccountId(jsonRequestBody.ExecutorId).Get()
 	if err != nil {
 		response := CreateGroupChatResponseErrorBody{Message: err.Error()}
 		c.JSON(http.StatusBadRequest, response)

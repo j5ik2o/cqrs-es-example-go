@@ -1,24 +1,22 @@
 package models
 
+import "github.com/samber/mo"
+
 type Message struct {
 	id       *MessageId
 	text     string
 	senderId *UserAccountId
 }
 
-func NewMessage(id *MessageId, text string, senderId *UserAccountId) *Message {
-	return &Message{id, text, senderId}
+func NewMessage(id *MessageId, text string, senderId *UserAccountId) mo.Result[*Message] {
+	return mo.Ok(&Message{id, text, senderId})
 }
 
-func ConvertMessageFromJSON(value map[string]interface{}) *Message {
-	json, err := ConvertUserAccountIdFromJSON(value["SenderId"].(map[string]interface{}))
-	if err != nil {
-		panic(err)
-	}
+func ConvertMessageFromJSON(value map[string]interface{}) mo.Result[*Message] {
 	return NewMessage(
 		ConvertMessageIdFromJSON(value["Id"].(map[string]interface{})),
 		value["Text"].(string),
-		json,
+		ConvertUserAccountIdFromJSON(value["SenderId"].(map[string]interface{})).MustGet(),
 	)
 }
 

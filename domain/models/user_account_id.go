@@ -1,8 +1,10 @@
 package models
 
 import (
+	"errors"
 	"fmt"
 	"github.com/oklog/ulid/v2"
+	"github.com/samber/mo"
 )
 
 type UserAccountId struct {
@@ -14,14 +16,14 @@ func NewUserAccountId() *UserAccountId {
 	return &UserAccountId{value: id.String()}
 }
 
-func NewUserAccountIdFromString(value string) (*UserAccountId, error) {
+func NewUserAccountIdFromString(value string) mo.Result[*UserAccountId] {
 	if value == "" {
-		return nil, fmt.Errorf("UserAccountId is empty")
+		return mo.Err[*UserAccountId](errors.New("UserAccountId is empty"))
 	}
-	return &UserAccountId{value: value}, nil
+	return mo.Ok(&UserAccountId{value: value})
 }
 
-func ConvertUserAccountIdFromJSON(value map[string]interface{}) (*UserAccountId, error) {
+func ConvertUserAccountIdFromJSON(value map[string]interface{}) mo.Result[*UserAccountId] {
 	return NewUserAccountIdFromString(value["Value"].(string))
 }
 

@@ -1,19 +1,22 @@
 package models
 
-import "errors"
+import (
+	"errors"
+	"github.com/samber/mo"
+)
 
 type GroupChatName struct {
 	value string
 }
 
-func NewGroupChatName(value string) (*GroupChatName, error) {
+func NewGroupChatName(value string) mo.Result[*GroupChatName] {
 	if value == "" {
-		return nil, errors.New("GroupChatName is empty")
+		return mo.Err[*GroupChatName](errors.New("GroupChatName is empty"))
 	}
-	return &GroupChatName{value}, nil
+	return mo.Ok(&GroupChatName{value})
 }
 
-func ConvertGroupChatNameFromJSON(value map[string]interface{}) (*GroupChatName, error) {
+func ConvertGroupChatNameFromJSON(value map[string]interface{}) mo.Result[*GroupChatName] {
 	return NewGroupChatName(value["Value"].(string))
 }
 

@@ -14,13 +14,17 @@ func NewMessagesFromMap(values map[*MessageId]*Message) *Messages {
 	return &Messages{values: values}
 }
 
-func ConvertMessagesFromJSON(value map[string]interface{}) *Messages {
+func ConvertMessagesFromJSON(value map[string]interface{}) mo.Result[*Messages] {
 	values := value["Values"].([]interface{})
 	m := NewMessages()
 	for _, v := range values {
-		m = m.Add(ConvertMessageFromJSON(v.(map[string]interface{}))).MustGet()
+		result := ConvertMessageFromJSON(v.(map[string]interface{}))
+		if result.IsError() {
+			return mo.Err[*Messages](result.Error())
+		}
+		m = m.Add(result.MustGet()).MustGet()
 	}
-	return m
+	return mo.Ok(m)
 }
 
 func (m *Messages) Contains(id *MessageId) bool {

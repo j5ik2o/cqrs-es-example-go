@@ -17,13 +17,9 @@ func NewMember(id *MemberId, userAccountId *UserAccountId, role Role) *Member {
 func ConvertMemberFromJSON(value map[string]interface{}) *Member {
 	roleValue := value["Role"]
 	role := Role(roleValue.(float64))
-	json, err := ConvertUserAccountIdFromJSON(value["UserAccountId"].(map[string]interface{}))
-	if err != nil {
-		panic(err)
-	}
 	return NewMember(
-		ConvertMemberIdFromJSON(value["Id"].(map[string]interface{})),
-		json,
+		ConvertMemberIdFromJSON(value["Id"].(map[string]interface{})).MustGet(),
+		ConvertUserAccountIdFromJSON(value["UserAccountId"].(map[string]interface{})).MustGet(),
 		role,
 	)
 }

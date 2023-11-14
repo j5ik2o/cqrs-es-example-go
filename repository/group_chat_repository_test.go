@@ -52,12 +52,12 @@ func TestGroupChatRepositoryImpl_FindById(t *testing.T) {
 	eventConverter := func(m map[string]interface{}) (esa.Event, error) {
 		eventId := m["Id"].(string)
 		groupChatId := models.ConvertGroupChatIdFromJSON(m["AggregateId"].(map[string]interface{}))
-		groupChatName, err := models.ConvertGroupChatNameFromJSON(m["Name"].(map[string]interface{}))
+		groupChatName, err := models.ConvertGroupChatNameFromJSON(m["Name"].(map[string]interface{})).Get()
 		if err != nil {
 			return nil, err
 		}
 		members := models.ConvertMembersFromJSON(m["Members"].(map[string]interface{}))
-		executorId, err := models.ConvertUserAccountIdFromJSON(m["ExecutorId"].(map[string]interface{}))
+		executorId, err := models.ConvertUserAccountIdFromJSON(m["ExecutorId"].(map[string]interface{})).Get()
 		if err != nil {
 			return nil, err
 		}
@@ -83,7 +83,7 @@ func TestGroupChatRepositoryImpl_FindById(t *testing.T) {
 				occurredAt,
 			), nil
 		case "GroupChatRenamed":
-			name, err := models.NewGroupChatName(m["Name"].(string))
+			name, err := models.NewGroupChatName(m["Name"].(string)).Get()
 			if err != nil {
 				return nil, err
 			}
@@ -97,8 +97,11 @@ func TestGroupChatRepositoryImpl_FindById(t *testing.T) {
 			), nil
 		case "GroupChatMemberAdded":
 			memberObj := m["Member"].(map[string]interface{})
-			memberId := models.ConvertMemberIdFromJSON(memberObj["MemberId"].(map[string]interface{}))
-			userAccountId, err := models.ConvertUserAccountIdFromJSON(memberObj["UserAccountId"].(map[string]interface{}))
+			memberId, err := models.ConvertMemberIdFromJSON(memberObj["MemberId"].(map[string]interface{})).Get()
+			if err != nil {
+				return nil, err
+			}
+			userAccountId, err := models.ConvertUserAccountIdFromJSON(memberObj["UserAccountId"].(map[string]interface{})).Get()
 			if err != nil {
 				return nil, err
 			}
@@ -113,7 +116,7 @@ func TestGroupChatRepositoryImpl_FindById(t *testing.T) {
 				occurredAt,
 			), nil
 		case "GroupChatMemberRemoved":
-			userAccountId, err := models.ConvertUserAccountIdFromJSON(m["UserAccountId"].(map[string]interface{}))
+			userAccountId, err := models.ConvertUserAccountIdFromJSON(m["UserAccountId"].(map[string]interface{})).Get()
 			if err != nil {
 				return nil, err
 			}
@@ -126,7 +129,10 @@ func TestGroupChatRepositoryImpl_FindById(t *testing.T) {
 				occurredAt,
 			), nil
 		case "GroupChatMessagePosted":
-			message := models.ConvertMessageFromJSON(m["Message"].(map[string]interface{}))
+			message, err := models.ConvertMessageFromJSON(m["Message"].(map[string]interface{})).Get()
+			if err != nil {
+				return nil, err
+			}
 			return events.NewGroupChatMessagePostedFrom(
 				eventId,
 				groupChatId,
@@ -152,12 +158,15 @@ func TestGroupChatRepositoryImpl_FindById(t *testing.T) {
 
 	aggregateConverter := func(m map[string]interface{}) (esa.Aggregate, error) {
 		groupChatId := models.ConvertGroupChatIdFromJSON(m["Id"].(map[string]interface{}))
-		name, err := models.ConvertGroupChatNameFromJSON(m["Name"].(map[string]interface{}))
+		name, err := models.ConvertGroupChatNameFromJSON(m["Name"].(map[string]interface{})).Get()
 		if err != nil {
 			return nil, err
 		}
 		members := models.ConvertMembersFromJSON(m["Members"].(map[string]interface{}))
-		messages := models.ConvertMessagesFromJSON(m["Messages"].(map[string]interface{}))
+		messages, err := models.ConvertMessagesFromJSON(m["Messages"].(map[string]interface{})).Get()
+		if err != nil {
+			return nil, err
+		}
 		seqNr := uint64(m["SeqNr"].(float64))
 		version := uint64(m["Version"].(float64))
 		deleted := m["Deleted"].(bool)
@@ -178,7 +187,7 @@ func TestGroupChatRepositoryImpl_FindById(t *testing.T) {
 	}
 	repository := NewGroupChatRepository(eventStore)
 	adminId := models.NewUserAccountId()
-	name, err := models.NewGroupChatName("test")
+	name, err := models.NewGroupChatName("test").Get()
 	if err != nil {
 		t.Fatal(err)
 	}

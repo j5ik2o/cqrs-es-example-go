@@ -1,6 +1,9 @@
 package models
 
-import "github.com/oklog/ulid/v2"
+import (
+	"github.com/oklog/ulid/v2"
+	"github.com/samber/mo"
+)
 
 type MemberId struct {
 	value string
@@ -11,11 +14,11 @@ func NewMemberId() *MemberId {
 	return &MemberId{value: id.String()}
 }
 
-func NewMemberIdFromString(value string) *MemberId {
-	return &MemberId{value: value}
+func NewMemberIdFromString(value string) mo.Result[*MemberId] {
+	return mo.Ok(&MemberId{value: value})
 }
 
-func ConvertMemberIdFromJSON(value map[string]interface{}) *MemberId {
+func ConvertMemberIdFromJSON(value map[string]interface{}) mo.Result[*MemberId] {
 	return NewMemberIdFromString(value["Value"].(string))
 }
 
