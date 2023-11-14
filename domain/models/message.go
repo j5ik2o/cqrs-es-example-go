@@ -11,10 +11,14 @@ func NewMessage(id *MessageId, text string, senderId *UserAccountId) *Message {
 }
 
 func ConvertMessageFromJSON(value map[string]interface{}) *Message {
+	json, err := ConvertUserAccountIdFromJSON(value["SenderId"].(map[string]interface{}))
+	if err != nil {
+		panic(err)
+	}
 	return NewMessage(
 		ConvertMessageIdFromJSON(value["Id"].(map[string]interface{})),
 		value["Text"].(string),
-		ConvertUserAccountIdFromJSON(value["SenderId"].(map[string]interface{})),
+		json,
 	)
 }
 

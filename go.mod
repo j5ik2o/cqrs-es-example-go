@@ -10,6 +10,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.25.0
 	github.com/barweiss/go-tuple v1.1.2
 	github.com/docker/go-connections v0.4.0
+	github.com/gin-gonic/gin v1.9.1
 	github.com/j5ik2o/event-store-adapter-go v0.4.0
 	github.com/oklog/ulid/v2 v2.1.0
 	github.com/samber/mo v1.11.0
@@ -17,6 +18,7 @@ require (
 	github.com/testcontainers/testcontainers-go v0.26.0
 	github.com/testcontainers/testcontainers-go/modules/localstack v0.26.0
 	github.com/vektah/gqlparser/v2 v2.5.10
+	k8s.io/utils v0.0.0-20230220204549-a5ecb0141aa5
 )
 
 require (
@@ -50,7 +52,6 @@ require (
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
-	github.com/gin-gonic/gin v1.9.1 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect

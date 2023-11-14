@@ -14,11 +14,14 @@ func NewUserAccountId() *UserAccountId {
 	return &UserAccountId{value: id.String()}
 }
 
-func NewUserAccountIdFromString(value string) *UserAccountId {
-	return &UserAccountId{value: value}
+func NewUserAccountIdFromString(value string) (*UserAccountId, error) {
+	if value == "" {
+		return nil, fmt.Errorf("UserAccountId is empty")
+	}
+	return &UserAccountId{value: value}, nil
 }
 
-func ConvertUserAccountIdFromJSON(value map[string]interface{}) *UserAccountId {
+func ConvertUserAccountIdFromJSON(value map[string]interface{}) (*UserAccountId, error) {
 	return NewUserAccountIdFromString(value["Value"].(string))
 }
 

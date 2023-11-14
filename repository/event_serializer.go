@@ -8,6 +8,10 @@ import (
 
 type EventSerializer struct{}
 
+func NewEventSerializer() *EventSerializer {
+	return &EventSerializer{}
+}
+
 func (s *EventSerializer) Serialize(event esa.Event) ([]byte, error) {
 	result, err := json.Marshal(event.(events.GroupChatEvent).ToJSON())
 	if err != nil {

@@ -8,6 +8,10 @@ import (
 
 type SnapshotSerializer struct{}
 
+func NewSnapshotSerializer() *SnapshotSerializer {
+	return &SnapshotSerializer{}
+}
+
 func (s *SnapshotSerializer) Serialize(aggregate esa.Aggregate) ([]byte, error) {
 	result, err := json.Marshal(aggregate.(*domain.GroupChat).ToJSON())
 	if err != nil {
