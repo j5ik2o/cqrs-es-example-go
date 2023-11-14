@@ -9,7 +9,8 @@ import (
 func TestGroupChat_AddMember(t *testing.T) {
 	// Given
 	adminId := models.NewUserAccountId()
-	groupChatName := models.NewGroupChatName("test")
+	groupChatName, err := models.NewGroupChatName("test")
+	require.NoError(t, err)
 	groupChat, _ := NewGroupChat(groupChatName, adminId, adminId)
 	memberId := models.NewMemberId()
 	userAccountId := models.NewUserAccountId()
@@ -32,7 +33,8 @@ func TestGroupChat_AddMember(t *testing.T) {
 func TestGroupChat_RemoveMemberByUserAccountId(t *testing.T) {
 	// Given
 	adminId := models.NewUserAccountId()
-	groupChatName := models.NewGroupChatName("test")
+	groupChatName, err := models.NewGroupChatName("test")
+	require.NoError(t, err)
 	groupChat, _ := NewGroupChat(groupChatName, adminId, adminId)
 	memberId := models.NewMemberId()
 	userAccountId := models.NewUserAccountId()
@@ -55,11 +57,14 @@ func TestGroupChat_RemoveMemberByUserAccountId(t *testing.T) {
 func TestGroupChat_Rename(t *testing.T) {
 	// Given
 	adminId := models.NewUserAccountId()
-	groupChatName := models.NewGroupChatName("test")
+	groupChatName, err := models.NewGroupChatName("test")
+	require.NoError(t, err)
 	groupChat, _ := NewGroupChat(groupChatName, adminId, adminId)
+	name, err := models.NewGroupChatName("test2")
+	require.NoError(t, err)
 
 	// When
-	result := groupChat.Rename(models.NewGroupChatName("test2"), adminId)
+	result := groupChat.Rename(name, adminId)
 
 	// Then
 	require.True(t, result.IsOk())
@@ -74,7 +79,8 @@ func TestGroupChat_Rename(t *testing.T) {
 func TestGroupChat_Delete(t *testing.T) {
 	// Given
 	adminId := models.NewUserAccountId()
-	groupChatName := models.NewGroupChatName("test")
+	groupChatName, err := models.NewGroupChatName("test")
+	require.NoError(t, err)
 	groupChat, _ := NewGroupChat(groupChatName, adminId, adminId)
 
 	// When
@@ -93,7 +99,8 @@ func TestGroupChat_Delete(t *testing.T) {
 func TestGroupChat_PostMessage(t *testing.T) {
 	// Given
 	adminId := models.NewUserAccountId()
-	groupChatName := models.NewGroupChatName("test")
+	groupChatName, err := models.NewGroupChatName("test")
+	require.NoError(t, err)
 	userAccountId := models.NewUserAccountId()
 	groupChat, _ := NewGroupChat(groupChatName, adminId, adminId)
 	groupChat = groupChat.AddMember(models.NewMemberId(), userAccountId, models.MemberRole, adminId).MustGet().V1
@@ -115,7 +122,8 @@ func TestGroupChat_PostMessage(t *testing.T) {
 func TestGroupChat_DeleteMessage(t *testing.T) {
 	// Given
 	adminId := models.NewUserAccountId()
-	groupChatName := models.NewGroupChatName("test")
+	groupChatName, err := models.NewGroupChatName("test")
+	require.NoError(t, err)
 	userAccountId := models.NewUserAccountId()
 	groupChat, _ := NewGroupChat(groupChatName, adminId, adminId)
 	groupChat = groupChat.AddMember(models.NewMemberId(), userAccountId, models.MemberRole, adminId).MustGet().V1
