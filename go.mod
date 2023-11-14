@@ -13,12 +13,12 @@ require (
 	github.com/gin-gonic/gin v1.9.1
 	github.com/j5ik2o/event-store-adapter-go v0.4.0
 	github.com/oklog/ulid/v2 v2.1.0
+	github.com/olivere/env v1.1.0
 	github.com/samber/mo v1.11.0
 	github.com/stretchr/testify v1.8.4
 	github.com/testcontainers/testcontainers-go v0.26.0
 	github.com/testcontainers/testcontainers-go/modules/localstack v0.26.0
 	github.com/vektah/gqlparser/v2 v2.5.10
-	k8s.io/utils v0.0.0-20230220204549-a5ecb0141aa5
 )
 
 require (

@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/gin-gonic/gin"
 	esa "github.com/j5ik2o/event-store-adapter-go"
-	"k8s.io/utils/env"
+	"github.com/olivere/env"
 )
 
 func main() {
@@ -17,14 +17,11 @@ func main() {
 		panic(err)
 	}
 	dynamodbClient := dynamodb.NewFromConfig(awsCfg)
-	journalTableName := env.GetString("JOURNAL_TABLE_NAME", "journal")
-	snapshotTableName := env.GetString("SNAPSHOT_TABLE_NAME", "snapshot")
-	journalAidIndexName := env.GetString("JOURNAL_AID_INDEX_NAME", "journal-aid-index")
-	snapshotAidIndexName := env.GetString("SNAPSHOT_AID_INDEX_NAME", "snapshot-aid-index")
-	shardCount, err := env.GetInt("SHARD_COUNT", 10)
-	if err != nil {
-		panic(err)
-	}
+	journalTableName := env.String("journal", "JOURNAL_TABLE_NAME")
+	snapshotTableName := env.String("snapshot", "SNAPSHOT_TABLE_NAME")
+	journalAidIndexName := env.String("journal-aid-index", "JOURNAL_AID_INDEX_NAME")
+	snapshotAidIndexName := env.String("snapshot-aid-index", "SNAPSHOT_AID_INDEX_NAME")
+	shardCount := env.Int64(10, "SHARD_COUNT")
 
 	eventStore, err := esa.NewEventStore(
 		dynamodbClient,
