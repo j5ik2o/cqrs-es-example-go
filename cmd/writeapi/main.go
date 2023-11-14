@@ -34,6 +34,9 @@ func main() {
 		repository.SnapshotConverter,
 		esa.WithEventSerializer(repository.NewEventSerializer()),
 		esa.WithSnapshotSerializer(repository.NewSnapshotSerializer()))
+	if err != nil {
+		panic(err)
+	}
 
 	groupChatRepository := repository.NewGroupChatRepository(eventStore)
 	groupChatController := controller.NewGroupChatController(groupChatRepository)
