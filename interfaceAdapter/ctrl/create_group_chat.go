@@ -32,8 +32,10 @@ func NewGroupChatController(repository repository.GroupChatRepository) *GroupCha
 
 func (g *GroupChatController) CreateGroupChat(c *gin.Context) {
 	var jsonRequestBody CreateGroupChatRequestBody
+
 	if err := c.ShouldBindJSON(&jsonRequestBody); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		response := CreateGroupChatResponseErrorBody{Message: err.Error()}
+		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
@@ -43,6 +45,7 @@ func (g *GroupChatController) CreateGroupChat(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
+
 	executorId, err := ValidateUserAccountId(jsonRequestBody.ExecutorId)
 	if err != nil {
 		response := CreateGroupChatResponseErrorBody{Message: err.Error()}
