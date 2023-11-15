@@ -22,7 +22,7 @@ func getTypeString(bytes []byte) mo.Result[string] {
 	if err != nil {
 		return mo.Err[string](err)
 	}
-	typeValue, ok := parsed["type"].(string)
+	typeValue, ok := parsed["type_name"].(string)
 	if !ok {
 		mo.Err[string](fmt.Errorf("type is not a string"))
 	}

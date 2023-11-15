@@ -31,6 +31,7 @@ func NewGroupChatCreatedFrom(id string, aggregateId *models2.GroupChatId, name *
 
 func (g *GroupChatCreated) ToJSON() map[string]interface{} {
 	return map[string]interface{}{
+		"type_name":    g.GetTypeName(),
 		"id":           g.id,
 		"aggregate_id": g.aggregateId.ToJSON(),
 		"name":         g.name.ToJSON(),

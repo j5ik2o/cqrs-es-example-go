@@ -5,6 +5,7 @@ import (
 	"cqrs-es-example-go/pkg/command/domain"
 	"cqrs-es-example-go/pkg/command/domain/events"
 	"cqrs-es-example-go/pkg/command/domain/models"
+	"encoding/json"
 	"fmt"
 	esa "github.com/j5ik2o/event-store-adapter-go"
 	"github.com/j5ik2o/event-store-adapter-go/common"
@@ -198,6 +199,9 @@ func TestGroupChatRepositoryImpl_FindById(t *testing.T) {
 		t.Fatal(err)
 	}
 	groupChat, event := domain.NewGroupChat(name, adminId, adminId)
+	json, err := json.Marshal(event.ToJSON())
+	require.NoError(t, err)
+	fmt.Printf("event = %s\n", string(json))
 	err = repository.StoreEventWithSnapshot(event, groupChat)
 	require.NoError(t, err)
 

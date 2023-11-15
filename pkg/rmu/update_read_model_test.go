@@ -1,6 +1,7 @@
 package rmu
 
 import (
+	"context"
 	_ "embed"
 	"encoding/json"
 	dynamodbevents "github.com/aws/aws-lambda-go/events"
@@ -22,7 +23,7 @@ func TestUpdateReadModel(t *testing.T) {
 	var parsed dynamodbevents.DynamoDBEvent
 	err := json.Unmarshal(eventData, &parsed)
 	require.NoError(t, err)
-	// UpdateReadModel(context.Background(), parsed)
+	UpdateReadModel(context.Background(), parsed)
 	// Given
 	// When
 	// Then

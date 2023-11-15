@@ -44,7 +44,7 @@ func (g *GroupChatMemberRemoved) GetId() string {
 }
 
 func (g *GroupChatMemberRemoved) GetTypeName() string {
-	return "group-chat-member-removed"
+	return "GroupChatMemberRemoved"
 }
 
 func (g *GroupChatMemberRemoved) GetAggregateId() esa.AggregateId {
