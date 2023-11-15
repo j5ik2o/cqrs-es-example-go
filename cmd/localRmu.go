@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodbstreams"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodbstreams/types"
 	"github.com/olivere/env"
+	"github.com/samber/mo"
 	"reflect"
 	"time"
 
@@ -143,16 +144,14 @@ func streamDriver(dynamoDbClient *dynamodb.Client, dynamoDbStreamsClient *dynamo
 					return err
 				}
 				for _, record := range getRecordsResult.Records {
-					fmt.Printf("record = %v\n", record)
-
 					keysMap := record.Dynamodb.Keys
-					keys, err := convertKeys(keysMap)
+					keys, err := convertAttributeMap(keysMap)
 					if err != nil {
 						return err
 					}
 
 					itemMap := record.Dynamodb.NewImage
-					newItem, err := convertItem(itemMap)
+					newItem, err := convertAttributeMap(itemMap)
 					if err != nil {
 						return err
 					}
@@ -200,50 +199,61 @@ func convertEvent(record types.Record, keys map[string]events.DynamoDBAttributeV
 	return event
 }
 
-func convertItem(recordMap map[string]types.AttributeValue) (map[string]events.DynamoDBAttributeValue, error) {
-	newItem := make(map[string]events.DynamoDBAttributeValue)
-	for key, value := range recordMap {
-		fmt.Printf("key = %v\n", key)
-		fmt.Printf("value = %v\n", value)
-		var av events.DynamoDBAttributeValue
-		switch value.(type) {
-		case *types.AttributeValueMemberNULL:
-			av = events.NewNullAttribute()
-		case *types.AttributeValueMemberS:
-			av = events.NewStringAttribute(value.(*types.AttributeValueMemberS).Value)
-		case *types.AttributeValueMemberN:
-			av = events.NewNumberAttribute(value.(*types.AttributeValueMemberN).Value)
-		case *types.AttributeValueMemberB:
-			av = events.NewBinaryAttribute(value.(*types.AttributeValueMemberB).Value)
-		case *types.AttributeValueMemberBS:
-			av = events.NewBinarySetAttribute(value.(*types.AttributeValueMemberBS).Value)
-		case *types.AttributeValueMemberBOOL:
-			av = events.NewBooleanAttribute(value.(*types.AttributeValueMemberBOOL).Value)
-		default:
-			return nil, fmt.Errorf("unknown type: %s", reflect.TypeOf(value))
+func convertTo(value types.AttributeValue) mo.Result[events.DynamoDBAttributeValue] {
+	var av events.DynamoDBAttributeValue
+	switch value.(type) {
+	case *types.AttributeValueMemberNULL:
+		av = events.NewNullAttribute()
+	case *types.AttributeValueMemberS:
+		av = events.NewStringAttribute(value.(*types.AttributeValueMemberS).Value)
+	case *types.AttributeValueMemberN:
+		av = events.NewNumberAttribute(value.(*types.AttributeValueMemberN).Value)
+	case *types.AttributeValueMemberB:
+		av = events.NewBinaryAttribute(value.(*types.AttributeValueMemberB).Value)
+	case *types.AttributeValueMemberBS:
+		av = events.NewBinarySetAttribute(value.(*types.AttributeValueMemberBS).Value)
+	case *types.AttributeValueMemberNS:
+		av = events.NewNumberSetAttribute(value.(*types.AttributeValueMemberNS).Value)
+	case *types.AttributeValueMemberSS:
+		av = events.NewStringSetAttribute(value.(*types.AttributeValueMemberSS).Value)
+	case *types.AttributeValueMemberL:
+		var l []events.DynamoDBAttributeValue
+		for _, e := range value.(*types.AttributeValueMemberL).Value {
+			result := convertTo(e)
+			if result.IsError() {
+				return result
+			}
+			l = append(l, result.MustGet())
 		}
-		newItem[key] = av
+		av = events.NewListAttribute(l)
+	case *types.AttributeValueMemberM:
+		m := make(map[string]events.DynamoDBAttributeValue)
+		for key, e := range value.(*types.AttributeValueMemberM).Value {
+			result := convertTo(e)
+			if result.IsError() {
+				return result
+			}
+			m[key] = result.MustGet()
+		}
+		av = events.NewMapAttribute(m)
+	case *types.AttributeValueMemberBOOL:
+		av = events.NewBooleanAttribute(value.(*types.AttributeValueMemberBOOL).Value)
+	default:
+		return mo.Err[events.DynamoDBAttributeValue](fmt.Errorf("unknown type: %s", reflect.TypeOf(value)))
 	}
-	return newItem, nil
+	return mo.Ok(av)
 }
 
-func convertKeys(keysMap map[string]types.AttributeValue) (map[string]events.DynamoDBAttributeValue, error) {
-	keys := make(map[string]events.DynamoDBAttributeValue)
-	for key, value := range keysMap {
-		fmt.Printf("key = %v\n", key)
-		fmt.Printf("value = %v\n", value)
-		var av events.DynamoDBAttributeValue
-		switch value.(type) {
-		case *types.AttributeValueMemberS:
-			av = events.NewStringAttribute(value.(*types.AttributeValueMemberS).Value)
-		case *types.AttributeValueMemberN:
-			av = events.NewNumberAttribute(value.(*types.AttributeValueMemberN).Value)
-		default:
-			return nil, fmt.Errorf("unknown type: %s", reflect.TypeOf(value))
+func convertAttributeMap(recordMap map[string]types.AttributeValue) (map[string]events.DynamoDBAttributeValue, error) {
+	result := make(map[string]events.DynamoDBAttributeValue)
+	for key, value := range recordMap {
+		v, err := convertTo(value).Get()
+		if err != nil {
+			return nil, err
 		}
-		keys[key] = av
+		result[key] = v
 	}
-	return keys, nil
+	return result, nil
 }
 
 func init() {
