@@ -63,7 +63,7 @@ to quickly create a Cobra application.`,
 						SigningRegion: region,
 					}, nil
 				})
-			awsCfg, err = config.LoadDefaultConfig(context.TODO(),
+			awsCfg, err = config.LoadDefaultConfig(context.Background(),
 				config.WithRegion(awsRegion),
 				config.WithEndpointResolverWithOptions(customResolver),
 				config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(awsDynamoDBAccessKeyId, awsDynamoDBSecretKey, "x")),
