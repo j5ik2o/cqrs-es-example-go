@@ -57,6 +57,7 @@ to quickly create a Cobra application.`,
 		groupChat := engine.Group("/group-chats")
 		{
 			groupChat.POST("/create", groupChatController.CreateGroupChat)
+			groupChat.POST("/rename", groupChatController.RenameGroupChat)
 		}
 		err = engine.Run()
 		if err != nil {

@@ -3,6 +3,7 @@ package models
 import (
 	"fmt"
 	"github.com/oklog/ulid/v2"
+	"github.com/samber/mo"
 )
 
 type GroupChatId struct {
@@ -14,8 +15,8 @@ func NewGroupChatId() *GroupChatId {
 	return &GroupChatId{value: id.String()}
 }
 
-func NewGroupChatIdFromString(value string) *GroupChatId {
-	return &GroupChatId{value: value}
+func NewGroupChatIdFromString(value string) mo.Result[*GroupChatId] {
+	return mo.Ok(&GroupChatId{value: value})
 }
 
 func (g *GroupChatId) ToJSON() map[string]interface{} {
@@ -40,6 +41,6 @@ func (g *GroupChatId) String() string {
 	return g.AsString()
 }
 
-func ConvertGroupChatIdFromJSON(value map[string]interface{}) *GroupChatId {
+func ConvertGroupChatIdFromJSON(value map[string]interface{}) mo.Result[*GroupChatId] {
 	return NewGroupChatIdFromString(value["Value"].(string))
 }

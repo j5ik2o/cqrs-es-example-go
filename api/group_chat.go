@@ -17,6 +17,16 @@ type CreateGroupChatResponseSuccessBody struct {
 	GroupChatId string `json:"groupChatId"`
 }
 
+type RenameGroupChatRequestBody struct {
+	GroupChatId string `json:"groupChatId"`
+	Name        string `json:"name"`
+	ExecutorId  string `json:"executorId"`
+}
+
+type RenameGroupChatResponseSuccessBody struct {
+	GroupChatId string `json:"groupChatId"`
+}
+
 type CreateGroupChatResponseErrorBody struct {
 	Message string `json:"message"`
 }
@@ -56,6 +66,49 @@ func (g *GroupChatController) CreateGroupChat(c *gin.Context) {
 
 	commandProcessor := useCase.NewGroupChatCommandProcessor(g.repository)
 	event, err := commandProcessor.CreateGroupChat(groupChatName, executorId, executorId)
+
+	if err != nil {
+		response := CreateGroupChatResponseErrorBody{Message: err.Error()}
+		c.JSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	response := CreateGroupChatResponseSuccessBody{GroupChatId: event.GetAggregateId().AsString()}
+	c.JSON(http.StatusOK, response)
+}
+
+func (g *GroupChatController) RenameGroupChat(c *gin.Context) {
+	var jsonRequestBody RenameGroupChatRequestBody
+
+	if err := c.ShouldBindJSON(&jsonRequestBody); err != nil {
+		response := CreateGroupChatResponseErrorBody{Message: err.Error()}
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	groupChatId, err := validator.ValidateGroupChatId(jsonRequestBody.GroupChatId).Get()
+	if err != nil {
+		response := CreateGroupChatResponseErrorBody{Message: err.Error()}
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	groupChatName, err := validator.ValidateGroupChatName(jsonRequestBody.Name).Get()
+	if err != nil {
+		response := CreateGroupChatResponseErrorBody{Message: err.Error()}
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	executorId, err := validator.ValidateUserAccountId(jsonRequestBody.ExecutorId).Get()
+	if err != nil {
+		response := CreateGroupChatResponseErrorBody{Message: err.Error()}
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	commandProcessor := useCase.NewGroupChatCommandProcessor(g.repository)
+	event, err := commandProcessor.RenameGroupChat(groupChatId, groupChatName, executorId)
 
 	if err != nil {
 		response := CreateGroupChatResponseErrorBody{Message: err.Error()}
