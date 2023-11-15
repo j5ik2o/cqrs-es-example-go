@@ -17,12 +17,12 @@ func NewGroupChatName(value string) mo.Result[*GroupChatName] {
 }
 
 func ConvertGroupChatNameFromJSON(value map[string]interface{}) mo.Result[*GroupChatName] {
-	return NewGroupChatName(value["Value"].(string))
+	return NewGroupChatName(value["value"].(string))
 }
 
 func (g *GroupChatName) ToJSON() map[string]interface{} {
 	return map[string]interface{}{
-		"Value": g.value,
+		"value": g.value,
 	}
 }
 

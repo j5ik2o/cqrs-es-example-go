@@ -14,17 +14,17 @@ func NewMessage(id *MessageId, text string, senderId *UserAccountId) mo.Result[*
 
 func ConvertMessageFromJSON(value map[string]interface{}) mo.Result[*Message] {
 	return NewMessage(
-		ConvertMessageIdFromJSON(value["Id"].(map[string]interface{})),
-		value["Text"].(string),
-		ConvertUserAccountIdFromJSON(value["SenderId"].(map[string]interface{})).MustGet(),
+		ConvertMessageIdFromJSON(value["id"].(map[string]interface{})),
+		value["text"].(string),
+		ConvertUserAccountIdFromJSON(value["sender_id"].(map[string]interface{})).MustGet(),
 	)
 }
 
 func (m *Message) ToJSON() map[string]interface{} {
 	return map[string]interface{}{
-		"Id":       m.id.ToJSON(),
-		"Text":     m.text,
-		"SenderId": m.senderId.ToJSON(),
+		"id":        m.id.ToJSON(),
+		"text":      m.text,
+		"sender_id": m.senderId.ToJSON(),
 	}
 }
 

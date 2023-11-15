@@ -43,24 +43,33 @@ func convertGroupChatEvent(payloadBytes []byte) mo.Result[esa.Event] {
 }
 
 func UpdateReadModel(ctx context.Context, event dynamodbevents.DynamoDBEvent) {
-	db, err := sqlx.Connect("mysql", "root/sample")
+	db, err := sqlx.Connect("mysql", "ceer:ceer@tcp(localhost:3306)/ceer")
+	defer func(db *sqlx.DB) {
+		err := db.Close()
+		if err != nil {
+			panic(err.Error())
+		}
+	}(db)
 	if err != nil {
-		defer db.Close()
 		panic(err.Error())
 	}
 	dao := NewGroupChatDao(db)
 	for _, record := range event.Records {
 		fmt.Printf("Processing request data for event ID %s, type %s.\n", record.EventID, record.EventName)
 		attributeValues := record.Change.NewImage
-		payloadBytes := attributeValues["Payload"].Binary()
+		payloadAttr := attributeValues["payload"]
+		payloadBytes := []byte(payloadAttr.String())
 		typeValueStr := getTypeString(payloadBytes).MustGet()
 		if strings.HasPrefix(typeValueStr, "GroupChat") {
 			event := convertGroupChatEvent(payloadBytes).MustGet()
 			switch event.(type) {
 			case *events.GroupChatCreated:
 				ev := event.(*events.GroupChatCreated)
-				ev.GetOccurredAt()
-				err := dao.Create(ev.GetAggregateId().(*models.GroupChatId), ev.GetName(), ev.GetExecutorId(), time.Unix(int64(ev.GetOccurredAt()), 0))
+				groupChatId := ev.GetAggregateId().(*models.GroupChatId)
+				name := ev.GetName()
+				executorId := ev.GetExecutorId()
+				occurredAt := time.Unix(int64(ev.GetOccurredAt()), 0)
+				err := dao.Create(groupChatId, name, executorId, occurredAt)
 				if err != nil {
 					panic(err.Error())
 				}

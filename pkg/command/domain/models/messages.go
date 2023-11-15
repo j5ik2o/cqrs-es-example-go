@@ -15,7 +15,7 @@ func NewMessagesFromMap(values map[*MessageId]*Message) *Messages {
 }
 
 func ConvertMessagesFromJSON(value map[string]interface{}) mo.Result[*Messages] {
-	values := value["Values"].([]interface{})
+	values := value["values"].([]interface{})
 	m := NewMessages()
 	for _, v := range values {
 		result := ConvertMessageFromJSON(v.(map[string]interface{}))
@@ -65,7 +65,7 @@ func (m *Messages) ToJSON() map[string]interface{} {
 		i++
 	}
 	return map[string]interface{}{
-		"Values": values,
+		"values": values,
 	}
 }
 

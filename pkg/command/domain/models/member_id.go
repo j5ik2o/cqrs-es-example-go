@@ -19,12 +19,12 @@ func NewMemberIdFromString(value string) mo.Result[*MemberId] {
 }
 
 func ConvertMemberIdFromJSON(value map[string]interface{}) mo.Result[*MemberId] {
-	return NewMemberIdFromString(value["Value"].(string))
+	return NewMemberIdFromString(value["value"].(string))
 }
 
 func (m *MemberId) ToJSON() map[string]interface{} {
 	return map[string]interface{}{
-		"Value": m.value,
+		"value": m.value,
 	}
 }
 

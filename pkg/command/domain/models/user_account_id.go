@@ -24,12 +24,12 @@ func NewUserAccountIdFromString(value string) mo.Result[*UserAccountId] {
 }
 
 func ConvertUserAccountIdFromJSON(value map[string]interface{}) mo.Result[*UserAccountId] {
-	return NewUserAccountIdFromString(value["Value"].(string))
+	return NewUserAccountIdFromString(value["value"].(string))
 }
 
 func (u *UserAccountId) ToJSON() map[string]interface{} {
 	return map[string]interface{}{
-		"Value": u.value,
+		"value": u.value,
 	}
 }
 

@@ -1,32 +1,32 @@
 package repository
 
 import (
-	events2 "cqrs-es-example-go/pkg/command/domain/events"
-	models2 "cqrs-es-example-go/pkg/command/domain/models"
+	"cqrs-es-example-go/pkg/command/domain/events"
+	"cqrs-es-example-go/pkg/command/domain/models"
 	"fmt"
 	esa "github.com/j5ik2o/event-store-adapter-go"
 )
 
 func EventConverter(m map[string]interface{}) (esa.Event, error) {
-	eventId := m["Id"].(string)
-	groupChatId, err := models2.ConvertGroupChatIdFromJSON(m["AggregateId"].(map[string]interface{})).Get()
+	eventId := m["id"].(string)
+	groupChatId, err := models.ConvertGroupChatIdFromJSON(m["aggregate_id"].(map[string]interface{})).Get()
 	if err != nil {
 		return nil, err
 	}
-	groupChatName, err := models2.ConvertGroupChatNameFromJSON(m["Name"].(map[string]interface{})).Get()
+	groupChatName, err := models.ConvertGroupChatNameFromJSON(m["name"].(map[string]interface{})).Get()
 	if err != nil {
 		return nil, err
 	}
-	members := models2.ConvertMembersFromJSON(m["Members"].(map[string]interface{}))
-	executorId, err := models2.ConvertUserAccountIdFromJSON(m["ExecutorId"].(map[string]interface{})).Get()
+	members := models.ConvertMembersFromJSON(m["members"].(map[string]interface{}))
+	executorId, err := models.ConvertUserAccountIdFromJSON(m["executor_id"].(map[string]interface{})).Get()
 	if err != nil {
 		return nil, err
 	}
-	seqNr := uint64(m["SeqNr"].(float64))
-	occurredAt := uint64(m["OccurredAt"].(float64))
-	switch m["TypeName"].(string) {
+	seqNr := uint64(m["seq_nr"].(float64))
+	occurredAt := uint64(m["occurred_at"].(float64))
+	switch m["type_name"].(string) {
 	case "GroupChatCreated":
-		return events2.NewGroupChatCreatedFrom(
+		return events.NewGroupChatCreatedFrom(
 			eventId,
 			groupChatId,
 			groupChatName,
@@ -36,7 +36,7 @@ func EventConverter(m map[string]interface{}) (esa.Event, error) {
 			occurredAt,
 		), nil
 	case "GroupChatDeleted":
-		return events2.NewGroupChatDeletedFrom(
+		return events.NewGroupChatDeletedFrom(
 			eventId,
 			groupChatId,
 			seqNr,
@@ -44,11 +44,11 @@ func EventConverter(m map[string]interface{}) (esa.Event, error) {
 			occurredAt,
 		), nil
 	case "GroupChatRenamed":
-		name, err := models2.NewGroupChatName(m["Name"].(string)).Get()
+		name, err := models.NewGroupChatName(m["name"].(string)).Get()
 		if err != nil {
 			return nil, err
 		}
-		return events2.NewGroupChatRenamedFrom(
+		return events.NewGroupChatRenamedFrom(
 			eventId,
 			groupChatId,
 			name,
@@ -57,18 +57,18 @@ func EventConverter(m map[string]interface{}) (esa.Event, error) {
 			occurredAt,
 		), nil
 	case "GroupChatMemberAdded":
-		memberObj := m["Member"].(map[string]interface{})
-		memberId, err := models2.ConvertMemberIdFromJSON(memberObj["MemberId"].(map[string]interface{})).Get()
+		memberObj := m["member"].(map[string]interface{})
+		memberId, err := models.ConvertMemberIdFromJSON(memberObj["member_id"].(map[string]interface{})).Get()
 		if err != nil {
 			return nil, err
 		}
-		userAccountId, err := models2.ConvertUserAccountIdFromJSON(memberObj["UserAccountId"].(map[string]interface{})).Get()
+		userAccountId, err := models.ConvertUserAccountIdFromJSON(memberObj["user_account_id"].(map[string]interface{})).Get()
 		if err != nil {
 			return nil, err
 		}
-		role := models2.Role(memberObj["Role"].(int))
-		member := models2.NewMember(memberId, userAccountId, role)
-		return events2.NewGroupChatMemberAddedFrom(
+		role := models.Role(memberObj["role"].(int))
+		member := models.NewMember(memberId, userAccountId, role)
+		return events.NewGroupChatMemberAddedFrom(
 			eventId,
 			groupChatId,
 			member,
@@ -77,11 +77,11 @@ func EventConverter(m map[string]interface{}) (esa.Event, error) {
 			occurredAt,
 		), nil
 	case "GroupChatMemberRemoved":
-		userAccountId, err := models2.ConvertUserAccountIdFromJSON(m["UserAccountId"].(map[string]interface{})).Get()
+		userAccountId, err := models.ConvertUserAccountIdFromJSON(m["user_account_id"].(map[string]interface{})).Get()
 		if err != nil {
 			return nil, err
 		}
-		return events2.NewGroupChatMemberRemovedFrom(
+		return events.NewGroupChatMemberRemovedFrom(
 			eventId,
 			groupChatId,
 			userAccountId,
@@ -90,11 +90,11 @@ func EventConverter(m map[string]interface{}) (esa.Event, error) {
 			occurredAt,
 		), nil
 	case "GroupChatMessagePosted":
-		message, err := models2.ConvertMessageFromJSON(m["Message"].(map[string]interface{})).Get()
+		message, err := models.ConvertMessageFromJSON(m["message"].(map[string]interface{})).Get()
 		if err != nil {
 			return nil, err
 		}
-		return events2.NewGroupChatMessagePostedFrom(
+		return events.NewGroupChatMessagePostedFrom(
 			eventId,
 			groupChatId,
 			message,
@@ -103,8 +103,8 @@ func EventConverter(m map[string]interface{}) (esa.Event, error) {
 			occurredAt,
 		), nil
 	case "GroupChatMessageDeleted":
-		messageId := models2.ConvertMessageIdFromJSON(m["MessageId"].(map[string]interface{}))
-		return events2.NewGroupChatMessageDeletedFrom(
+		messageId := models.ConvertMessageIdFromJSON(m["message_id"].(map[string]interface{}))
+		return events.NewGroupChatMessageDeletedFrom(
 			eventId,
 			groupChatId,
 			messageId,
@@ -113,6 +113,6 @@ func EventConverter(m map[string]interface{}) (esa.Event, error) {
 			occurredAt,
 		), nil
 	default:
-		return nil, fmt.Errorf("unknown event type")
+		return nil, fmt.Errorf("unknown event type: %s", m["type_name"].(string))
 	}
 }

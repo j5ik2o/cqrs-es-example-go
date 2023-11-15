@@ -7,22 +7,22 @@ import (
 )
 
 func SnapshotConverter(m map[string]interface{}) (esa.Aggregate, error) {
-	groupChatId, err := models.ConvertGroupChatIdFromJSON(m["Id"].(map[string]interface{})).Get()
+	groupChatId, err := models.ConvertGroupChatIdFromJSON(m["id"].(map[string]interface{})).Get()
 	if err != nil {
 		return nil, err
 	}
-	name, err := models.ConvertGroupChatNameFromJSON(m["Name"].(map[string]interface{})).Get()
+	name, err := models.ConvertGroupChatNameFromJSON(m["name"].(map[string]interface{})).Get()
 	if err != nil {
 		return nil, err
 	}
-	members := models.ConvertMembersFromJSON(m["Members"].(map[string]interface{}))
-	messages, err := models.ConvertMessagesFromJSON(m["Messages"].(map[string]interface{})).Get()
+	members := models.ConvertMembersFromJSON(m["members"].(map[string]interface{}))
+	messages, err := models.ConvertMessagesFromJSON(m["messages"].(map[string]interface{})).Get()
 	if err != nil {
 		return nil, err
 	}
-	seqNr := uint64(m["SeqNr"].(float64))
-	version := uint64(m["Version"].(float64))
-	deleted := m["Deleted"].(bool)
+	seqNr := uint64(m["seq_nr"].(float64))
+	version := uint64(m["version"].(float64))
+	deleted := m["deleted"].(bool)
 	result := domain.NewGroupChatFrom(groupChatId, name, members, messages, seqNr, version, deleted)
 	return result, nil
 }

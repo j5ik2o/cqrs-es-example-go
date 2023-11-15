@@ -23,7 +23,7 @@ func NewMembersFrom(values []*Member) *Members {
 }
 
 func ConvertMembersFromJSON(value map[string]interface{}) *Members {
-	values := value["Values"].([]interface{})
+	values := value["values"].([]interface{})
 	members := make([]*Member, len(values))
 	for i, v := range values {
 		members[i] = ConvertMemberFromJSON(v.(map[string]interface{}))
@@ -37,7 +37,7 @@ func (m *Members) ToJSON() map[string]interface{} {
 		values[i] = v.ToJSON()
 	}
 	return map[string]interface{}{
-		"Values": values,
+		"values": values,
 	}
 }
 

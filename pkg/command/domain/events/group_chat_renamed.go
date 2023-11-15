@@ -30,12 +30,12 @@ func NewGroupChatRenamedFrom(id string, aggregateId *models2.GroupChatId, name *
 
 func (g *GroupChatRenamed) ToJSON() map[string]interface{} {
 	return map[string]interface{}{
-		"Id":          g.id,
-		"AggregateId": g.aggregateId.ToJSON(),
-		"Name":        g.name.ToJSON(),
-		"SeqNr":       g.seqNr,
-		"ExecutorId":  g.executorId.ToJSON(),
-		"OccurredAt":  g.occurredAt,
+		"id":           g.id,
+		"aggregate_id": g.aggregateId.ToJSON(),
+		"name":         g.name.ToJSON(),
+		"seq_nr":       g.seqNr,
+		"executor_id":  g.executorId.ToJSON(),
+		"occurred_at":  g.occurredAt,
 	}
 }
 

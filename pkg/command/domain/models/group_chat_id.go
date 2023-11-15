@@ -21,7 +21,7 @@ func NewGroupChatIdFromString(value string) mo.Result[*GroupChatId] {
 
 func (g *GroupChatId) ToJSON() map[string]interface{} {
 	return map[string]interface{}{
-		"Value": g.value,
+		"value": g.value,
 	}
 }
 
@@ -42,5 +42,5 @@ func (g *GroupChatId) String() string {
 }
 
 func ConvertGroupChatIdFromJSON(value map[string]interface{}) mo.Result[*GroupChatId] {
-	return NewGroupChatIdFromString(value["Value"].(string))
+	return NewGroupChatIdFromString(value["value"].(string))
 }
