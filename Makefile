@@ -3,6 +3,7 @@ GOCMD=go
 GOTEST=$(GOCMD) test
 GOGET=$(GOCMD) get
 GOMOD=$(GOCMD) mod
+GOBUILD=$(GOCMD) build
 
 .PHONY: install-tools
 install-tools:
@@ -54,14 +55,17 @@ update:
 	$(GOMOD) tidy
 	$(GOMOD) download
 
+build:
+	$(GOBUILD)
+
 q-gql-init:
 	@echo "Generating GraphQL code..."
-	@go run github.com/99designs/gqlgen init --config query/gqlgen.yml
+	@go run github.com/99designs/gqlgen init --config pkg/query/gqlgen.yml
 	$(GOMOD) tidy
 
 q-gql-gen:
 	@echo "Generating GraphQL code..."
-	@go run github.com/99designs/gqlgen generate --config query/gqlgen.yml
+	@go run github.com/99designs/gqlgen generate --config pkg/query/gqlgen.yml
 	$(GOMOD) tidy
 
 docker-build:

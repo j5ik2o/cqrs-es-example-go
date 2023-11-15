@@ -1,12 +1,9 @@
-/*
-Copyright © 2023 NAME HERE <EMAIL ADDRESS>
-*/
 package cmd
 
 import (
 	"context"
-	controller "cqrs-es-example-go/interfaceAdapter/ctrl"
-	"cqrs-es-example-go/repository"
+	"cqrs-es-example-go/api"
+	repository2 "cqrs-es-example-go/pkg/command/interfaceAdaptor/repository"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/gin-gonic/gin"
@@ -44,19 +41,19 @@ to quickly create a Cobra application.`,
 			journalAidIndexName,
 			snapshotAidIndexName,
 			uint64(shardCount),
-			repository.EventConverter,
-			repository.SnapshotConverter,
-			esa.WithEventSerializer(repository.NewEventSerializer()),
-			esa.WithSnapshotSerializer(repository.NewSnapshotSerializer()))
+			repository2.EventConverter,
+			repository2.SnapshotConverter,
+			esa.WithEventSerializer(repository2.NewEventSerializer()),
+			esa.WithSnapshotSerializer(repository2.NewSnapshotSerializer()))
 		if err != nil {
 			panic(err)
 		}
 
-		groupChatRepository := repository.NewGroupChatRepository(eventStore)
-		groupChatController := controller.NewGroupChatController(groupChatRepository)
+		groupChatRepository := repository2.NewGroupChatRepository(eventStore)
+		groupChatController := api.NewGroupChatController(groupChatRepository)
 
 		engine := gin.Default()
-		engine.GET("/", controller.Index)
+		engine.GET("/", api.Index)
 		groupChat := engine.Group("/group-chats")
 		{
 			groupChat.POST("/create", groupChatController.CreateGroupChat)
