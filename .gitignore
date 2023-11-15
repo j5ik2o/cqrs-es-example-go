@@ -32,3 +32,5 @@ ehthumbs_vista.db
 
 .vscode/*
 !.vscode/settings.json
+
+cqrs-es-example-go

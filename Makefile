@@ -63,3 +63,6 @@ q-gql-gen:
 	@echo "Generating GraphQL code..."
 	@go run github.com/99designs/gqlgen generate --config query/gqlgen.yml
 	$(GOMOD) tidy
+
+docker-build:
+	docker build -t cqrs-es-example-go:latest -f Dockerfile .
