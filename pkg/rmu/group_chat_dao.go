@@ -15,9 +15,12 @@ func NewGroupChatDao(db *sqlx.DB) *GroupChatDao {
 }
 
 func (dao *GroupChatDao) Create(aggregateId *models.GroupChatId, name *models.GroupChatName, administratorId *models.UserAccountId, createdAt time.Time) error {
-	tx := dao.db.MustBegin()
-	tx.MustExec("INSERT INTO group_chats (id, name, owner_id, created_at) VALUES($1,$2,$3,$4)", aggregateId.AsString(), name.String(), administratorId.AsString(), createdAt)
-	err := tx.Commit()
+	stmt, err := dao.db.Prepare(`INSERT INTO group_chats (id, name, owner_id, created_at) VALUES(?,?,?,?)`)
+	if err != nil {
+		return err
+	}
+	dt := createdAt.Format("2006-01-02 15:04:05")
+	_, err = stmt.Exec(aggregateId.AsString(), name.String(), administratorId.AsString(), dt)
 	if err != nil {
 		return err
 	}

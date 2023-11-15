@@ -68,7 +68,9 @@ func UpdateReadModel(ctx context.Context, event dynamodbevents.DynamoDBEvent) {
 				groupChatId := ev.GetAggregateId().(*models.GroupChatId)
 				name := ev.GetName()
 				executorId := ev.GetExecutorId()
-				occurredAt := time.Unix(int64(ev.GetOccurredAt()), 0)
+				occurredAtUnix := int64(ev.GetOccurredAt()) * int64(time.Millisecond)
+				occurredAt := time.Unix(0, occurredAtUnix)
+				fmt.Printf("occurredAt = %v\n", occurredAt)
 				err := dao.Create(groupChatId, name, executorId, occurredAt)
 				if err != nil {
 					panic(err.Error())
