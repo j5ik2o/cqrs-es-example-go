@@ -10,21 +10,21 @@ import (
 
 type CreateGroupChatRequestBody struct {
 	Name       string `json:"name"`
-	ExecutorId string `json:"executorId"`
+	ExecutorId string `json:"executor_id"`
 }
 
 type CreateGroupChatResponseSuccessBody struct {
-	GroupChatId string `json:"groupChatId"`
+	GroupChatId string `json:"group_chat_id"`
 }
 
 type RenameGroupChatRequestBody struct {
-	GroupChatId string `json:"groupChatId"`
+	GroupChatId string `json:"group_chat_id"`
 	Name        string `json:"name"`
-	ExecutorId  string `json:"executorId"`
+	ExecutorId  string `json:"executor_id"`
 }
 
 type RenameGroupChatResponseSuccessBody struct {
-	GroupChatId string `json:"groupChatId"`
+	GroupChatId string `json:"group_chat_id"`
 }
 
 type CreateGroupChatResponseErrorBody struct {

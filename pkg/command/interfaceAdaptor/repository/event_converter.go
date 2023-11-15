@@ -9,7 +9,10 @@ import (
 
 func EventConverter(m map[string]interface{}) (esa.Event, error) {
 	eventId := m["Id"].(string)
-	groupChatId := models2.ConvertGroupChatIdFromJSON(m["AggregateId"].(map[string]interface{}))
+	groupChatId, err := models2.ConvertGroupChatIdFromJSON(m["AggregateId"].(map[string]interface{})).Get()
+	if err != nil {
+		return nil, err
+	}
 	groupChatName, err := models2.ConvertGroupChatNameFromJSON(m["Name"].(map[string]interface{})).Get()
 	if err != nil {
 		return nil, err

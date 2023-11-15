@@ -2,18 +2,21 @@ package repository
 
 import (
 	"cqrs-es-example-go/pkg/command/domain"
-	models2 "cqrs-es-example-go/pkg/command/domain/models"
+	"cqrs-es-example-go/pkg/command/domain/models"
 	esa "github.com/j5ik2o/event-store-adapter-go"
 )
 
 func SnapshotConverter(m map[string]interface{}) (esa.Aggregate, error) {
-	groupChatId := models2.ConvertGroupChatIdFromJSON(m["Id"].(map[string]interface{}))
-	name, err := models2.ConvertGroupChatNameFromJSON(m["Name"].(map[string]interface{})).Get()
+	groupChatId, err := models.ConvertGroupChatIdFromJSON(m["Id"].(map[string]interface{})).Get()
 	if err != nil {
 		return nil, err
 	}
-	members := models2.ConvertMembersFromJSON(m["Members"].(map[string]interface{}))
-	messages, err := models2.ConvertMessagesFromJSON(m["Messages"].(map[string]interface{})).Get()
+	name, err := models.ConvertGroupChatNameFromJSON(m["Name"].(map[string]interface{})).Get()
+	if err != nil {
+		return nil, err
+	}
+	members := models.ConvertMembersFromJSON(m["Members"].(map[string]interface{}))
+	messages, err := models.ConvertMessagesFromJSON(m["Messages"].(map[string]interface{})).Get()
 	if err != nil {
 		return nil, err
 	}

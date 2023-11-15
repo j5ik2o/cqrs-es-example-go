@@ -1,0 +1,30 @@
+version: '3.6'
+services:
+  write-api-server-1:
+    build:
+      context: ../../
+      dockerfile: Dockerfile
+    command: ["writeApi"]
+    image: write-api-server:latest-${ARCH}
+    container_name: write-api-server-1
+    ports:
+      - 18080:8080
+    environment:
+      AWS_REGION: ap-northeast-1
+      API_HOST: "0.0.0.0"
+      API_PORT: 8080
+      API_ALLOW_ORIGINS: "http://localhost:18080,http://localhost:18082,http://localhost:8888"
+      PERSISTENCE_JOURNAL_TABLE_NAME: journal
+      PERSISTENCE_JOURNAL_AID_INDEX_NAME: journal-aid-index
+      PERSISTENCE_SNAPSHOT_TABLE_NAME: snapshot
+      PERSISTENCE_SNAPSHOT_AID_INDEX_NAME: snapshot-aid-index
+      PERSISTENCE_SHARD_COUNT: 64
+      PERSISTENCE_SNAPSHOT_INTERVAL: 10
+      AWS_REGION_NAME: ${AWS_REGION}
+      AWS_DYNAMODB_ENDPOINT_URL: http://localstack:4566
+      AWS_DYNAMODB_ACCESS_KEY_ID: x
+      AWS_DYNAMODB_SECRET_ACCESS_KEY: x
+    depends_on:
+      - localstack
+      - dynamodb-admin
+      - dynamodb-setup
