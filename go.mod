@@ -13,7 +13,9 @@ require (
 	github.com/barweiss/go-tuple v1.1.2
 	github.com/docker/go-connections v0.4.0
 	github.com/gin-gonic/gin v1.9.1
+	github.com/go-sql-driver/mysql v1.6.0
 	github.com/j5ik2o/event-store-adapter-go v0.4.0
+	github.com/jmoiron/sqlx v1.3.5
 	github.com/oklog/ulid/v2 v2.1.0
 	github.com/olivere/env v1.1.0
 	github.com/samber/mo v1.11.0
