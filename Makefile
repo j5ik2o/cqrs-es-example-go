@@ -70,3 +70,6 @@ q-gql-gen:
 
 docker-build:
 	docker build -t cqrs-es-example-go:latest -f Dockerfile .
+
+docker-build-rmu:
+	docker build -t cqrs-es-example-go-rmu:latest -f Dockerfile.rmu .
