@@ -159,11 +159,17 @@ func streamDriver(dynamoDbClient *dynamodb.Client, dynamoDbStreamsClient *dynamo
 
 					event := convertEvent(record, keys, newItem, streamArn)
 					rmu.UpdateReadModel(context.Background(), event)
-					processedRecordCount++
 				}
+				processedRecordCount += len(getRecordsResult.Records)
+				shardIterator = getRecordsResult.NextShardIterator
 			}
 		}
+		if describeStreamResult.StreamDescription.LastEvaluatedShardId == nil {
+			break
+		}
+		lastEvaluatedShardId = *describeStreamResult.StreamDescription.LastEvaluatedShardId
 	}
+	return nil
 }
 
 func convertEvent(record types.Record, keys map[string]events.DynamoDBAttributeValue, newItem map[string]events.DynamoDBAttributeValue, streamArn *string) events.DynamoDBEvent {
