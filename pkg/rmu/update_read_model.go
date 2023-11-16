@@ -10,8 +10,6 @@ import (
 	dynamodbevents "github.com/aws/aws-lambda-go/events"
 	_ "github.com/go-sql-driver/mysql"
 	esa "github.com/j5ik2o/event-store-adapter-go"
-	"github.com/jmoiron/sqlx"
-	"github.com/olivere/env"
 	"github.com/samber/mo"
 	"strings"
 	"time"
@@ -44,35 +42,38 @@ func convertGroupChatEvent(payloadBytes []byte) mo.Result[esa.Event] {
 	return mo.Ok(event)
 }
 
-func UpdateReadModel(ctx context.Context, event dynamodbevents.DynamoDBEvent) {
-	dbUrl := env.String("", "DATABASE_URL")
-	dataSourceName := fmt.Sprintf("%s?parseTime=true", dbUrl)
-	db, err := sqlx.Connect("mysql", dataSourceName)
-	defer func(db *sqlx.DB) {
-		if db != nil {
-			err := db.Close()
-			if err != nil {
-				panic(err.Error())
-			}
-		}
-	}(db)
-	if err != nil {
-		panic(err.Error())
-	}
-	dao := NewGroupChatDao(db)
+type ReadModelUpdater struct {
+	dao GroupChatDao
+}
+
+type GroupChatDao interface {
+	Create(aggregateId *models.GroupChatId, name *models.GroupChatName, administratorId *models.UserAccountId, createdAt time.Time) error
+	AddMember(id *models.MemberId, aggregateId *models.GroupChatId, accountId *models.UserAccountId, role models.Role, at time.Time) error
+}
+
+func NewReadModelUpdater(dao GroupChatDao) *ReadModelUpdater {
+	return &ReadModelUpdater{dao}
+}
+
+func (r *ReadModelUpdater) UpdateReadModel(ctx context.Context, event dynamodbevents.DynamoDBEvent) error {
 	for _, record := range event.Records {
 		fmt.Printf("Processing request data for event ID %s, type %s.\n", record.EventID, record.EventName)
 		attributeValues := record.Change.NewImage
 		payloadAttr := attributeValues["payload"]
-		payloadBytes := []byte(payloadAttr.Binary())
+		var payloadBytes []byte
+		if payloadAttr.DataType() == dynamodbevents.DataTypeBinary {
+			payloadBytes = payloadAttr.Binary()
+		} else if payloadAttr.DataType() == dynamodbevents.DataTypeString {
+			payloadBytes = []byte(payloadAttr.String())
+		}
 		typeValueStr, err := getTypeString(payloadBytes).Get()
 		if err != nil {
-			panic(err.Error())
+			return err
 		}
 		if strings.HasPrefix(typeValueStr, "GroupChat") {
 			event, err := convertGroupChatEvent(payloadBytes).Get()
 			if err != nil {
-				panic(err.Error())
+				return err
 			}
 			switch event.(type) {
 			case *events.GroupChatCreated:
@@ -83,15 +84,15 @@ func UpdateReadModel(ctx context.Context, event dynamodbevents.DynamoDBEvent) {
 				occurredAtUnix := int64(ev.GetOccurredAt()) * int64(time.Millisecond)
 				occurredAt := time.Unix(0, occurredAtUnix)
 				fmt.Printf("occurredAt = %v\n", occurredAt)
-				err := dao.Create(groupChatId, name, executorId, occurredAt)
+				err := r.dao.Create(groupChatId, name, executorId, occurredAt)
 				if err != nil {
-					panic(err.Error())
+					return err
 				}
 				memberId := ev.GetMembers().GetAdministrator().GetId()
 				accountId := ev.GetMembers().GetAdministrator().GetUserAccountId()
-				err = dao.AddMember(memberId, groupChatId, accountId, models.AdminRole, occurredAt)
+				err = r.dao.AddMember(memberId, groupChatId, accountId, models.AdminRole, occurredAt)
 				if err != nil {
-					panic(err.Error())
+					return err
 				}
 			case *events.GroupChatDeleted:
 			case *events.GroupChatRenamed:
@@ -107,4 +108,5 @@ func UpdateReadModel(ctx context.Context, event dynamodbevents.DynamoDBEvent) {
 			fmt.Printf("Attribute name: %s, value: %s\n", name, value.String())
 		}
 	}
+	return nil
 }

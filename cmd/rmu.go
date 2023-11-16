@@ -2,7 +2,10 @@ package cmd
 
 import (
 	"cqrs-es-example-go/pkg/rmu"
+	"fmt"
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/jmoiron/sqlx"
+	"github.com/olivere/env"
 
 	"github.com/spf13/cobra"
 )
@@ -18,7 +21,23 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		lambda.Start(rmu.UpdateReadModel)
+		dbUrl := env.String("", "DATABASE_URL")
+		dataSourceName := fmt.Sprintf("%s?parseTime=true", dbUrl)
+		db, err := sqlx.Connect("mysql", dataSourceName)
+		defer func(db *sqlx.DB) {
+			if db != nil {
+				err := db.Close()
+				if err != nil {
+					panic(err.Error())
+				}
+			}
+		}(db)
+		if err != nil {
+			panic(err.Error())
+		}
+		dao := rmu.NewGroupChatDaoImpl(db)
+		readModelUpdater := rmu.NewReadModelUpdater(dao)
+		lambda.Start(readModelUpdater.UpdateReadModel)
 	},
 }
 

@@ -6,15 +6,15 @@ import (
 	"time"
 )
 
-type GroupChatDao struct {
+type GroupChatDaoImpl struct {
 	db *sqlx.DB
 }
 
-func NewGroupChatDao(db *sqlx.DB) *GroupChatDao {
-	return &GroupChatDao{db}
+func NewGroupChatDaoImpl(db *sqlx.DB) *GroupChatDaoImpl {
+	return &GroupChatDaoImpl{db}
 }
 
-func (dao *GroupChatDao) Create(aggregateId *models.GroupChatId, name *models.GroupChatName, administratorId *models.UserAccountId, createdAt time.Time) error {
+func (dao *GroupChatDaoImpl) Create(aggregateId *models.GroupChatId, name *models.GroupChatName, administratorId *models.UserAccountId, createdAt time.Time) error {
 	stmt, err := dao.db.Prepare(`INSERT INTO group_chats (id, name, owner_id, created_at) VALUES(?,?,?,?)`)
 	if err != nil {
 		return err
@@ -27,7 +27,7 @@ func (dao *GroupChatDao) Create(aggregateId *models.GroupChatId, name *models.Gr
 	return nil
 }
 
-func (dao *GroupChatDao) AddMember(id *models.MemberId, aggregateId *models.GroupChatId, accountId *models.UserAccountId, role models.Role, at time.Time) error {
+func (dao *GroupChatDaoImpl) AddMember(id *models.MemberId, aggregateId *models.GroupChatId, accountId *models.UserAccountId, role models.Role, at time.Time) error {
 	stmt, err := dao.db.Prepare(`INSERT INTO members (id, group_chat_id, account_id, role, created_at) VALUES (?, ?, ?, ?, ?)`)
 	if err != nil {
 		return err
