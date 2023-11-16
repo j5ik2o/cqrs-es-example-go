@@ -3,7 +3,7 @@ package cmd
 import (
 	"context"
 	"cqrs-es-example-go/api"
-	repository2 "cqrs-es-example-go/pkg/command/interfaceAdaptor/repository"
+	"cqrs-es-example-go/pkg/command/interfaceAdaptor/repository"
 	"fmt"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -82,15 +82,15 @@ to quickly create a Cobra application.`,
 			journalAidIndexName,
 			snapshotAidIndexName,
 			uint64(shardCount),
-			repository2.EventConverter,
-			repository2.SnapshotConverter,
-			esa.WithEventSerializer(repository2.NewEventSerializer()),
-			esa.WithSnapshotSerializer(repository2.NewSnapshotSerializer()))
+			repository.EventConverter,
+			repository.SnapshotConverter,
+			esa.WithEventSerializer(repository.NewEventSerializer()),
+			esa.WithSnapshotSerializer(repository.NewSnapshotSerializer()))
 		if err != nil {
 			panic(err)
 		}
 
-		groupChatRepository := repository2.NewGroupChatRepository(eventStore)
+		groupChatRepository := repository.NewGroupChatRepository(eventStore)
 		groupChatController := api.NewGroupChatController(groupChatRepository)
 
 		engine := gin.Default()
@@ -100,6 +100,7 @@ to quickly create a Cobra application.`,
 		{
 			groupChat.POST("/create", groupChatController.CreateGroupChat)
 			groupChat.POST("/rename", groupChatController.RenameGroupChat)
+			groupChat.POST("/add-member", groupChatController.AddMember)
 		}
 		address := fmt.Sprintf("%s:%d", apiHost, apiPort)
 		fmt.Printf("server started at http://%s\n", address)

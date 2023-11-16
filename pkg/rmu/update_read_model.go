@@ -59,13 +59,7 @@ func (r *ReadModelUpdater) UpdateReadModel(ctx context.Context, event dynamodbev
 	for _, record := range event.Records {
 		fmt.Printf("Processing request data for event ID %s, type %s.\n", record.EventID, record.EventName)
 		attributeValues := record.Change.NewImage
-		payloadAttr := attributeValues["payload"]
-		var payloadBytes []byte
-		if payloadAttr.DataType() == dynamodbevents.DataTypeBinary {
-			payloadBytes = payloadAttr.Binary()
-		} else if payloadAttr.DataType() == dynamodbevents.DataTypeString {
-			payloadBytes = []byte(payloadAttr.String())
-		}
+		payloadBytes := convertToBytes(attributeValues["payload"])
 		typeValueStr, err := getTypeString(payloadBytes).Get()
 		if err != nil {
 			return err
@@ -83,7 +77,6 @@ func (r *ReadModelUpdater) UpdateReadModel(ctx context.Context, event dynamodbev
 				executorId := ev.GetExecutorId()
 				occurredAtUnix := int64(ev.GetOccurredAt()) * int64(time.Millisecond)
 				occurredAt := time.Unix(0, occurredAtUnix)
-				fmt.Printf("occurredAt = %v\n", occurredAt)
 				err := r.dao.Create(groupChatId, name, executorId, occurredAt)
 				if err != nil {
 					return err
@@ -109,4 +102,14 @@ func (r *ReadModelUpdater) UpdateReadModel(ctx context.Context, event dynamodbev
 		}
 	}
 	return nil
+}
+
+func convertToBytes(payloadAttr dynamodbevents.DynamoDBAttributeValue) []byte {
+	var payloadBytes []byte
+	if payloadAttr.DataType() == dynamodbevents.DataTypeBinary {
+		payloadBytes = payloadAttr.Binary()
+	} else if payloadAttr.DataType() == dynamodbevents.DataTypeString {
+		payloadBytes = []byte(payloadAttr.String())
+	}
+	return payloadBytes
 }

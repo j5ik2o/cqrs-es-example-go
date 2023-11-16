@@ -41,3 +41,20 @@ func (g *GroupChatCommandProcessor) RenameGroupChat(groupChatId *models.GroupCha
 	}
 	return pair.V2, nil
 }
+
+func (g *GroupChatCommandProcessor) AddMember(groupChatId *models.GroupChatId, userAccountId *models.UserAccountId, role models.Role, executorId *models.UserAccountId) (events.GroupChatEvent, error) {
+	groupChat, err := g.repository.FindById(groupChatId).Get()
+	if err != nil {
+		return nil, err
+	}
+	memberId := models.NewMemberId()
+	pair, err := groupChat.AddMember(memberId, userAccountId, role, executorId).Get()
+	if err != nil {
+		return nil, err
+	}
+	err = g.repository.StoreEventWithSnapshot(pair.V2, pair.V1)
+	if err != nil {
+		return nil, err
+	}
+	return pair.V2, nil
+}
