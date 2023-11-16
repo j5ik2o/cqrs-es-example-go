@@ -126,18 +126,12 @@ func streamDriver(dynamoDbClient *dynamodb.Client, dynamoDbStreamsClient *dynamo
 		fmt.Printf("streamArn = %s\n", *streamArn)
 		fmt.Printf("maxItemCount = %d\n", maxItemCount)
 
-		request := &dynamodbstreams.DescribeStreamInput{
-			StreamArn: streamArn,
-		}
-		if lastEvaluatedShardId != "" {
-			request.ExclusiveStartShardId = &lastEvaluatedShardId
-		}
-		describeStreamResult, err := dynamoDbStreamsClient.DescribeStream(context.Background(), request)
+		describeStreamResponse, err := getDescribeStream(streamArn, lastEvaluatedShardId, dynamoDbStreamsClient)
 		if err != nil {
 			return err
 		}
 
-		for _, shard := range describeStreamResult.StreamDescription.Shards {
+		for _, shard := range describeStreamResponse.StreamDescription.Shards {
 			fmt.Printf("shard = %v\n", shard)
 			getShardIterator, err := dynamoDbStreamsClient.GetShardIterator(context.Background(), &dynamodbstreams.GetShardIteratorInput{
 				StreamArn:         streamArn,
@@ -180,12 +174,26 @@ func streamDriver(dynamoDbClient *dynamodb.Client, dynamoDbStreamsClient *dynamo
 				shardIterator = getRecordsResult.NextShardIterator
 			}
 		}
-		if describeStreamResult.StreamDescription.LastEvaluatedShardId == nil {
+		if describeStreamResponse.StreamDescription.LastEvaluatedShardId == nil {
 			break
 		}
-		lastEvaluatedShardId = *describeStreamResult.StreamDescription.LastEvaluatedShardId
+		lastEvaluatedShardId = *describeStreamResponse.StreamDescription.LastEvaluatedShardId
 	}
 	return nil
+}
+
+func getDescribeStream(streamArn *string, lastEvaluatedShardId string, dynamoDbStreamsClient *dynamodbstreams.Client) (*dynamodbstreams.DescribeStreamOutput, error) {
+	describeStreamRequest := &dynamodbstreams.DescribeStreamInput{
+		StreamArn: streamArn,
+	}
+	if lastEvaluatedShardId != "" {
+		describeStreamRequest.ExclusiveStartShardId = &lastEvaluatedShardId
+	}
+	describeStreamResponse, err := dynamoDbStreamsClient.DescribeStream(context.Background(), describeStreamRequest)
+	if err != nil {
+		return nil, err
+	}
+	return describeStreamResponse, nil
 }
 
 func convertEvent(record types.Record, keys map[string]events.DynamoDBAttributeValue, newItem map[string]events.DynamoDBAttributeValue, streamArn *string) events.DynamoDBEvent {
