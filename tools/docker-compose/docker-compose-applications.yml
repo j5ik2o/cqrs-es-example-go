@@ -47,8 +47,28 @@ services:
       AWS_DYNAMODB_SECRET_ACCESS_KEY: x
       STREAM_JOURNAL_TABLE_NAME: journal
       STREAM_MAX_ITEM_COUNT: 32
-      DATABASE_URL: mysql://ceer:ceer@mysql-local:3306/ceer
+      DATABASE_URL: ceer:ceer@tcp(mysql-local:3306)/ceer
     depends_on:
       - localstack
       - dynamodb-admin
       - dynamodb-setup
+  read-api-server-1:
+    build:
+      context: ../../
+      dockerfile: Dockerfile
+    command: [ "readApi" ]
+    image: read-api-server:latest-${ARCH}
+    container_name: read-api-server-1
+    ports:
+      - 18082:8080
+    environment:
+      AWS_REGION: ap-northeast-1
+      API_HOST: "0.0.0.0"
+      API_PORT: 8080
+      API_ALLOW_ORIGINS: "http://localhost:18080,http://localhost:18082,http://localhost:8888"
+      DATABASE_URL: ceer:ceer@tcp(mysql-local:3306)/ceer
+    depends_on:
+      - mysql
+      - refinery
+      - write-api-server-1
+      - read-model-updater-1

@@ -1,15 +1,18 @@
 package cmd
 
 import (
-	graph2 "cqrs-es-example-go/pkg/query/graph"
+	"cqrs-es-example-go/pkg/query/graph"
+	"fmt"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/jmoiron/sqlx"
+	"github.com/olivere/env"
+	"github.com/spf13/cobra"
 	"log"
 	"net/http"
-	"os"
-
-	"github.com/spf13/cobra"
 )
+
+const defaultPort = "8080"
 
 // readApiCmd represents the readApi command
 var readApiCmd = &cobra.Command{
@@ -22,22 +25,33 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		port := os.Getenv("PORT")
-		if port == "" {
-			port = defaultPort
-		}
+		apiPort := env.Int(8080, "API_PORT")
+		apiHost := env.String("0.0.0.0", "API_HOST")
+		dbUrl := env.String("", "DATABASE_URL")
 
-		srv := handler.NewDefaultServer(graph2.NewExecutableSchema(graph2.Config{Resolvers: &graph2.Resolver{}}))
+		db, err := sqlx.Connect("mysql", fmt.Sprintf("%s?parseTime=true", dbUrl))
+		defer func(db *sqlx.DB) {
+			if db != nil {
+				err := db.Close()
+				if err != nil {
+					panic(err.Error())
+				}
+			}
+		}(db)
+
+		if err != nil {
+			panic(err.Error())
+		}
+		srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: graph.NewResolver(db)}))
 
 		http.Handle("/", playground.Handler("GraphQL playground", "/query"))
 		http.Handle("/query", srv)
 
-		log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
-		log.Fatal(http.ListenAndServe(":"+port, nil))
+		endpoint := fmt.Sprintf("%s:%d", apiHost, apiPort)
+		log.Printf("connect to http://%s/ for GraphQL playground", endpoint)
+		log.Fatal(http.ListenAndServe(endpoint, nil))
 	},
 }
-
-const defaultPort = "8080"
 
 func init() {
 	rootCmd.AddCommand(readApiCmd)

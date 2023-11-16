@@ -11,6 +11,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	esa "github.com/j5ik2o/event-store-adapter-go"
 	"github.com/jmoiron/sqlx"
+	"github.com/olivere/env"
 	"github.com/samber/mo"
 	"strings"
 	"time"
@@ -20,6 +21,7 @@ func getTypeString(bytes []byte) mo.Result[string] {
 	var parsed map[string]interface{}
 	err := json.Unmarshal(bytes, &parsed)
 	if err != nil {
+		fmt.Printf("getTypeString: err = %v, %s\n", err, string(bytes))
 		return mo.Err[string](err)
 	}
 	typeValue, ok := parsed["type_name"].(string)
@@ -43,11 +45,15 @@ func convertGroupChatEvent(payloadBytes []byte) mo.Result[esa.Event] {
 }
 
 func UpdateReadModel(ctx context.Context, event dynamodbevents.DynamoDBEvent) {
-	db, err := sqlx.Connect("mysql", "ceer:ceer@tcp(localhost:3306)/ceer")
+	dbUrl := env.String("", "DATABASE_URL")
+	dataSourceName := fmt.Sprintf("%s?parseTime=true", dbUrl)
+	db, err := sqlx.Connect("mysql", dataSourceName)
 	defer func(db *sqlx.DB) {
-		err := db.Close()
-		if err != nil {
-			panic(err.Error())
+		if db != nil {
+			err := db.Close()
+			if err != nil {
+				panic(err.Error())
+			}
 		}
 	}(db)
 	if err != nil {
@@ -58,10 +64,16 @@ func UpdateReadModel(ctx context.Context, event dynamodbevents.DynamoDBEvent) {
 		fmt.Printf("Processing request data for event ID %s, type %s.\n", record.EventID, record.EventName)
 		attributeValues := record.Change.NewImage
 		payloadAttr := attributeValues["payload"]
-		payloadBytes := []byte(payloadAttr.String())
-		typeValueStr := getTypeString(payloadBytes).MustGet()
+		payloadBytes := []byte(payloadAttr.Binary())
+		typeValueStr, err := getTypeString(payloadBytes).Get()
+		if err != nil {
+			panic(err.Error())
+		}
 		if strings.HasPrefix(typeValueStr, "GroupChat") {
-			event := convertGroupChatEvent(payloadBytes).MustGet()
+			event, err := convertGroupChatEvent(payloadBytes).Get()
+			if err != nil {
+				panic(err.Error())
+			}
 			switch event.(type) {
 			case *events.GroupChatCreated:
 				ev := event.(*events.GroupChatCreated)
@@ -72,6 +84,12 @@ func UpdateReadModel(ctx context.Context, event dynamodbevents.DynamoDBEvent) {
 				occurredAt := time.Unix(0, occurredAtUnix)
 				fmt.Printf("occurredAt = %v\n", occurredAt)
 				err := dao.Create(groupChatId, name, executorId, occurredAt)
+				if err != nil {
+					panic(err.Error())
+				}
+				memberId := ev.GetMembers().GetAdministrator().GetId()
+				accountId := ev.GetMembers().GetAdministrator().GetUserAccountId()
+				err = dao.AddMember(memberId, groupChatId, accountId, models.AdminRole, occurredAt)
 				if err != nil {
 					panic(err.Error())
 				}
