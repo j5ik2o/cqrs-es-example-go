@@ -101,6 +101,7 @@ to quickly create a Cobra application.`,
 		}
 		dao := rmu.NewGroupChatDaoImpl(db)
 		readModelUpdater := rmu.NewReadModelUpdater(dao)
+
 		for {
 			err := streamDriver(dynamodbClient, dynamodbStreamsClient, journalTableName, streamMaxItemCount, readModelUpdater)
 			if err != nil {
@@ -114,25 +115,23 @@ to quickly create a Cobra application.`,
 }
 
 func streamDriver(dynamoDbClient *dynamodb.Client, dynamoDbStreamsClient *dynamodbstreams.Client, journalTableName string, maxItemCount int64, readModelUpdater *rmu.ReadModelUpdater) error {
-	describeTableResult, err := dynamoDbClient.DescribeTable(context.Background(), &dynamodb.DescribeTableInput{
-		TableName: aws.String(journalTableName),
-	})
+	describeTable, err := describeTable(dynamoDbClient, journalTableName)
 	if err != nil {
 		return err
 	}
-	streamArn := describeTableResult.Table.LatestStreamArn
+	streamArn := describeTable.Table.LatestStreamArn
 	lastEvaluatedShardId := ""
+
 	for {
 		fmt.Printf("streamArn = %s\n", *streamArn)
 		fmt.Printf("maxItemCount = %d\n", maxItemCount)
 
-		describeStreamResponse, err := getDescribeStream(streamArn, lastEvaluatedShardId, dynamoDbStreamsClient)
+		describeStream, err := getDescribeStream(streamArn, lastEvaluatedShardId, dynamoDbStreamsClient)
 		if err != nil {
 			return err
 		}
 
-		for _, shard := range describeStreamResponse.StreamDescription.Shards {
-			fmt.Printf("shard = %v\n", shard)
+		for _, shard := range describeStream.StreamDescription.Shards {
 			getShardIterator, err := getShardIterator(dynamoDbStreamsClient, streamArn, shard)
 			if err != nil {
 				return err
@@ -140,42 +139,69 @@ func streamDriver(dynamoDbClient *dynamodb.Client, dynamoDbStreamsClient *dynamo
 			shardIterator := getShardIterator.ShardIterator
 			processedRecordCount := 0
 			for shardIterator != nil && processedRecordCount < int(maxItemCount) {
-				// fmt.Printf("shardIterator = %v\n", shardIterator)
-				getRecordsResult, err := dynamoDbStreamsClient.GetRecords(context.Background(), &dynamodbstreams.GetRecordsInput{
-					ShardIterator: shardIterator,
-				})
+				getRecords, err := getRecords(dynamoDbStreamsClient, shardIterator)
 				if err != nil {
 					return err
 				}
-				for _, record := range getRecordsResult.Records {
-					keysMap := record.Dynamodb.Keys
-					keys, err := convertAttributeMap(keysMap)
-					if err != nil {
-						return err
-					}
-
-					itemMap := record.Dynamodb.NewImage
-					newItem, err := convertAttributeMap(itemMap)
-					if err != nil {
-						return err
-					}
-
-					event := convertEvent(record, keys, newItem, streamArn)
-					err = readModelUpdater.UpdateReadModel(context.Background(), event)
-					if err != nil {
-						return err
-					}
+				err = updateRecords(getRecords, readModelUpdater, streamArn)
+				if err != nil {
+					return err
 				}
-				processedRecordCount += len(getRecordsResult.Records)
-				shardIterator = getRecordsResult.NextShardIterator
+				processedRecordCount += len(getRecords.Records)
+				shardIterator = getRecords.NextShardIterator
 			}
 		}
-		if describeStreamResponse.StreamDescription.LastEvaluatedShardId == nil {
+
+		if describeStream.StreamDescription.LastEvaluatedShardId == nil {
 			break
 		}
-		lastEvaluatedShardId = *describeStreamResponse.StreamDescription.LastEvaluatedShardId
+		lastEvaluatedShardId = *describeStream.StreamDescription.LastEvaluatedShardId
 	}
 	return nil
+}
+
+func describeTable(dynamoDbClient *dynamodb.Client, journalTableName string) (*dynamodb.DescribeTableOutput, error) {
+	describeTableResult, err := dynamoDbClient.DescribeTable(context.Background(), &dynamodb.DescribeTableInput{
+		TableName: aws.String(journalTableName),
+	})
+	return describeTableResult, err
+}
+
+func updateRecords(getRecords *dynamodbstreams.GetRecordsOutput, readModelUpdater *rmu.ReadModelUpdater, streamArn *string) error {
+	for _, record := range getRecords.Records {
+		keys, err := getKeys(record)
+		if err != nil {
+			return err
+		}
+		item := getItem(record, err)
+		if err != nil {
+			return err
+		}
+		err = readModelUpdater.UpdateReadModel(context.Background(), convertToEvent(record, keys, item, streamArn))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func getItem(record types.Record, err error) map[string]events.DynamoDBAttributeValue {
+	itemMap := record.Dynamodb.NewImage
+	newItem, err := convertAttributeMap(itemMap)
+	return newItem
+}
+
+func getKeys(record types.Record) (map[string]events.DynamoDBAttributeValue, error) {
+	keysMap := record.Dynamodb.Keys
+	keys, err := convertAttributeMap(keysMap)
+	return keys, err
+}
+
+func getRecords(dynamoDbStreamsClient *dynamodbstreams.Client, shardIterator *string) (*dynamodbstreams.GetRecordsOutput, error) {
+	getRecordsResult, err := dynamoDbStreamsClient.GetRecords(context.Background(), &dynamodbstreams.GetRecordsInput{
+		ShardIterator: shardIterator,
+	})
+	return getRecordsResult, err
 }
 
 func getShardIterator(dynamoDbStreamsClient *dynamodbstreams.Client, streamArn *string, shard types.Shard) (*dynamodbstreams.GetShardIteratorOutput, error) {
@@ -201,7 +227,7 @@ func getDescribeStream(streamArn *string, lastEvaluatedShardId string, dynamoDbS
 	return describeStreamResponse, nil
 }
 
-func convertEvent(record types.Record, keys map[string]events.DynamoDBAttributeValue, newItem map[string]events.DynamoDBAttributeValue, streamArn *string) events.DynamoDBEvent {
+func convertToEvent(record types.Record, keys map[string]events.DynamoDBAttributeValue, newItem map[string]events.DynamoDBAttributeValue, streamArn *string) events.DynamoDBEvent {
 	event := events.DynamoDBEvent{
 		Records: []events.DynamoDBEventRecord{
 			{
