@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"cqrs-es-example-go/pkg/command/domain"
-	"cqrs-es-example-go/pkg/command/domain/events"
 	"cqrs-es-example-go/pkg/command/domain/models"
 	"encoding/json"
 	"fmt"
@@ -14,6 +13,13 @@ import (
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/localstack"
 	"testing"
+)
+
+var (
+	journalTableName     = "journal"
+	journalAidIndexName  = "journal-aid-index"
+	snapshotTableName    = "snapshot"
+	snapshotAidIndexName = "snapshot-aid-index"
 )
 
 func TestGroupChatRepositoryImpl_FindById(t *testing.T) {
@@ -34,160 +40,27 @@ func TestGroupChatRepositoryImpl_FindById(t *testing.T) {
 			},
 		}),
 	)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	assert.NotNil(t, container)
 	dynamodbClient, err := common.CreateDynamoDBClient(t, ctx, container)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	assert.NotNil(t, dynamodbClient)
-	journalTableName := "journal"
-	journalAidIndexName := "journal-aid-index"
+
 	err = common.CreateJournalTable(t, ctx, dynamodbClient, journalTableName, journalAidIndexName)
-	require.Nil(t, err)
-	snapshotTableName := "snapshot"
-	snapshotAidIndexName := "snapshot-aid-index"
+	require.NoError(t, err)
 	err = common.CreateSnapshotTable(t, ctx, dynamodbClient, snapshotTableName, snapshotAidIndexName)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// time.Sleep(5 * time.Second)
-
-	eventConverter := func(m map[string]interface{}) (esa.Event, error) {
-		eventId := m["Id"].(string)
-		groupChatId, err := models.ConvertGroupChatIdFromJSON(m["AggregateId"].(map[string]interface{})).Get()
-		if err != nil {
-			return nil, err
-		}
-		groupChatName, err := models.ConvertGroupChatNameFromJSON(m["Name"].(map[string]interface{})).Get()
-		if err != nil {
-			return nil, err
-		}
-		members := models.ConvertMembersFromJSON(m["Members"].(map[string]interface{}))
-		executorId, err := models.ConvertUserAccountIdFromJSON(m["ExecutorId"].(map[string]interface{})).Get()
-		if err != nil {
-			return nil, err
-		}
-		seqNr := uint64(m["SeqNr"].(float64))
-		occurredAt := uint64(m["OccurredAt"].(float64))
-		switch m["TypeName"].(string) {
-		case "GroupChatCreated":
-			return events.NewGroupChatCreatedFrom(
-				eventId,
-				groupChatId,
-				groupChatName,
-				members,
-				seqNr,
-				executorId,
-				occurredAt,
-			), nil
-		case "GroupChatDeleted":
-			return events.NewGroupChatDeletedFrom(
-				eventId,
-				groupChatId,
-				seqNr,
-				executorId,
-				occurredAt,
-			), nil
-		case "GroupChatRenamed":
-			name, err := models.NewGroupChatName(m["Name"].(string)).Get()
-			if err != nil {
-				return nil, err
-			}
-			return events.NewGroupChatRenamedFrom(
-				eventId,
-				groupChatId,
-				name,
-				seqNr,
-				executorId,
-				occurredAt,
-			), nil
-		case "GroupChatMemberAdded":
-			memberObj := m["Member"].(map[string]interface{})
-			memberId, err := models.ConvertMemberIdFromJSON(memberObj["MemberId"].(map[string]interface{})).Get()
-			if err != nil {
-				return nil, err
-			}
-			userAccountId, err := models.ConvertUserAccountIdFromJSON(memberObj["UserAccountId"].(map[string]interface{})).Get()
-			if err != nil {
-				return nil, err
-			}
-			role := models.Role(memberObj["Role"].(int))
-			member := models.NewMember(memberId, userAccountId, role)
-			return events.NewGroupChatMemberAddedFrom(
-				eventId,
-				groupChatId,
-				member,
-				seqNr,
-				executorId,
-				occurredAt,
-			), nil
-		case "GroupChatMemberRemoved":
-			userAccountId, err := models.ConvertUserAccountIdFromJSON(m["UserAccountId"].(map[string]interface{})).Get()
-			if err != nil {
-				return nil, err
-			}
-			return events.NewGroupChatMemberRemovedFrom(
-				eventId,
-				groupChatId,
-				userAccountId,
-				seqNr,
-				executorId,
-				occurredAt,
-			), nil
-		case "GroupChatMessagePosted":
-			message, err := models.ConvertMessageFromJSON(m["Message"].(map[string]interface{})).Get()
-			if err != nil {
-				return nil, err
-			}
-			return events.NewGroupChatMessagePostedFrom(
-				eventId,
-				groupChatId,
-				message,
-				seqNr,
-				executorId,
-				occurredAt,
-			), nil
-		case "GroupChatMessageDeleted":
-			messageId := models.ConvertMessageIdFromJSON(m["MessageId"].(map[string]interface{}))
-			return events.NewGroupChatMessageDeletedFrom(
-				eventId,
-				groupChatId,
-				messageId,
-				seqNr,
-				executorId,
-				occurredAt,
-			), nil
-		default:
-			return nil, fmt.Errorf("unknown event type")
-		}
-	}
-
-	aggregateConverter := func(m map[string]interface{}) (esa.Aggregate, error) {
-		groupChatId, err := models.ConvertGroupChatIdFromJSON(m["Id"].(map[string]interface{})).Get()
-		if err != nil {
-			return nil, err
-		}
-		name, err := models.ConvertGroupChatNameFromJSON(m["Name"].(map[string]interface{})).Get()
-		if err != nil {
-			return nil, err
-		}
-		members := models.ConvertMembersFromJSON(m["Members"].(map[string]interface{}))
-		messages, err := models.ConvertMessagesFromJSON(m["Messages"].(map[string]interface{})).Get()
-		if err != nil {
-			return nil, err
-		}
-		seqNr := uint64(m["SeqNr"].(float64))
-		version := uint64(m["Version"].(float64))
-		deleted := m["Deleted"].(bool)
-		result := domain.NewGroupChatFrom(groupChatId, name, members, messages, seqNr, version, deleted)
-		return result, nil
-	}
 
 	eventStore, err := esa.NewEventStore(
 		dynamodbClient,
 		journalTableName, snapshotTableName, journalAidIndexName, snapshotAidIndexName,
 		32,
-		eventConverter, aggregateConverter,
-		esa.WithEventSerializer(&EventSerializer{}),
-		esa.WithSnapshotSerializer(&SnapshotSerializer{}))
+		EventConverter,
+		SnapshotConverter,
+		esa.WithEventSerializer(NewEventSerializer()),
+		esa.WithSnapshotSerializer(NewSnapshotSerializer()))
 
 	if err != nil {
 		t.Fatal(err)
