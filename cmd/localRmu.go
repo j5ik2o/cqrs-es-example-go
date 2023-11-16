@@ -133,11 +133,7 @@ func streamDriver(dynamoDbClient *dynamodb.Client, dynamoDbStreamsClient *dynamo
 
 		for _, shard := range describeStreamResponse.StreamDescription.Shards {
 			fmt.Printf("shard = %v\n", shard)
-			getShardIterator, err := dynamoDbStreamsClient.GetShardIterator(context.Background(), &dynamodbstreams.GetShardIteratorInput{
-				StreamArn:         streamArn,
-				ShardId:           shard.ShardId,
-				ShardIteratorType: types.ShardIteratorTypeLatest,
-			})
+			getShardIterator, err := getShardIterator(dynamoDbStreamsClient, streamArn, shard)
 			if err != nil {
 				return err
 			}
@@ -180,6 +176,15 @@ func streamDriver(dynamoDbClient *dynamodb.Client, dynamoDbStreamsClient *dynamo
 		lastEvaluatedShardId = *describeStreamResponse.StreamDescription.LastEvaluatedShardId
 	}
 	return nil
+}
+
+func getShardIterator(dynamoDbStreamsClient *dynamodbstreams.Client, streamArn *string, shard types.Shard) (*dynamodbstreams.GetShardIteratorOutput, error) {
+	getShardIterator, err := dynamoDbStreamsClient.GetShardIterator(context.Background(), &dynamodbstreams.GetShardIteratorInput{
+		StreamArn:         streamArn,
+		ShardId:           shard.ShardId,
+		ShardIteratorType: types.ShardIteratorTypeLatest,
+	})
+	return getShardIterator, err
 }
 
 func getDescribeStream(streamArn *string, lastEvaluatedShardId string, dynamoDbStreamsClient *dynamodbstreams.Client) (*dynamodbstreams.DescribeStreamOutput, error) {
