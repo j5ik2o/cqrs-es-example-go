@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodbstreams"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodbstreams/types"
+	"github.com/jmoiron/sqlx"
 	"github.com/olivere/env"
 	"github.com/samber/mo"
 	"reflect"
@@ -84,8 +85,24 @@ to quickly create a Cobra application.`,
 		dynamodbClient := dynamodb.NewFromConfig(awsCfg)
 		dynamodbStreamsClient := dynamodbstreams.NewFromConfig(awsCfg)
 
+		dbUrl := env.String("", "DATABASE_URL")
+		dataSourceName := fmt.Sprintf("%s?parseTime=true", dbUrl)
+		db, err := sqlx.Connect("mysql", dataSourceName)
+		defer func(db *sqlx.DB) {
+			if db != nil {
+				err := db.Close()
+				if err != nil {
+					panic(err.Error())
+				}
+			}
+		}(db)
+		if err != nil {
+			panic(err.Error())
+		}
+		dao := rmu.NewGroupChatDaoImpl(db)
+		readModelUpdater := rmu.NewReadModelUpdater(dao)
 		for {
-			err := streamDriver(dynamodbClient, dynamodbStreamsClient, journalTableName, streamMaxItemCount)
+			err := streamDriver(dynamodbClient, dynamodbStreamsClient, journalTableName, streamMaxItemCount, readModelUpdater)
 			if err != nil {
 				fmt.Printf("An error has occurred, but stream processing is restarted. "+
 					"If this error persists, the read model condition may be incorrect.: error = %v\n", err)
@@ -96,7 +113,7 @@ to quickly create a Cobra application.`,
 	},
 }
 
-func streamDriver(dynamoDbClient *dynamodb.Client, dynamoDbStreamsClient *dynamodbstreams.Client, journalTableName string, maxItemCount int64) error {
+func streamDriver(dynamoDbClient *dynamodb.Client, dynamoDbStreamsClient *dynamodbstreams.Client, journalTableName string, maxItemCount int64, readModelUpdater *rmu.ReadModelUpdater) error {
 	describeTableResult, err := dynamoDbClient.DescribeTable(context.Background(), &dynamodb.DescribeTableInput{
 		TableName: aws.String(journalTableName),
 	})
@@ -154,7 +171,10 @@ func streamDriver(dynamoDbClient *dynamodb.Client, dynamoDbStreamsClient *dynamo
 					}
 
 					event := convertEvent(record, keys, newItem, streamArn)
-					rmu.UpdateReadModel(context.Background(), event)
+					err = readModelUpdater.UpdateReadModel(context.Background(), event)
+					if err != nil {
+						return err
+					}
 				}
 				processedRecordCount += len(getRecordsResult.Records)
 				shardIterator = getRecordsResult.NextShardIterator

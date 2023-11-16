@@ -69,6 +69,6 @@ services:
       DATABASE_URL: ceer:ceer@tcp(mysql-local:3306)/ceer
     depends_on:
       - mysql
-      - refinery
+      - migration
       - write-api-server-1
       - read-model-updater-1
