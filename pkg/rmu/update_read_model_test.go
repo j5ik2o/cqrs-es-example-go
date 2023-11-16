@@ -2,7 +2,6 @@ package rmu
 
 import (
 	"context"
-	"database/sql"
 	_ "embed"
 	"encoding/json"
 	"fmt"
@@ -41,19 +40,6 @@ func TestUpdateReadModel(t *testing.T) {
 	dbUrl := fmt.Sprintf("ceer:ceer@tcp(localhost:%s)/ceer", port.Port())
 	dataSourceName := fmt.Sprintf("%s?parseTime=true", dbUrl)
 
-	migrationDB, err := sql.Open("mysql", dataSourceName)
-	require.NoError(t, err)
-	driver, err := mysql.WithInstance(migrationDB, &mysql.Config{})
-	require.NoError(t, err)
-	m, err := migrate.NewWithDatabaseInstance(
-		"file://../../tools/migrate/migrations",
-		"mysql",
-		driver,
-	)
-	require.NoError(t, err)
-	err = m.Steps(3)
-	require.NoError(t, err)
-
 	db, err := sqlx.Connect("mysql", dataSourceName)
 	defer func(db *sqlx.DB) {
 		if db != nil {
@@ -66,8 +52,20 @@ func TestUpdateReadModel(t *testing.T) {
 	if err != nil {
 		panic(err.Error())
 	}
-	dao := NewGroupChatDaoImpl(db)
+	require.NoError(t, err)
 
+	driver, err := mysql.WithInstance(db.DB, &mysql.Config{})
+	require.NoError(t, err)
+	m, err := migrate.NewWithDatabaseInstance(
+		"file://../../tools/migrate/migrations",
+		"mysql",
+		driver,
+	)
+	require.NoError(t, err)
+	err = m.Steps(3)
+	require.NoError(t, err)
+
+	dao := NewGroupChatDaoImpl(db)
 	var parsed dynamodbevents.DynamoDBEvent
 	err = json.Unmarshal(eventData, &parsed)
 	require.NoError(t, err)
