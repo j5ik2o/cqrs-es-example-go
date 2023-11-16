@@ -2,19 +2,22 @@ package rmu
 
 import (
 	"context"
+	"database/sql"
 	_ "embed"
 	"encoding/json"
 	"fmt"
 	dynamodbevents "github.com/aws/aws-lambda-go/events"
 	"github.com/jmoiron/sqlx"
-	"github.com/olivere/env"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
-	"github.com/testcontainers/testcontainers-go/modules/mysql"
-	"os"
-	"path/filepath"
+	testcontainermysql "github.com/testcontainers/testcontainers-go/modules/mysql"
 	"testing"
+
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database/mysql"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
 //go:embed example-dynamodb-event.json
@@ -22,22 +25,35 @@ var eventData []byte
 
 func TestUpdateReadModel(t *testing.T) {
 	ctx := context.Background()
-	container, err := mysql.RunContainer(ctx,
-		testcontainers.WithImage("mysql:8"),
+	container, err := testcontainermysql.RunContainer(ctx,
+		testcontainers.WithImage("mysql:8.2"),
 		// mysql.WithConfigFile(filepath.Join("testdata", "my_8.cnf")),
-		mysql.WithDatabase("ceer"),
-		mysql.WithUsername("ceer"),
-		mysql.WithPassword("ceer"),
-		mysql.WithScripts(filepath.Join("testdata", "schema.sql")),
+		testcontainermysql.WithDatabase("ceer"),
+		testcontainermysql.WithUsername("ceer"),
+		testcontainermysql.WithPassword("ceer"),
+		// testcontainermysql.WithScripts(filepath.Join("testdata", "schema.sql")),
 	)
 	require.NoError(t, err)
 	assert.NotNil(t, container)
 	port, err := container.MappedPort(ctx, "3306")
 	require.NoError(t, err)
-	err = os.Setenv("DATABASE_URL", fmt.Sprintf("ceer:ceer@tcp(localhost:%s)/ceer", port.Port()))
-	require.NoError(t, err)
-	dbUrl := env.String("", "DATABASE_URL")
+
+	dbUrl := fmt.Sprintf("ceer:ceer@tcp(localhost:%s)/ceer", port.Port())
 	dataSourceName := fmt.Sprintf("%s?parseTime=true", dbUrl)
+
+	migrationDB, err := sql.Open("mysql", dataSourceName)
+	require.NoError(t, err)
+	driver, err := mysql.WithInstance(migrationDB, &mysql.Config{})
+	require.NoError(t, err)
+	m, err := migrate.NewWithDatabaseInstance(
+		"file://../../tools/migrate/migrations",
+		"mysql",
+		driver,
+	)
+	require.NoError(t, err)
+	err = m.Steps(3)
+	require.NoError(t, err)
+
 	db, err := sqlx.Connect("mysql", dataSourceName)
 	defer func(db *sqlx.DB) {
 		if db != nil {
