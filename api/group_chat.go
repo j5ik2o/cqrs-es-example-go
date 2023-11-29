@@ -57,6 +57,20 @@ type RemoveMemberResponseSuccessBody struct {
 
 // ---
 
+type PostMessageRequestBody struct {
+	GroupChatId string `json:"group_chat_id"`
+	Message     string `json:"message"`
+	AccountId   string `json:"account_id"`
+	ExecutorId  string `json:"executor_id"`
+}
+
+type PostMessageResponseSuccessBody struct {
+	GroupChatId string `json:"group_chat_id"`
+	MessageId   string `json:"message_id"`
+}
+
+// ---
+
 type GroupChatResponseErrorBody struct {
 	Message string `json:"message"`
 }
@@ -222,6 +236,53 @@ func (g *GroupChatController) RemoveMember(c *gin.Context) {
 	}
 
 	response := RemoveMemberResponseSuccessBody{GroupChatId: event.GetAggregateId().AsString()}
+	c.JSON(http.StatusOK, response)
+}
+
+func (g *GroupChatController) PostMessage(c *gin.Context) {
+	var jsonRequestBody PostMessageRequestBody
+
+	if err := c.ShouldBindJSON(&jsonRequestBody); err != nil {
+		handleClientError(c, http.StatusBadRequest, err)
+		return
+	}
+
+	groupChatId, err := validator.ValidateGroupChatId(jsonRequestBody.GroupChatId).Get()
+	if err != nil {
+		handleClientError(c, http.StatusBadRequest, err)
+		return
+	}
+
+	messageId := models.NewMessageId()
+
+	senderId, err := validator.ValidateUserAccountId(jsonRequestBody.AccountId).Get()
+	if err != nil {
+		handleClientError(c, http.StatusBadRequest, err)
+		return
+	}
+
+	message, err := validator.ValidateMessage(messageId, jsonRequestBody.Message, senderId).Get()
+	if err != nil {
+		handleClientError(c, http.StatusBadRequest, err)
+		return
+	}
+
+	executorId, err := validator.ValidateUserAccountId(jsonRequestBody.ExecutorId).Get()
+	if err != nil {
+		handleClientError(c, http.StatusBadRequest, err)
+		return
+	}
+
+	commandProcessor := useCase.NewGroupChatCommandProcessor(g.repository)
+	event, err := commandProcessor.PostMessage(groupChatId, message, executorId)
+
+	if err != nil {
+		response := GroupChatResponseErrorBody{Message: err.Error()}
+		c.JSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	response := PostMessageResponseSuccessBody{GroupChatId: event.GetAggregateId().AsString(), MessageId: messageId.String()}
 	c.JSON(http.StatusOK, response)
 }
 
