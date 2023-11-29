@@ -38,7 +38,7 @@ func (u *UserAccountId) GetValue() string {
 }
 
 func (u *UserAccountId) GetTypeName() string {
-	return "user-account"
+	return "UserAccount"
 }
 
 func (u *UserAccountId) AsString() string {
