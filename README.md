@@ -21,7 +21,6 @@ ARCH=arm64
  Container read-api-server-1  Started
 ```
 
-
 #### Creating a Group Chat
 
 ```shell
