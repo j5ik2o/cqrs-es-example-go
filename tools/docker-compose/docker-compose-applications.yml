@@ -52,6 +52,7 @@ services:
       - localstack
       - dynamodb-admin
       - dynamodb-setup
+    restart: on-failure
   read-api-server-1:
     build:
       context: ../../
