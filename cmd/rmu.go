@@ -13,13 +13,8 @@ import (
 // rmuCmd represents the rmu command
 var rmuCmd = &cobra.Command{
 	Use:   "rmu",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Read Model Updater",
+	Long:  "Read Model Updater",
 	Run: func(cmd *cobra.Command, args []string) {
 		dbUrl := env.String("", "DATABASE_URL")
 		dataSourceName := fmt.Sprintf("%s?parseTime=true", dbUrl)

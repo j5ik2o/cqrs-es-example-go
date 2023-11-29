@@ -18,13 +18,8 @@ import (
 // writeApiCmd represents the writeApi command
 var writeApiCmd = &cobra.Command{
 	Use:   "writeApi",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Write API",
+	Long:  "Write API",
 	Run: func(cmd *cobra.Command, args []string) {
 		awsRegion := env.String("", "AWS_REGION")
 		apiHost := env.String("0.0.0.0", "API_HOST")
@@ -101,6 +96,7 @@ to quickly create a Cobra application.`,
 			groupChat.POST("/create", groupChatController.CreateGroupChat)
 			groupChat.POST("/rename", groupChatController.RenameGroupChat)
 			groupChat.POST("/add-member", groupChatController.AddMember)
+			groupChat.POST("/remove-member", groupChatController.RemoveMember)
 		}
 		address := fmt.Sprintf("%s:%d", apiHost, apiPort)
 		fmt.Printf("server started at http://%s\n", address)

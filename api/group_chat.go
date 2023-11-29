@@ -43,9 +43,25 @@ type AddMemberResponseSuccessBody struct {
 	GroupChatId string `json:"group_chat_id"`
 }
 
+// ---
+
+type RemoveMemberRequestBody struct {
+	GroupChatId string `json:"group_chat_id"`
+	AccountId   string `json:"account_id"`
+	ExecutorId  string `json:"executor_id"`
+}
+
+type RemoveMemberResponseSuccessBody struct {
+	GroupChatId string `json:"group_chat_id"`
+}
+
+// ---
+
 type GroupChatResponseErrorBody struct {
 	Message string `json:"message"`
 }
+
+// ---
 
 type GroupChatController struct {
 	repository repository.GroupChatRepository
@@ -167,6 +183,45 @@ func (g *GroupChatController) AddMember(c *gin.Context) {
 	}
 
 	response := AddMemberResponseSuccessBody{GroupChatId: event.GetAggregateId().AsString()}
+	c.JSON(http.StatusOK, response)
+}
+
+func (g *GroupChatController) RemoveMember(c *gin.Context) {
+	var jsonRequestBody RemoveMemberRequestBody
+
+	if err := c.ShouldBindJSON(&jsonRequestBody); err != nil {
+		handleClientError(c, http.StatusBadRequest, err)
+		return
+	}
+
+	groupChatId, err := validator.ValidateGroupChatId(jsonRequestBody.GroupChatId).Get()
+	if err != nil {
+		handleClientError(c, http.StatusBadRequest, err)
+		return
+	}
+
+	accountId, err := validator.ValidateUserAccountId(jsonRequestBody.ExecutorId).Get()
+	if err != nil {
+		handleClientError(c, http.StatusBadRequest, err)
+		return
+	}
+
+	executorId, err := validator.ValidateUserAccountId(jsonRequestBody.ExecutorId).Get()
+	if err != nil {
+		handleClientError(c, http.StatusBadRequest, err)
+		return
+	}
+
+	commandProcessor := useCase.NewGroupChatCommandProcessor(g.repository)
+	event, err := commandProcessor.RemoveMember(groupChatId, accountId, executorId)
+
+	if err != nil {
+		response := GroupChatResponseErrorBody{Message: err.Error()}
+		c.JSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	response := RemoveMemberResponseSuccessBody{GroupChatId: event.GetAggregateId().AsString()}
 	c.JSON(http.StatusOK, response)
 }
 
