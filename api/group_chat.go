@@ -61,22 +61,19 @@ func (g *GroupChatController) CreateGroupChat(c *gin.Context) {
 	var jsonRequestBody CreateGroupChatRequestBody
 
 	if err := c.ShouldBindJSON(&jsonRequestBody); err != nil {
-		response := GroupChatResponseErrorBody{Message: err.Error()}
-		c.JSON(http.StatusBadRequest, response)
+		handleClientError(c, http.StatusBadRequest, err)
 		return
 	}
 
 	groupChatName, err := validator.ValidateGroupChatName(jsonRequestBody.Name).Get()
 	if err != nil {
-		response := GroupChatResponseErrorBody{Message: err.Error()}
-		c.JSON(http.StatusBadRequest, response)
+		handleClientError(c, http.StatusBadRequest, err)
 		return
 	}
 
 	executorId, err := validator.ValidateUserAccountId(jsonRequestBody.ExecutorId).Get()
 	if err != nil {
-		response := GroupChatResponseErrorBody{Message: err.Error()}
-		c.JSON(http.StatusBadRequest, response)
+		handleClientError(c, http.StatusBadRequest, err)
 		return
 	}
 
@@ -97,29 +94,25 @@ func (g *GroupChatController) RenameGroupChat(c *gin.Context) {
 	var jsonRequestBody RenameGroupChatRequestBody
 
 	if err := c.ShouldBindJSON(&jsonRequestBody); err != nil {
-		response := GroupChatResponseErrorBody{Message: err.Error()}
-		c.JSON(http.StatusBadRequest, response)
+		handleClientError(c, http.StatusBadRequest, err)
 		return
 	}
 
 	groupChatId, err := validator.ValidateGroupChatId(jsonRequestBody.GroupChatId).Get()
 	if err != nil {
-		response := GroupChatResponseErrorBody{Message: err.Error()}
-		c.JSON(http.StatusBadRequest, response)
+		handleClientError(c, http.StatusBadRequest, err)
 		return
 	}
 
 	groupChatName, err := validator.ValidateGroupChatName(jsonRequestBody.Name).Get()
 	if err != nil {
-		response := GroupChatResponseErrorBody{Message: err.Error()}
-		c.JSON(http.StatusBadRequest, response)
+		handleClientError(c, http.StatusBadRequest, err)
 		return
 	}
 
 	executorId, err := validator.ValidateUserAccountId(jsonRequestBody.ExecutorId).Get()
 	if err != nil {
-		response := GroupChatResponseErrorBody{Message: err.Error()}
-		c.JSON(http.StatusBadRequest, response)
+		handleClientError(c, http.StatusBadRequest, err)
 		return
 	}
 
@@ -140,38 +133,29 @@ func (g *GroupChatController) AddMember(c *gin.Context) {
 	var jsonRequestBody AddMemberRequestBody
 
 	if err := c.ShouldBindJSON(&jsonRequestBody); err != nil {
-		response := GroupChatResponseErrorBody{Message: err.Error()}
-		c.JSON(http.StatusBadRequest, response)
+		handleClientError(c, http.StatusBadRequest, err)
 		return
 	}
 
 	groupChatId, err := validator.ValidateGroupChatId(jsonRequestBody.GroupChatId).Get()
 	if err != nil {
-		response := GroupChatResponseErrorBody{Message: err.Error()}
-		c.JSON(http.StatusBadRequest, response)
+		handleClientError(c, http.StatusBadRequest, err)
 		return
 	}
 
 	accountId, err := validator.ValidateUserAccountId(jsonRequestBody.ExecutorId).Get()
 	if err != nil {
-		response := GroupChatResponseErrorBody{Message: err.Error()}
-		c.JSON(http.StatusBadRequest, response)
+		handleClientError(c, http.StatusBadRequest, err)
 		return
 	}
 
 	executorId, err := validator.ValidateUserAccountId(jsonRequestBody.ExecutorId).Get()
 	if err != nil {
-		response := GroupChatResponseErrorBody{Message: err.Error()}
-		c.JSON(http.StatusBadRequest, response)
+		handleClientError(c, http.StatusBadRequest, err)
 		return
 	}
 
-	var role models.Role
-	if jsonRequestBody.Role == "amin" {
-		role = models.AdminRole
-	} else {
-		role = models.MemberRole
-	}
+	role := getRole(jsonRequestBody)
 
 	commandProcessor := useCase.NewGroupChatCommandProcessor(g.repository)
 	event, err := commandProcessor.AddMember(groupChatId, accountId, role, executorId)
@@ -184,4 +168,19 @@ func (g *GroupChatController) AddMember(c *gin.Context) {
 
 	response := AddMemberResponseSuccessBody{GroupChatId: event.GetAggregateId().AsString()}
 	c.JSON(http.StatusOK, response)
+}
+
+func getRole(jsonRequestBody AddMemberRequestBody) models.Role {
+	var role models.Role
+	if jsonRequestBody.Role == "amin" {
+		role = models.AdminRole
+	} else {
+		role = models.MemberRole
+	}
+	return role
+}
+
+func handleClientError(c *gin.Context, statusCode int, err error) {
+	response := GroupChatResponseErrorBody{Message: err.Error()}
+	c.JSON(statusCode, response)
 }
