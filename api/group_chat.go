@@ -288,7 +288,7 @@ func (g *GroupChatController) PostMessage(c *gin.Context) {
 
 func getRole(jsonRequestBody AddMemberRequestBody) models.Role {
 	var role models.Role
-	if jsonRequestBody.Role == "amin" {
+	if jsonRequestBody.Role == "admin" {
 		role = models.AdminRole
 	} else {
 		role = models.MemberRole
