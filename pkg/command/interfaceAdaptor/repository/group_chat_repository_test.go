@@ -53,7 +53,7 @@ func TestGroupChatRepositoryImpl_FindById(t *testing.T) {
 
 	// time.Sleep(5 * time.Second)
 
-	eventStore, err := esa.NewEventStore(
+	eventStore, err := esa.NewEventStoreOnDynamoDB(
 		dynamodbClient,
 		journalTableName, snapshotTableName, journalAidIndexName, snapshotAidIndexName,
 		32,
