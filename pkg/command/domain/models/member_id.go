@@ -35,3 +35,7 @@ func (m *MemberId) GetValue() string {
 func (m *MemberId) String() string {
 	return m.value
 }
+
+func (m *MemberId) Equals(other *MemberId) bool {
+	return m.value == other.value
+}

@@ -24,18 +24,55 @@ func Test_GroupChat_Create(t *testing.T) {
 	}
 	sender := NewRequestSender(engine)
 
-	w1 := httptest.NewRecorder()
-	err := sender.sendCreateGroupChatCommand(w1, "test1", "01H42K4ABWQ5V2XQEP3A48VE0Z")
+	recorder := httptest.NewRecorder()
+	groupChatName := "test1"
+	executorId := "01H42K4ABWQ5V2XQEP3A48VE0Z"
+	err := sender.sendCreateGroupChatCommand(recorder, groupChatName, executorId)
 	require.NoError(t, err)
-	require.Equal(t, 200, w1.Code)
+	require.Equal(t, 200, recorder.Code)
 
-	groupChatID, err := getGroupChatId(w1)
+	groupChatID, err := getGroupChatId(recorder)
 	require.NoError(t, err)
-	id := models.NewGroupChatIdFromString(groupChatID).MustGet()
-	result := groupChatRepository.FindById(id)
+
+	result := groupChatRepository.FindById(models.NewGroupChatIdFromString(groupChatID).MustGet())
 	require.True(t, result.IsOk())
 	actualGroupChat := result.MustGet()
 	require.Equal(t, groupChatID, actualGroupChat.GetId().String())
+	require.Equal(t, groupChatName, actualGroupChat.GetName().String())
+	require.Equal(t, executorId, actualGroupChat.GetMembers().GetAdministrator().GetUserAccountId().GetValue())
+}
+
+func Test_GroupChat_Delete(t *testing.T) {
+	groupChatRepository := repository.NewGroupChatRepository(eventstoreadaptergo.NewEventStoreOnMemory())
+	groupChatController := NewGroupChatController(groupChatRepository)
+
+	engine := gin.Default()
+	groupChat := engine.Group("/group-chats")
+	{
+		groupChat.POST("/create", groupChatController.CreateGroupChat)
+		groupChat.POST("/delete", groupChatController.DeleteGroupChat)
+	}
+	sender := NewRequestSender(engine)
+
+	recorder := httptest.NewRecorder()
+	groupChatName := "test1"
+	executorId := "01H42K4ABWQ5V2XQEP3A48VE0Z"
+	err := sender.sendCreateGroupChatCommand(recorder, groupChatName, executorId)
+	require.NoError(t, err)
+	require.Equal(t, 200, recorder.Code)
+
+	groupChatID, err := getGroupChatId(recorder)
+	require.NoError(t, err)
+
+	recorder = httptest.NewRecorder()
+	err = sender.sendDeleteGroupChatCommand(recorder, groupChatID, executorId)
+	require.NoError(t, err)
+	require.Equal(t, 200, recorder.Code)
+
+	result := groupChatRepository.FindById(models.NewGroupChatIdFromString(groupChatID).MustGet())
+	require.True(t, result.IsOk())
+	actualGroupChat := result.MustGet()
+	require.True(t, actualGroupChat.IsDeleted())
 }
 
 func Test_GroupChat_Rename(t *testing.T) {
@@ -50,18 +87,28 @@ func Test_GroupChat_Rename(t *testing.T) {
 	}
 	sender := NewRequestSender(engine)
 
-	w1 := httptest.NewRecorder()
-	err := sender.sendCreateGroupChatCommand(w1, "test1", "01H42K4ABWQ5V2XQEP3A48VE0Z")
+	recorder := httptest.NewRecorder()
+	groupChatName := "test1"
+	executorId := "01H42K4ABWQ5V2XQEP3A48VE0Z"
+	err := sender.sendCreateGroupChatCommand(recorder, groupChatName, executorId)
 	require.NoError(t, err)
-	require.Equal(t, 200, w1.Code)
+	require.Equal(t, 200, recorder.Code)
 
-	groupChatID, err := getGroupChatId(w1)
+	groupChatID, err := getGroupChatId(recorder)
 	require.NoError(t, err)
 
-	w2 := httptest.NewRecorder()
-	err = sender.sendRenameGroupChatCommand(w2, groupChatID, "test2", "01H42K4ABWQ5V2XQEP3A48VE0Z")
+	recorder = httptest.NewRecorder()
+	groupChatName2 := "test2"
+	err = sender.sendRenameGroupChatCommand(recorder, groupChatID, groupChatName2, executorId)
 	require.NoError(t, err)
-	require.Equal(t, 200, w2.Code)
+	require.Equal(t, 200, recorder.Code)
+
+	result := groupChatRepository.FindById(models.NewGroupChatIdFromString(groupChatID).MustGet())
+	require.True(t, result.IsOk())
+	actualGroupChat := result.MustGet()
+	require.Equal(t, groupChatID, actualGroupChat.GetId().String())
+	require.Equal(t, groupChatName2, actualGroupChat.GetName().String())
+	require.Equal(t, executorId, actualGroupChat.GetMembers().GetAdministrator().GetUserAccountId().GetValue())
 }
 
 func Test_GroupChat_AddMember(t *testing.T) {
@@ -76,18 +123,29 @@ func Test_GroupChat_AddMember(t *testing.T) {
 	}
 
 	sender := NewRequestSender(engine)
-	w1 := httptest.NewRecorder()
-	err := sender.sendCreateGroupChatCommand(w1, "test1", "01H42K4ABWQ5V2XQEP3A48VE0Z")
+	recorder := httptest.NewRecorder()
+	groupChatName := "test1"
+	executorId := "01H42K4ABWQ5V2XQEP3A48VE0Z"
+	err := sender.sendCreateGroupChatCommand(recorder, groupChatName, executorId)
 	require.NoError(t, err)
-	require.Equal(t, 200, w1.Code)
+	require.Equal(t, 200, recorder.Code)
 
-	groupChatID, err := getGroupChatId(w1)
+	groupChatID, err := getGroupChatId(recorder)
 	require.NoError(t, err)
 
-	w2 := httptest.NewRecorder()
-	err = sender.sendAddMemberCommand(w2, groupChatID, "01H42K4ABWQ5V2XQEP3A48VE0Z", "01H42K4ABWQ5V2XQEP3A48VE0Z")
+	recorder = httptest.NewRecorder()
+	userAccountId := "01HMGVNJTTW24CHABMT85M9EN9"
+	err = sender.sendAddMemberCommand(recorder, groupChatID, userAccountId, executorId)
 	require.NoError(t, err)
-	require.Equal(t, 200, w2.Code)
+	require.Equal(t, 200, recorder.Code)
+
+	result := groupChatRepository.FindById(models.NewGroupChatIdFromString(groupChatID).MustGet())
+	require.True(t, result.IsOk())
+	actualGroupChat := result.MustGet()
+	require.Equal(t, groupChatID, actualGroupChat.GetId().String())
+	require.Equal(t, groupChatName, actualGroupChat.GetName().String())
+	require.Equal(t, executorId, actualGroupChat.GetMembers().GetAdministrator().GetUserAccountId().GetValue())
+	require.True(t, actualGroupChat.GetMembers().FindByUserAccountId(models.NewUserAccountIdFromString(userAccountId).MustGet()).IsPresent())
 }
 
 func Test_GroupChat_RemoveMember(t *testing.T) {
@@ -103,23 +161,133 @@ func Test_GroupChat_RemoveMember(t *testing.T) {
 	}
 
 	sender := NewRequestSender(engine)
-	w1 := httptest.NewRecorder()
-	err := sender.sendCreateGroupChatCommand(w1, "test1", "01H42K4ABWQ5V2XQEP3A48VE0Z")
+	recorder := httptest.NewRecorder()
+	groupChatName := "test1"
+	executorId := "01H42K4ABWQ5V2XQEP3A48VE0Z"
+	err := sender.sendCreateGroupChatCommand(recorder, groupChatName, executorId)
 	require.NoError(t, err)
-	require.Equal(t, 200, w1.Code)
+	require.Equal(t, 200, recorder.Code)
 
-	groupChatID, err := getGroupChatId(w1)
+	groupChatID, err := getGroupChatId(recorder)
 	require.NoError(t, err)
 
-	w2 := httptest.NewRecorder()
-	err = sender.sendAddMemberCommand(w2, groupChatID, "01H42K4ABWQ5V2XQEP3A48VE0Z", "01H42K4ABWQ5V2XQEP3A48VE0Z")
+	recorder = httptest.NewRecorder()
+	userAccountId := "01HMGVNJTTW24CHABMT85M9EN9"
+	err = sender.sendAddMemberCommand(recorder, groupChatID, userAccountId, executorId)
 	require.NoError(t, err)
-	require.Equal(t, 200, w2.Code)
+	require.Equal(t, 200, recorder.Code)
 
-	w3 := httptest.NewRecorder()
-	err = sender.sendRemoveMemberCommand(w3, groupChatID, "01H42K4ABWQ5V2XQEP3A48VE0Z", "01H42K4ABWQ5V2XQEP3A48VE0Z")
+	recorder = httptest.NewRecorder()
+	err = sender.sendRemoveMemberCommand(recorder, groupChatID, userAccountId, executorId)
 	require.NoError(t, err)
-	require.Equal(t, 200, w3.Code)
+	require.Equal(t, 200, recorder.Code)
+
+	result := groupChatRepository.FindById(models.NewGroupChatIdFromString(groupChatID).MustGet())
+	require.True(t, result.IsOk())
+	actualGroupChat := result.MustGet()
+	require.Equal(t, groupChatID, actualGroupChat.GetId().String())
+	require.Equal(t, groupChatName, actualGroupChat.GetName().String())
+	require.Equal(t, executorId, actualGroupChat.GetMembers().GetAdministrator().GetUserAccountId().GetValue())
+	require.False(t, actualGroupChat.GetMembers().FindByUserAccountId(models.NewUserAccountIdFromString(userAccountId).MustGet()).IsPresent())
+}
+
+func Test_GroupChat_PostMessage(t *testing.T) {
+	groupChatRepository := repository.NewGroupChatRepository(eventstoreadaptergo.NewEventStoreOnMemory())
+	groupChatController := NewGroupChatController(groupChatRepository)
+
+	engine := gin.Default()
+	groupChat := engine.Group("/group-chats")
+	{
+		groupChat.POST("/create", groupChatController.CreateGroupChat)
+		groupChat.POST("/add-member", groupChatController.AddMember)
+		groupChat.POST("/post-message", groupChatController.PostMessage)
+	}
+
+	sender := NewRequestSender(engine)
+	recorder := httptest.NewRecorder()
+	groupChatName := "test1"
+	executorId := "01H42K4ABWQ5V2XQEP3A48VE0Z"
+	err := sender.sendCreateGroupChatCommand(recorder, groupChatName, executorId)
+	require.NoError(t, err)
+	require.Equal(t, 200, recorder.Code)
+
+	groupChatID, err := getGroupChatId(recorder)
+	require.NoError(t, err)
+
+	recorder = httptest.NewRecorder()
+	userAccountId := "01HMGVNJTTW24CHABMT85M9EN9"
+	err = sender.sendAddMemberCommand(recorder, groupChatID, userAccountId, executorId)
+	require.NoError(t, err)
+	require.Equal(t, 200, recorder.Code)
+
+	recorder = httptest.NewRecorder()
+	message := "test-message"
+	err = sender.sendPostMessageCommand(recorder, groupChatID, userAccountId, message, userAccountId)
+	require.NoError(t, err)
+	require.Equal(t, 200, recorder.Code)
+
+	result := groupChatRepository.FindById(models.NewGroupChatIdFromString(groupChatID).MustGet())
+	require.True(t, result.IsOk())
+	actualGroupChat := result.MustGet()
+	require.Equal(t, groupChatID, actualGroupChat.GetId().String())
+	require.Equal(t, groupChatName, actualGroupChat.GetName().String())
+	require.Equal(t, executorId, actualGroupChat.GetMembers().GetAdministrator().GetUserAccountId().GetValue())
+	require.True(t, actualGroupChat.GetMembers().FindByUserAccountId(models.NewUserAccountIdFromString(userAccountId).MustGet()).IsPresent())
+	require.Equal(t, message, actualGroupChat.GetMessages().ToSlice()[0].GetText())
+}
+
+func Test_GroupChat_DeleteMessage(t *testing.T) {
+	groupChatRepository := repository.NewGroupChatRepository(eventstoreadaptergo.NewEventStoreOnMemory())
+	groupChatController := NewGroupChatController(groupChatRepository)
+
+	engine := gin.Default()
+	groupChat := engine.Group("/group-chats")
+	{
+		groupChat.POST("/create", groupChatController.CreateGroupChat)
+		groupChat.POST("/add-member", groupChatController.AddMember)
+		groupChat.POST("/post-message", groupChatController.PostMessage)
+		groupChat.POST("/delete-message", groupChatController.DeleteMessage)
+	}
+
+	sender := NewRequestSender(engine)
+	recorder := httptest.NewRecorder()
+	groupChatName := "test1"
+	executorId := "01H42K4ABWQ5V2XQEP3A48VE0Z"
+	err := sender.sendCreateGroupChatCommand(recorder, groupChatName, executorId)
+	require.NoError(t, err)
+	require.Equal(t, 200, recorder.Code)
+
+	groupChatID, err := getGroupChatId(recorder)
+	require.NoError(t, err)
+
+	recorder = httptest.NewRecorder()
+	userAccountId := "01HMGVNJTTW24CHABMT85M9EN9"
+	err = sender.sendAddMemberCommand(recorder, groupChatID, userAccountId, executorId)
+	require.NoError(t, err)
+	require.Equal(t, 200, recorder.Code)
+
+	recorder = httptest.NewRecorder()
+	message := "test-message"
+	err = sender.sendPostMessageCommand(recorder, groupChatID, userAccountId, message, userAccountId)
+	require.NoError(t, err)
+	require.Equal(t, 200, recorder.Code)
+
+	messageId, err := getMessageId(recorder)
+	require.NoError(t, err)
+
+	recorder = httptest.NewRecorder()
+	err = sender.sendDeleteMessageCommand(recorder, groupChatID, messageId, userAccountId)
+	require.NoError(t, err)
+	require.Equal(t, 200, recorder.Code)
+
+	result := groupChatRepository.FindById(models.NewGroupChatIdFromString(groupChatID).MustGet())
+	require.True(t, result.IsOk())
+	actualGroupChat := result.MustGet()
+	require.Equal(t, groupChatID, actualGroupChat.GetId().String())
+	require.Equal(t, groupChatName, actualGroupChat.GetName().String())
+	require.Equal(t, executorId, actualGroupChat.GetMembers().GetAdministrator().GetUserAccountId().GetValue())
+	require.True(t, actualGroupChat.GetMembers().FindByUserAccountId(models.NewUserAccountIdFromString(userAccountId).MustGet()).IsPresent())
+	require.False(t, actualGroupChat.GetMessages().Contains(models.NewMessageIdFromString(messageId).MustGet()))
 }
 
 type RequestSender struct {
@@ -146,6 +314,20 @@ func (r *RequestSender) sendCreateGroupChatCommand(w *httptest.ResponseRecorder,
 	return nil
 }
 
+func (r *RequestSender) sendDeleteGroupChatCommand(w *httptest.ResponseRecorder, groupChatID string, executorId string) error {
+	createGroupChatRequestBodyJson, err := json.Marshal(DeleteGroupChatRequestBody{
+		GroupChatId: groupChatID,
+		ExecutorId:  executorId,
+	})
+	if err != nil {
+		return err
+	}
+	createGroupChatRequestBody := bytes.NewBuffer(createGroupChatRequestBodyJson)
+	createGroupChatRequest := httptest.NewRequest("POST", "/group-chats/delete", createGroupChatRequestBody)
+	r.engine.ServeHTTP(w, createGroupChatRequest)
+	return nil
+}
+
 func getGroupChatId(w *httptest.ResponseRecorder) (string, error) {
 	responseBody, err := io.ReadAll(w.Body)
 	if err != nil {
@@ -158,6 +340,20 @@ func getGroupChatId(w *httptest.ResponseRecorder) (string, error) {
 	}
 	groupChatID := createGroupChatResponseSuccessBody.GroupChatId
 	return groupChatID, err
+}
+
+func getMessageId(w *httptest.ResponseRecorder) (string, error) {
+	responseBody, err := io.ReadAll(w.Body)
+	if err != nil {
+		return "", err
+	}
+	var responseSuccessBody PostMessageResponseSuccessBody
+	err = json.Unmarshal(responseBody, &responseSuccessBody)
+	if err != nil {
+		return "", err
+	}
+	messageId := responseSuccessBody.MessageId
+	return messageId, err
 }
 
 func (r *RequestSender) sendRenameGroupChatCommand(w *httptest.ResponseRecorder, groupChatID string, groupChatName string, executorId string) error {
@@ -202,6 +398,37 @@ func (r *RequestSender) sendRemoveMemberCommand(w *httptest.ResponseRecorder, gr
 	}
 	requestBodyJsonBody := bytes.NewBuffer(requestBodyJson)
 	request := httptest.NewRequest("POST", "/group-chats/remove-member", requestBodyJsonBody)
+	r.engine.ServeHTTP(w, request)
+	return nil
+}
+
+func (r *RequestSender) sendPostMessageCommand(w *httptest.ResponseRecorder, groupChatID string, accountId string, message string, executorId string) error {
+	requestBodyJson, err := json.Marshal(PostMessageRequestBody{
+		GroupChatId: groupChatID,
+		AccountId:   accountId,
+		Message:     message,
+		ExecutorId:  executorId,
+	})
+	if err != nil {
+		return err
+	}
+	requestBodyJsonBody := bytes.NewBuffer(requestBodyJson)
+	request := httptest.NewRequest("POST", "/group-chats/post-message", requestBodyJsonBody)
+	r.engine.ServeHTTP(w, request)
+	return nil
+}
+
+func (r *RequestSender) sendDeleteMessageCommand(w *httptest.ResponseRecorder, groupChatID string, messageId string, executorId string) error {
+	requestBodyJson, err := json.Marshal(DeleteMessageRequestBody{
+		GroupChatId: groupChatID,
+		MessageId:   messageId,
+		ExecutorId:  executorId,
+	})
+	if err != nil {
+		return err
+	}
+	requestBodyJsonBody := bytes.NewBuffer(requestBodyJson)
+	request := httptest.NewRequest("POST", "/group-chats/delete-message", requestBodyJsonBody)
 	r.engine.ServeHTTP(w, request)
 	return nil
 }
