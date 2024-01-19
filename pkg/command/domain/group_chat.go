@@ -68,13 +68,13 @@ func NewGroupChatFrom(id *models.GroupChatId, name *models.GroupChatName, member
 
 func (g *GroupChat) ToJSON() map[string]interface{} {
 	return map[string]interface{}{
-		"Id":       g.id.ToJSON(),
-		"Name":     g.name.ToJSON(),
-		"Members":  g.members.ToJSON(),
-		"Messages": g.messages.ToJSON(),
-		"SeqNr":    g.seqNr,
-		"Version":  g.version,
-		"Deleted":  g.deleted,
+		"id":       g.id.ToJSON(),
+		"name":     g.name.ToJSON(),
+		"members":  g.members.ToJSON(),
+		"messages": g.messages.ToJSON(),
+		"seq_nr":   g.seqNr,
+		"version":  g.version,
+		"deleted":  g.deleted,
 	}
 }
 

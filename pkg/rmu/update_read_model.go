@@ -24,10 +24,12 @@ type GroupChatDao interface {
 	AddMember(id *models.MemberId, aggregateId *models.GroupChatId, accountId *models.UserAccountId, role models.Role, at time.Time) error
 }
 
+// NewReadModelUpdater は ReadModelUpdater を生成します。
 func NewReadModelUpdater(dao GroupChatDao) *ReadModelUpdater {
 	return &ReadModelUpdater{dao}
 }
 
+// UpdateReadModel は DynamoDB のストリームからのイベントを処理して、リードモデルを更新します。
 func (r *ReadModelUpdater) UpdateReadModel(ctx context.Context, event dynamodbevents.DynamoDBEvent) error {
 	for _, record := range event.Records {
 		fmt.Printf("Processing request data for event ID %s, type %s.\n", record.EventID, record.EventName)

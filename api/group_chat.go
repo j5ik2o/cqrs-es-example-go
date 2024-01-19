@@ -81,12 +81,14 @@ type GroupChatController struct {
 	repository repository.GroupChatRepository
 }
 
+// NewGroupChatController は GroupChatController を生成します。
 func NewGroupChatController(repository repository.GroupChatRepository) *GroupChatController {
 	return &GroupChatController{
 		repository,
 	}
 }
 
+// CreateGroupChat はグループチャットを作成します。
 func (g *GroupChatController) CreateGroupChat(c *gin.Context) {
 	var jsonRequestBody CreateGroupChatRequestBody
 
@@ -120,6 +122,7 @@ func (g *GroupChatController) CreateGroupChat(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
+// RenameGroupChat はグループチャットをリネームします。
 func (g *GroupChatController) RenameGroupChat(c *gin.Context) {
 	var jsonRequestBody RenameGroupChatRequestBody
 
@@ -159,6 +162,7 @@ func (g *GroupChatController) RenameGroupChat(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
+// AddMember はグループチャットにメンバーを追加します。
 func (g *GroupChatController) AddMember(c *gin.Context) {
 	var jsonRequestBody AddMemberRequestBody
 
@@ -200,6 +204,7 @@ func (g *GroupChatController) AddMember(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
+// RemoveMember はグループチャットからメンバーを削除します。
 func (g *GroupChatController) RemoveMember(c *gin.Context) {
 	var jsonRequestBody RemoveMemberRequestBody
 
@@ -239,6 +244,7 @@ func (g *GroupChatController) RemoveMember(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
+// PostMessage はグループチャットにメッセージを投稿します。
 func (g *GroupChatController) PostMessage(c *gin.Context) {
 	var jsonRequestBody PostMessageRequestBody
 
@@ -286,6 +292,7 @@ func (g *GroupChatController) PostMessage(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
+// getRole はリクエストボディからロールを取得します。
 func getRole(jsonRequestBody AddMemberRequestBody) models.Role {
 	var role models.Role
 	if jsonRequestBody.Role == "admin" {
@@ -296,6 +303,7 @@ func getRole(jsonRequestBody AddMemberRequestBody) models.Role {
 	return role
 }
 
+// handleClientError はクライアントエラーを処理します。
 func handleClientError(c *gin.Context, statusCode int, err error) {
 	response := GroupChatResponseErrorBody{Message: err.Error()}
 	c.JSON(statusCode, response)

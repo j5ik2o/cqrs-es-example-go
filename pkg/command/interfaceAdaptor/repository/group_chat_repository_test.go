@@ -53,7 +53,7 @@ func TestGroupChatRepositoryImpl_FindById(t *testing.T) {
 
 	// time.Sleep(5 * time.Second)
 
-	eventStore, err := esa.NewEventStore(
+	eventStore, err := esa.NewEventStoreOnDynamoDB(
 		dynamodbClient,
 		journalTableName, snapshotTableName, journalAidIndexName, snapshotAidIndexName,
 		32,
@@ -72,9 +72,9 @@ func TestGroupChatRepositoryImpl_FindById(t *testing.T) {
 		t.Fatal(err)
 	}
 	groupChat, event := domain.NewGroupChat(name, adminId, adminId)
-	json, err := json.Marshal(event.ToJSON())
+	jsonObj, err := json.Marshal(event.ToJSON())
 	require.NoError(t, err)
-	fmt.Printf("event = %s\n", string(json))
+	fmt.Printf("event = %s\n", string(jsonObj))
 	err = repository.StoreEventWithSnapshot(event, groupChat)
 	require.NoError(t, err)
 

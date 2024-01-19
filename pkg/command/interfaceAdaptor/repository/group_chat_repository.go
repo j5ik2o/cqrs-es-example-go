@@ -16,10 +16,10 @@ type GroupChatRepository interface {
 }
 
 type GroupChatRepositoryImpl struct {
-	eventStore *esa.EventStore
+	eventStore esa.EventStore
 }
 
-func NewGroupChatRepository(eventStore *esa.EventStore) *GroupChatRepositoryImpl {
+func NewGroupChatRepository(eventStore esa.EventStore) *GroupChatRepositoryImpl {
 	return &GroupChatRepositoryImpl{eventStore}
 }
 

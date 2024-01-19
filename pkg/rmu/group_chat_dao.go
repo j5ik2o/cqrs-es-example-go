@@ -2,6 +2,7 @@ package rmu
 
 import (
 	"cqrs-es-example-go/pkg/command/domain/models"
+	"database/sql"
 	"github.com/jmoiron/sqlx"
 	"time"
 )
@@ -10,12 +11,20 @@ type GroupChatDaoImpl struct {
 	db *sqlx.DB
 }
 
+// NewGroupChatDaoImpl は GroupChatDaoImpl を生成します。
 func NewGroupChatDaoImpl(db *sqlx.DB) *GroupChatDaoImpl {
 	return &GroupChatDaoImpl{db}
 }
 
+// Create は DB上にグループチャットリードモデルを作成します。
 func (dao *GroupChatDaoImpl) Create(aggregateId *models.GroupChatId, name *models.GroupChatName, administratorId *models.UserAccountId, createdAt time.Time) error {
 	stmt, err := dao.db.Prepare(`INSERT INTO group_chats (id, name, owner_id, created_at) VALUES(?,?,?,?)`)
+	defer func(stmt *sql.Stmt) {
+		err := stmt.Close()
+		if err != nil {
+			panic(err.Error())
+		}
+	}(stmt)
 	if err != nil {
 		return err
 	}
@@ -27,6 +36,7 @@ func (dao *GroupChatDaoImpl) Create(aggregateId *models.GroupChatId, name *model
 	return nil
 }
 
+// AddMember は DB上にメンバーリードモデルを追加します。
 func (dao *GroupChatDaoImpl) AddMember(id *models.MemberId, aggregateId *models.GroupChatId, accountId *models.UserAccountId, role models.Role, at time.Time) error {
 	stmt, err := dao.db.Prepare(`INSERT INTO members (id, group_chat_id, account_id, role, created_at) VALUES (?, ?, ?, ?, ?)`)
 	if err != nil {
