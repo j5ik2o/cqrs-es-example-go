@@ -20,3 +20,7 @@ func ValidateUserAccountId(id string) mo.Result[*models.UserAccountId] {
 func ValidateMessage(id *models.MessageId, message string, senderId *models.UserAccountId) mo.Result[*models.Message] {
 	return models.NewMessage(id, message, senderId)
 }
+
+func ValidateMessageId(id string) mo.Result[*models.MessageId] {
+	return models.NewMessageIdFromString(id)
+}

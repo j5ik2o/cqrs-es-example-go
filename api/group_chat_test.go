@@ -203,6 +203,51 @@ func Test_GroupChat_PostMessage(t *testing.T) {
 	require.Equal(t, message, actualGroupChat.GetMessages().ToSlice()[0].GetText())
 }
 
+func Test_GroupChat_DeleteMessage(t *testing.T) {
+	groupChatRepository := repository.NewGroupChatRepository(eventstoreadaptergo.NewEventStoreOnMemory())
+	groupChatController := NewGroupChatController(groupChatRepository)
+
+	engine := gin.Default()
+	groupChat := engine.Group("/group-chats")
+	{
+		groupChat.POST("/create", groupChatController.CreateGroupChat)
+		groupChat.POST("/add-member", groupChatController.AddMember)
+		groupChat.POST("/post-message", groupChatController.PostMessage)
+		groupChat.POST("/delete-message", groupChatController.DeleteMessage)
+	}
+
+	sender := NewRequestSender(engine)
+	recorder := httptest.NewRecorder()
+	groupChatName := "test1"
+	executorId := "01H42K4ABWQ5V2XQEP3A48VE0Z"
+	err := sender.sendCreateGroupChatCommand(recorder, groupChatName, executorId)
+	require.NoError(t, err)
+	require.Equal(t, 200, recorder.Code)
+
+	groupChatID, err := getGroupChatId(recorder)
+	require.NoError(t, err)
+
+	recorder = httptest.NewRecorder()
+	userAccountId := "01HMGVNJTTW24CHABMT85M9EN9"
+	err = sender.sendAddMemberCommand(recorder, groupChatID, userAccountId, executorId)
+	require.NoError(t, err)
+	require.Equal(t, 200, recorder.Code)
+
+	recorder = httptest.NewRecorder()
+	message := "test-message"
+	err = sender.sendPostMessageCommand(recorder, groupChatID, userAccountId, message, userAccountId)
+	require.NoError(t, err)
+	require.Equal(t, 200, recorder.Code)
+
+	messageId, err := getMessageId(recorder)
+	require.NoError(t, err)
+
+	recorder = httptest.NewRecorder()
+	err = sender.sendDeleteMessageCommand(recorder, groupChatID, messageId, userAccountId)
+	require.NoError(t, err)
+	require.Equal(t, 200, recorder.Code)
+}
+
 type RequestSender struct {
 	engine *gin.Engine
 }
@@ -239,6 +284,20 @@ func getGroupChatId(w *httptest.ResponseRecorder) (string, error) {
 	}
 	groupChatID := createGroupChatResponseSuccessBody.GroupChatId
 	return groupChatID, err
+}
+
+func getMessageId(w *httptest.ResponseRecorder) (string, error) {
+	responseBody, err := io.ReadAll(w.Body)
+	if err != nil {
+		return "", err
+	}
+	var responseSuccessBody PostMessageResponseSuccessBody
+	err = json.Unmarshal(responseBody, &responseSuccessBody)
+	if err != nil {
+		return "", err
+	}
+	messageId := responseSuccessBody.MessageId
+	return messageId, err
 }
 
 func (r *RequestSender) sendRenameGroupChatCommand(w *httptest.ResponseRecorder, groupChatID string, groupChatName string, executorId string) error {
@@ -299,6 +358,21 @@ func (r *RequestSender) sendPostMessageCommand(w *httptest.ResponseRecorder, gro
 	}
 	requestBodyJsonBody := bytes.NewBuffer(requestBodyJson)
 	request := httptest.NewRequest("POST", "/group-chats/post-message", requestBodyJsonBody)
+	r.engine.ServeHTTP(w, request)
+	return nil
+}
+
+func (r *RequestSender) sendDeleteMessageCommand(w *httptest.ResponseRecorder, groupChatID string, messageId string, executorId string) error {
+	requestBodyJson, err := json.Marshal(DeleteMessageRequestBody{
+		GroupChatId: groupChatID,
+		MessageId:   messageId,
+		ExecutorId:  executorId,
+	})
+	if err != nil {
+		return err
+	}
+	requestBodyJsonBody := bytes.NewBuffer(requestBodyJson)
+	request := httptest.NewRequest("POST", "/group-chats/delete-message", requestBodyJsonBody)
 	r.engine.ServeHTTP(w, request)
 	return nil
 }

@@ -90,3 +90,19 @@ func (g *GroupChatCommandProcessor) PostMessage(groupChatId *models.GroupChatId,
 	}
 	return pair.V2, nil
 }
+
+func (g *GroupChatCommandProcessor) DeleteMessage(groupChatId *models.GroupChatId, messageId *models.MessageId, executorId *models.UserAccountId) (events.GroupChatEvent, error) {
+	groupChat, err := g.repository.FindById(groupChatId).Get()
+	if err != nil {
+		return nil, err
+	}
+	pair, err := groupChat.DeleteMessage(messageId, executorId).Get()
+	if err != nil {
+		return nil, err
+	}
+	err = g.repository.StoreEventWithSnapshot(pair.V2, pair.V1)
+	if err != nil {
+		return nil, err
+	}
+	return pair.V2, nil
+}

@@ -236,7 +236,7 @@ func (g *GroupChat) DeleteMessage(messageId *models.MessageId, executorId *model
 		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatDeleteMessageErr("message is not found"))
 	}
 	member := g.members.FindByUserAccountId(message.GetSenderId()).MustGet()
-	if member.GetUserAccountId() != executorId {
+	if !member.GetUserAccountId().Equals(executorId) {
 		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatDeleteMessageErr("User is not the sender of the message"))
 	}
 	newState := g.WithMessages(g.messages.Remove(messageId).MustGet())

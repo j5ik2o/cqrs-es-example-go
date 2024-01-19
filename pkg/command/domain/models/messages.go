@@ -3,15 +3,19 @@ package models
 import "github.com/samber/mo"
 
 type Messages struct {
-	values map[*MessageId]*Message
+	values map[string]*Message
 }
 
 func NewMessages() *Messages {
-	return &Messages{values: map[*MessageId]*Message{}}
+	return &Messages{values: map[string]*Message{}}
 }
 
 func NewMessagesFromMap(values map[*MessageId]*Message) *Messages {
-	return &Messages{values: values}
+	m := make(map[string]*Message, len(values))
+	for k, v := range values {
+		m[k.GetValue()] = v
+	}
+	return &Messages{values: m}
 }
 
 func ConvertMessagesFromJSON(value map[string]interface{}) mo.Result[*Messages] {
@@ -28,7 +32,7 @@ func ConvertMessagesFromJSON(value map[string]interface{}) mo.Result[*Messages] 
 }
 
 func (m *Messages) Contains(id *MessageId) bool {
-	_, ok := m.values[id]
+	_, ok := m.values[id.GetValue()]
 	return ok
 }
 
@@ -54,7 +58,7 @@ func (m *Messages) Get(id *MessageId) mo.Option[*Message] {
 	if !m.Contains(id) {
 		return mo.None[*Message]()
 	}
-	return mo.Some[*Message](m.values[id])
+	return mo.Some[*Message](m.values[id.GetValue()])
 }
 
 func (m *Messages) ToJSON() map[string]interface{} {
@@ -72,7 +76,8 @@ func (m *Messages) ToJSON() map[string]interface{} {
 func (m *Messages) ToMap() map[*MessageId]*Message {
 	result := map[*MessageId]*Message{}
 	for k, v := range m.values {
-		result[k] = v
+		id := NewMessageIdFromString(k).MustGet()
+		result[id] = v
 	}
 	return result
 }
