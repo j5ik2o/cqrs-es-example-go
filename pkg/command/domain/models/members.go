@@ -53,7 +53,7 @@ func (m *Members) AddMember(userAccountId *UserAccountId) *Members {
 func (m *Members) RemoveMemberByUserAccountId(userAccountId *UserAccountId) *Members {
 	newMembers := make([]*Member, 0, len(m.values))
 	for _, member := range m.values {
-		if member.userAccountId != userAccountId {
+		if !member.userAccountId.Equals(userAccountId) {
 			newMembers = append(newMembers, member)
 		}
 	}
@@ -82,7 +82,7 @@ func (m *Members) IsAdministrator(userAccountId *UserAccountId) bool {
 
 func (m *Members) IsMember(userAccountId *UserAccountId) bool {
 	for _, member := range m.values {
-		if member.userAccountId == userAccountId {
+		if member.userAccountId.Equals(userAccountId) {
 			return true
 		}
 	}
@@ -91,7 +91,7 @@ func (m *Members) IsMember(userAccountId *UserAccountId) bool {
 
 func (m *Members) FindByMemberId(memberId *MemberId) mo.Option[*Member] {
 	for _, member := range m.values {
-		if member.id == memberId {
+		if member.id.Equals(memberId) {
 			return mo.Some(member)
 		}
 	}
@@ -100,7 +100,7 @@ func (m *Members) FindByMemberId(memberId *MemberId) mo.Option[*Member] {
 
 func (m *Members) FindByUserAccountId(userAccountId *UserAccountId) mo.Option[*Member] {
 	for _, member := range m.values {
-		if member.userAccountId == userAccountId {
+		if member.userAccountId.Equals(userAccountId) {
 			return mo.Some(member)
 		}
 	}

@@ -177,7 +177,7 @@ func (g *GroupChatController) AddMember(c *gin.Context) {
 		return
 	}
 
-	accountId, err := validator.ValidateUserAccountId(jsonRequestBody.ExecutorId).Get()
+	accountId, err := validator.ValidateUserAccountId(jsonRequestBody.AccountId).Get()
 	if err != nil {
 		handleClientError(c, http.StatusBadRequest, err)
 		return
@@ -219,7 +219,7 @@ func (g *GroupChatController) RemoveMember(c *gin.Context) {
 		return
 	}
 
-	accountId, err := validator.ValidateUserAccountId(jsonRequestBody.ExecutorId).Get()
+	accountId, err := validator.ValidateUserAccountId(jsonRequestBody.AccountId).Get()
 	if err != nil {
 		handleClientError(c, http.StatusBadRequest, err)
 		return
