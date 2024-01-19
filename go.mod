@@ -3,7 +3,7 @@ module cqrs-es-example-go
 go 1.20
 
 require (
-	github.com/99designs/gqlgen v0.17.40
+	github.com/99designs/gqlgen v0.17.43
 	github.com/aws/aws-lambda-go v1.41.0
 	github.com/aws/aws-sdk-go-v2 v1.24.1
 	github.com/aws/aws-sdk-go-v2/config v1.26.5
@@ -25,7 +25,7 @@ require (
 	github.com/testcontainers/testcontainers-go v0.27.0
 	github.com/testcontainers/testcontainers-go/modules/localstack v0.27.0
 	github.com/testcontainers/testcontainers-go/modules/mysql v0.26.0
-	github.com/vektah/gqlparser/v2 v2.5.10
+	github.com/vektah/gqlparser/v2 v2.5.11
 )
 
 require (
