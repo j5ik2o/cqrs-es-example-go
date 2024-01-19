@@ -72,9 +72,9 @@ func TestGroupChatRepositoryImpl_FindById(t *testing.T) {
 		t.Fatal(err)
 	}
 	groupChat, event := domain.NewGroupChat(name, adminId, adminId)
-	json, err := json.Marshal(event.ToJSON())
+	jsonObj, err := json.Marshal(event.ToJSON())
 	require.NoError(t, err)
-	fmt.Printf("event = %s\n", string(json))
+	fmt.Printf("event = %s\n", string(jsonObj))
 	err = repository.StoreEventWithSnapshot(event, groupChat)
 	require.NoError(t, err)
 
