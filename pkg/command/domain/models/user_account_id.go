@@ -20,6 +20,10 @@ func NewUserAccountIdFromString(value string) mo.Result[*UserAccountId] {
 	if value == "" {
 		return mo.Err[*UserAccountId](errors.New("UserAccountId is empty"))
 	}
+	// 先頭がUserAccount-であれば、それを削除する
+	if len(value) > 12 && value[0:12] == "UserAccount" {
+		value = value[13:]
+	}
 	return mo.Ok(&UserAccountId{value: value})
 }
 
@@ -47,4 +51,8 @@ func (u *UserAccountId) AsString() string {
 
 func (u *UserAccountId) String() string {
 	return u.AsString()
+}
+
+func (u *UserAccountId) Equals(other *UserAccountId) bool {
+	return u.value == other.value
 }

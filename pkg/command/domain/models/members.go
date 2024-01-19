@@ -73,7 +73,7 @@ func (m *Members) GetAdministrator() *Member {
 
 func (m *Members) IsAdministrator(userAccountId *UserAccountId) bool {
 	for _, member := range m.values {
-		if member.userAccountId == userAccountId && member.role == AdminRole {
+		if member.userAccountId.Equals(userAccountId) && member.role == AdminRole {
 			return true
 		}
 	}
