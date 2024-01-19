@@ -70,7 +70,7 @@ var writeApiCmd = &cobra.Command{
 
 		dynamodbClient := dynamodb.NewFromConfig(awsCfg)
 
-		eventStore, err := esa.NewEventStore(
+		eventStore, err := esa.NewEventStoreOnDynamoDB(
 			dynamodbClient,
 			journalTableName,
 			snapshotTableName,

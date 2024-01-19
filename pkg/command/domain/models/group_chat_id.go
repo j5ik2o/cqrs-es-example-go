@@ -16,6 +16,10 @@ func NewGroupChatId() *GroupChatId {
 }
 
 func NewGroupChatIdFromString(value string) mo.Result[*GroupChatId] {
+	// 先頭がGroupChat-であれば、それを削除する
+	if len(value) > 9 && value[0:9] == "GroupChat" {
+		value = value[10:]
+	}
 	return mo.Ok(&GroupChatId{value: value})
 }
 

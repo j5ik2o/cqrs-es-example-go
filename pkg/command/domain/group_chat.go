@@ -127,7 +127,7 @@ func (g *GroupChat) WithMessages(messages *models.Messages) *GroupChat {
 }
 
 func (g *GroupChat) WithVersion(version uint64) esa.Aggregate {
-	return &GroupChat{id: g.id, seqNr: g.seqNr, version: version}
+	return NewGroupChatFrom(g.id, g.name, g.members, g.messages, g.seqNr, version, g.deleted)
 }
 
 func (g *GroupChat) WithDeleted() *GroupChat {
@@ -174,7 +174,7 @@ func (g *GroupChat) Rename(name *models.GroupChatName, executorId *models.UserAc
 		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatAddMemberErr("The group chat is deleted"))
 	}
 	if !g.members.IsAdministrator(executorId) {
-		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatAddMemberErr("executorId is not a newMember of the group chat"))
+		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatAddMemberErr("executorId is not an administrator of the group chat"))
 	}
 	if g.name == name {
 		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatAddMemberErr("name is already the same as the current name"))
