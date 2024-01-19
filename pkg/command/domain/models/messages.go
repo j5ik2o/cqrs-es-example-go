@@ -10,10 +10,10 @@ func NewMessages() *Messages {
 	return &Messages{values: map[string]*Message{}}
 }
 
-func NewMessagesFromMap(values map[*MessageId]*Message) *Messages {
+func NewMessagesFromMap(values map[string]*Message) *Messages {
 	m := make(map[string]*Message, len(values))
 	for k, v := range values {
-		m[k.GetValue()] = v
+		m[k] = v
 	}
 	return &Messages{values: m}
 }
@@ -41,7 +41,7 @@ func (m *Messages) Add(message *Message) mo.Option[*Messages] {
 		return mo.None[*Messages]()
 	}
 	newMap := m.ToMap()
-	newMap[message.GetId()] = message
+	newMap[message.GetId().GetValue()] = message
 	return mo.Some(NewMessagesFromMap(newMap))
 }
 
@@ -50,7 +50,7 @@ func (m *Messages) Remove(id *MessageId) mo.Option[*Messages] {
 		return mo.None[*Messages]()
 	}
 	newMap := m.ToMap()
-	delete(newMap, id)
+	delete(newMap, id.GetValue())
 	return mo.Some(NewMessagesFromMap(newMap))
 }
 
@@ -73,11 +73,10 @@ func (m *Messages) ToJSON() map[string]interface{} {
 	}
 }
 
-func (m *Messages) ToMap() map[*MessageId]*Message {
-	result := map[*MessageId]*Message{}
+func (m *Messages) ToMap() map[string]*Message {
+	result := map[string]*Message{}
 	for k, v := range m.values {
-		id := NewMessageIdFromString(k).MustGet()
-		result[id] = v
+		result[k] = v
 	}
 	return result
 }

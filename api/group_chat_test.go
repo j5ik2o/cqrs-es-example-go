@@ -287,7 +287,7 @@ func Test_GroupChat_DeleteMessage(t *testing.T) {
 	require.Equal(t, groupChatName, actualGroupChat.GetName().String())
 	require.Equal(t, executorId, actualGroupChat.GetMembers().GetAdministrator().GetUserAccountId().GetValue())
 	require.True(t, actualGroupChat.GetMembers().FindByUserAccountId(models.NewUserAccountIdFromString(userAccountId).MustGet()).IsPresent())
-	require.True(t, actualGroupChat.GetMessages().Contains(models.NewMessageIdFromString(messageId).MustGet()))
+	require.False(t, actualGroupChat.GetMessages().Contains(models.NewMessageIdFromString(messageId).MustGet()))
 }
 
 type RequestSender struct {

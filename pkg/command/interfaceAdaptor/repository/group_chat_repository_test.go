@@ -58,7 +58,7 @@ func Test_GroupChatRepository_OnDynamoDB_FindById(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	groupChat, event := domain.NewGroupChat(name, adminId, adminId)
+	groupChat, event := domain.NewGroupChat(name, adminId)
 	jsonObj, err := json.Marshal(event.ToJSON())
 	require.NoError(t, err)
 	fmt.Printf("event = %s\n", string(jsonObj))
@@ -79,7 +79,7 @@ func Test_GroupChatRepository_OnMemory_FindById(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	groupChat, event := domain.NewGroupChat(name, adminId, adminId)
+	groupChat, event := domain.NewGroupChat(name, adminId)
 	jsonObj, err := json.Marshal(event.ToJSON())
 	require.NoError(t, err)
 	fmt.Printf("event = %s\n", string(jsonObj))
