@@ -90,6 +90,38 @@ func Test_GroupChat_AddMember(t *testing.T) {
 	require.Equal(t, 200, w2.Code)
 }
 
+func Test_GroupChat_RemoveMember(t *testing.T) {
+	groupChatRepository := repository.NewGroupChatRepository(eventstoreadaptergo.NewEventStoreOnMemory())
+	groupChatController := NewGroupChatController(groupChatRepository)
+
+	engine := gin.Default()
+	groupChat := engine.Group("/group-chats")
+	{
+		groupChat.POST("/create", groupChatController.CreateGroupChat)
+		groupChat.POST("/add-member", groupChatController.AddMember)
+		groupChat.POST("/remove-member", groupChatController.RemoveMember)
+	}
+
+	sender := NewRequestSender(engine)
+	w1 := httptest.NewRecorder()
+	err := sender.sendCreateGroupChatCommand(w1, "test1", "01H42K4ABWQ5V2XQEP3A48VE0Z")
+	require.NoError(t, err)
+	require.Equal(t, 200, w1.Code)
+
+	groupChatID, err := getGroupChatId(w1)
+	require.NoError(t, err)
+
+	w2 := httptest.NewRecorder()
+	err = sender.sendAddMemberCommand(w2, groupChatID, "01H42K4ABWQ5V2XQEP3A48VE0Z", "01H42K4ABWQ5V2XQEP3A48VE0Z")
+	require.NoError(t, err)
+	require.Equal(t, 200, w2.Code)
+
+	w3 := httptest.NewRecorder()
+	err = sender.sendRemoveMemberCommand(w3, groupChatID, "01H42K4ABWQ5V2XQEP3A48VE0Z", "01H42K4ABWQ5V2XQEP3A48VE0Z")
+	require.NoError(t, err)
+	require.Equal(t, 200, w3.Code)
+}
+
 type RequestSender struct {
 	engine *gin.Engine
 }
@@ -144,7 +176,7 @@ func (r *RequestSender) sendRenameGroupChatCommand(w *httptest.ResponseRecorder,
 }
 
 func (r *RequestSender) sendAddMemberCommand(w *httptest.ResponseRecorder, groupChatID string, accountId string, executorId string) error {
-	addMemberRequestBodyJson, err := json.Marshal(AddMemberRequestBody{
+	requestBodyJson, err := json.Marshal(AddMemberRequestBody{
 		GroupChatId: groupChatID,
 		AccountId:   accountId,
 		Role:        "admin",
@@ -153,8 +185,23 @@ func (r *RequestSender) sendAddMemberCommand(w *httptest.ResponseRecorder, group
 	if err != nil {
 		return err
 	}
-	addMemberRequestBodyJsonBody := bytes.NewBuffer(addMemberRequestBodyJson)
-	addMemberRequest := httptest.NewRequest("POST", "/group-chats/add-member", addMemberRequestBodyJsonBody)
-	r.engine.ServeHTTP(w, addMemberRequest)
+	requestBodyJsonBody := bytes.NewBuffer(requestBodyJson)
+	request := httptest.NewRequest("POST", "/group-chats/add-member", requestBodyJsonBody)
+	r.engine.ServeHTTP(w, request)
+	return nil
+}
+
+func (r *RequestSender) sendRemoveMemberCommand(w *httptest.ResponseRecorder, groupChatID string, accountId string, executorId string) error {
+	requestBodyJson, err := json.Marshal(RemoveMemberRequestBody{
+		GroupChatId: groupChatID,
+		AccountId:   accountId,
+		ExecutorId:  executorId,
+	})
+	if err != nil {
+		return err
+	}
+	requestBodyJsonBody := bytes.NewBuffer(requestBodyJson)
+	request := httptest.NewRequest("POST", "/group-chats/remove-member", requestBodyJsonBody)
+	r.engine.ServeHTTP(w, request)
 	return nil
 }
