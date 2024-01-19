@@ -38,6 +38,7 @@ func Test_GroupChat_RemoveMemberByUserAccountId(t *testing.T) {
 	userAccountId := models.NewUserAccountId()
 	result := groupChat.AddMember(memberId, userAccountId, models.MemberRole, adminId)
 	require.True(t, result.IsOk())
+	groupChat = result.MustGet().V1
 
 	// When
 	result = groupChat.RemoveMemberByUserAccountId(userAccountId, adminId)
