@@ -22,9 +22,10 @@ func Test_GroupChat_Create(t *testing.T) {
 	{
 		groupChat.POST("/create", groupChatController.CreateGroupChat)
 	}
+	sender := NewRequestSender(engine)
 
 	w1 := httptest.NewRecorder()
-	err := sendCreateGroupChatCommand("test1", "01H42K4ABWQ5V2XQEP3A48VE0Z", engine, w1)
+	err := sender.sendCreateGroupChatCommand(w1, "test1", "01H42K4ABWQ5V2XQEP3A48VE0Z")
 	require.NoError(t, err)
 	require.Equal(t, 200, w1.Code)
 
@@ -47,9 +48,10 @@ func Test_GroupChat_Rename(t *testing.T) {
 		groupChat.POST("/create", groupChatController.CreateGroupChat)
 		groupChat.POST("/rename", groupChatController.RenameGroupChat)
 	}
+	sender := NewRequestSender(engine)
 
 	w1 := httptest.NewRecorder()
-	err := sendCreateGroupChatCommand("test1", "01H42K4ABWQ5V2XQEP3A48VE0Z", engine, w1)
+	err := sender.sendCreateGroupChatCommand(w1, "test1", "01H42K4ABWQ5V2XQEP3A48VE0Z")
 	require.NoError(t, err)
 	require.Equal(t, 200, w1.Code)
 
@@ -57,7 +59,7 @@ func Test_GroupChat_Rename(t *testing.T) {
 	require.NoError(t, err)
 
 	w2 := httptest.NewRecorder()
-	err = sendRenameGroupChatCommand(groupChatID, "test2", "01H42K4ABWQ5V2XQEP3A48VE0Z", engine, w2)
+	err = sender.sendRenameGroupChatCommand(w2, groupChatID, "test2", "01H42K4ABWQ5V2XQEP3A48VE0Z")
 	require.NoError(t, err)
 	require.Equal(t, 200, w2.Code)
 }
@@ -73,8 +75,9 @@ func Test_GroupChat_AddMember(t *testing.T) {
 		groupChat.POST("/add-member", groupChatController.AddMember)
 	}
 
+	sender := NewRequestSender(engine)
 	w1 := httptest.NewRecorder()
-	err := sendCreateGroupChatCommand("test1", "01H42K4ABWQ5V2XQEP3A48VE0Z", engine, w1)
+	err := sender.sendCreateGroupChatCommand(w1, "test1", "01H42K4ABWQ5V2XQEP3A48VE0Z")
 	require.NoError(t, err)
 	require.Equal(t, 200, w1.Code)
 
@@ -82,12 +85,22 @@ func Test_GroupChat_AddMember(t *testing.T) {
 	require.NoError(t, err)
 
 	w2 := httptest.NewRecorder()
-	err = sendAddMemberCommand(groupChatID, engine, w2)
+	err = sender.sendAddMemberCommand(w2, groupChatID, "01H42K4ABWQ5V2XQEP3A48VE0Z", "01H42K4ABWQ5V2XQEP3A48VE0Z")
 	require.NoError(t, err)
 	require.Equal(t, 200, w2.Code)
 }
 
-func sendCreateGroupChatCommand(groupChatName string, executorId string, engine *gin.Engine, w *httptest.ResponseRecorder) error {
+type RequestSender struct {
+	engine *gin.Engine
+}
+
+func NewRequestSender(engine *gin.Engine) *RequestSender {
+	return &RequestSender{
+		engine: engine,
+	}
+}
+
+func (r *RequestSender) sendCreateGroupChatCommand(w *httptest.ResponseRecorder, groupChatName string, executorId string) error {
 	createGroupChatRequestBodyJson, err := json.Marshal(CreateGroupChatRequestBody{
 		Name:       groupChatName,
 		ExecutorId: executorId,
@@ -97,7 +110,7 @@ func sendCreateGroupChatCommand(groupChatName string, executorId string, engine 
 	}
 	createGroupChatRequestBody := bytes.NewBuffer(createGroupChatRequestBodyJson)
 	createGroupChatRequest := httptest.NewRequest("POST", "/group-chats/create", createGroupChatRequestBody)
-	engine.ServeHTTP(w, createGroupChatRequest)
+	r.engine.ServeHTTP(w, createGroupChatRequest)
 	return nil
 }
 
@@ -115,7 +128,7 @@ func getGroupChatId(w *httptest.ResponseRecorder) (string, error) {
 	return groupChatID, err
 }
 
-func sendRenameGroupChatCommand(groupChatID string, groupChatName string, executorId string, engine *gin.Engine, w *httptest.ResponseRecorder) error {
+func (r *RequestSender) sendRenameGroupChatCommand(w *httptest.ResponseRecorder, groupChatID string, groupChatName string, executorId string) error {
 	renameGroupChatRequestBodyJson, err := json.Marshal(RenameGroupChatRequestBody{
 		GroupChatId: groupChatID,
 		Name:        groupChatName,
@@ -126,22 +139,22 @@ func sendRenameGroupChatCommand(groupChatID string, groupChatName string, execut
 	}
 	renameGroupChatRequestBodyJsonBody := bytes.NewBuffer(renameGroupChatRequestBodyJson)
 	renameGroupChatRequest := httptest.NewRequest("POST", "/group-chats/rename", renameGroupChatRequestBodyJsonBody)
-	engine.ServeHTTP(w, renameGroupChatRequest)
+	r.engine.ServeHTTP(w, renameGroupChatRequest)
 	return nil
 }
 
-func sendAddMemberCommand(groupChatID string, engine *gin.Engine, w *httptest.ResponseRecorder) error {
+func (r *RequestSender) sendAddMemberCommand(w *httptest.ResponseRecorder, groupChatID string, accountId string, executorId string) error {
 	addMemberRequestBodyJson, err := json.Marshal(AddMemberRequestBody{
 		GroupChatId: groupChatID,
-		AccountId:   "1",
+		AccountId:   accountId,
 		Role:        "admin",
-		ExecutorId:  "01H42K4ABWQ5V2XQEP3A48VE0Z",
+		ExecutorId:  executorId,
 	})
 	if err != nil {
 		return err
 	}
 	addMemberRequestBodyJsonBody := bytes.NewBuffer(addMemberRequestBodyJson)
 	addMemberRequest := httptest.NewRequest("POST", "/group-chats/add-member", addMemberRequestBodyJsonBody)
-	engine.ServeHTTP(w, addMemberRequest)
+	r.engine.ServeHTTP(w, addMemberRequest)
 	return nil
 }
