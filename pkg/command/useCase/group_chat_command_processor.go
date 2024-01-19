@@ -17,13 +17,29 @@ func NewGroupChatCommandProcessor(repository repository.GroupChatRepository) *Gr
 	}
 }
 
-func (g *GroupChatCommandProcessor) CreateGroupChat(name *models.GroupChatName, administratorId *models.UserAccountId, executorId *models.UserAccountId) (events.GroupChatEvent, error) {
-	groupChat, event := domain.NewGroupChat(name, administratorId, executorId)
+func (g *GroupChatCommandProcessor) CreateGroupChat(name *models.GroupChatName, executorId *models.UserAccountId) (events.GroupChatEvent, error) {
+	groupChat, event := domain.NewGroupChat(name, executorId)
 	err := g.repository.StoreEventWithSnapshot(event, groupChat)
 	if err != nil {
 		return nil, err
 	}
 	return event, nil
+}
+
+func (g *GroupChatCommandProcessor) DeleteGroupChat(groupChatId *models.GroupChatId, executorId *models.UserAccountId) (events.GroupChatEvent, error) {
+	groupChat, err := g.repository.FindById(groupChatId).Get()
+	if err != nil {
+		return nil, err
+	}
+	pair, err := groupChat.Delete(executorId).Get()
+	if err != nil {
+		return nil, err
+	}
+	err = g.repository.StoreEventWithSnapshot(pair.V2, pair.V1)
+	if err != nil {
+		return nil, err
+	}
+	return pair.V2, nil
 }
 
 func (g *GroupChatCommandProcessor) RenameGroupChat(groupChatId *models.GroupChatId, name *models.GroupChatName, executorId *models.UserAccountId) (events.GroupChatEvent, error) {

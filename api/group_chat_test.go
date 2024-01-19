@@ -42,6 +42,39 @@ func Test_GroupChat_Create(t *testing.T) {
 	require.Equal(t, executorId, actualGroupChat.GetMembers().GetAdministrator().GetUserAccountId().GetValue())
 }
 
+func Test_GroupChat_Delete(t *testing.T) {
+	groupChatRepository := repository.NewGroupChatRepository(eventstoreadaptergo.NewEventStoreOnMemory())
+	groupChatController := NewGroupChatController(groupChatRepository)
+
+	engine := gin.Default()
+	groupChat := engine.Group("/group-chats")
+	{
+		groupChat.POST("/create", groupChatController.CreateGroupChat)
+		groupChat.POST("/delete", groupChatController.DeleteGroupChat)
+	}
+	sender := NewRequestSender(engine)
+
+	recorder := httptest.NewRecorder()
+	groupChatName := "test1"
+	executorId := "01H42K4ABWQ5V2XQEP3A48VE0Z"
+	err := sender.sendCreateGroupChatCommand(recorder, groupChatName, executorId)
+	require.NoError(t, err)
+	require.Equal(t, 200, recorder.Code)
+
+	groupChatID, err := getGroupChatId(recorder)
+	require.NoError(t, err)
+
+	recorder = httptest.NewRecorder()
+	err = sender.sendDeleteGroupChatCommand(recorder, groupChatID, executorId)
+	require.NoError(t, err)
+	require.Equal(t, 200, recorder.Code)
+
+	result := groupChatRepository.FindById(models.NewGroupChatIdFromString(groupChatID).MustGet())
+	require.True(t, result.IsOk())
+	actualGroupChat := result.MustGet()
+	require.True(t, actualGroupChat.IsDeleted())
+}
+
 func Test_GroupChat_Rename(t *testing.T) {
 	groupChatRepository := repository.NewGroupChatRepository(eventstoreadaptergo.NewEventStoreOnMemory())
 	groupChatController := NewGroupChatController(groupChatRepository)
@@ -246,6 +279,15 @@ func Test_GroupChat_DeleteMessage(t *testing.T) {
 	err = sender.sendDeleteMessageCommand(recorder, groupChatID, messageId, userAccountId)
 	require.NoError(t, err)
 	require.Equal(t, 200, recorder.Code)
+
+	result := groupChatRepository.FindById(models.NewGroupChatIdFromString(groupChatID).MustGet())
+	require.True(t, result.IsOk())
+	actualGroupChat := result.MustGet()
+	require.Equal(t, groupChatID, actualGroupChat.GetId().String())
+	require.Equal(t, groupChatName, actualGroupChat.GetName().String())
+	require.Equal(t, executorId, actualGroupChat.GetMembers().GetAdministrator().GetUserAccountId().GetValue())
+	require.True(t, actualGroupChat.GetMembers().FindByUserAccountId(models.NewUserAccountIdFromString(userAccountId).MustGet()).IsPresent())
+	require.True(t, actualGroupChat.GetMessages().Contains(models.NewMessageIdFromString(messageId).MustGet()))
 }
 
 type RequestSender struct {
@@ -268,6 +310,20 @@ func (r *RequestSender) sendCreateGroupChatCommand(w *httptest.ResponseRecorder,
 	}
 	createGroupChatRequestBody := bytes.NewBuffer(createGroupChatRequestBodyJson)
 	createGroupChatRequest := httptest.NewRequest("POST", "/group-chats/create", createGroupChatRequestBody)
+	r.engine.ServeHTTP(w, createGroupChatRequest)
+	return nil
+}
+
+func (r *RequestSender) sendDeleteGroupChatCommand(w *httptest.ResponseRecorder, groupChatID string, executorId string) error {
+	createGroupChatRequestBodyJson, err := json.Marshal(DeleteGroupChatRequestBody{
+		GroupChatId: groupChatID,
+		ExecutorId:  executorId,
+	})
+	if err != nil {
+		return err
+	}
+	createGroupChatRequestBody := bytes.NewBuffer(createGroupChatRequestBodyJson)
+	createGroupChatRequest := httptest.NewRequest("POST", "/group-chats/delete", createGroupChatRequestBody)
 	r.engine.ServeHTTP(w, createGroupChatRequest)
 	return nil
 }

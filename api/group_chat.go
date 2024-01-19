@@ -20,6 +20,17 @@ type CreateGroupChatResponseSuccessBody struct {
 
 // ---
 
+type DeleteGroupChatRequestBody struct {
+	GroupChatId string `json:"group_chat_id"`
+	ExecutorId  string `json:"executor_id"`
+}
+
+type DeleteGroupChatResponseSuccessBody struct {
+	GroupChatId string `json:"group_chat_id"`
+}
+
+// ---
+
 type RenameGroupChatRequestBody struct {
 	GroupChatId string `json:"group_chat_id"`
 	Name        string `json:"name"`
@@ -123,7 +134,7 @@ func (g *GroupChatController) CreateGroupChat(c *gin.Context) {
 	}
 
 	commandProcessor := useCase.NewGroupChatCommandProcessor(g.repository)
-	event, err := commandProcessor.CreateGroupChat(groupChatName, executorId, executorId)
+	event, err := commandProcessor.CreateGroupChat(groupChatName, executorId)
 
 	if err != nil {
 		response := GroupChatResponseErrorBody{Message: err.Error()}
@@ -132,6 +143,39 @@ func (g *GroupChatController) CreateGroupChat(c *gin.Context) {
 	}
 
 	response := CreateGroupChatResponseSuccessBody{GroupChatId: event.GetAggregateId().AsString()}
+	c.JSON(http.StatusOK, response)
+}
+
+func (g *GroupChatController) DeleteGroupChat(c *gin.Context) {
+	var jsonRequestBody DeleteGroupChatRequestBody
+
+	if err := c.ShouldBindJSON(&jsonRequestBody); err != nil {
+		handleClientError(c, http.StatusBadRequest, err)
+		return
+	}
+
+	groupChatId, err := validator.ValidateGroupChatId(jsonRequestBody.GroupChatId).Get()
+	if err != nil {
+		handleClientError(c, http.StatusBadRequest, err)
+		return
+	}
+
+	executorId, err := validator.ValidateUserAccountId(jsonRequestBody.ExecutorId).Get()
+	if err != nil {
+		handleClientError(c, http.StatusBadRequest, err)
+		return
+	}
+
+	commandProcessor := useCase.NewGroupChatCommandProcessor(g.repository)
+	event, err := commandProcessor.DeleteGroupChat(groupChatId, executorId)
+
+	if err != nil {
+		response := GroupChatResponseErrorBody{Message: err.Error()}
+		c.JSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	response := DeleteGroupChatResponseSuccessBody{GroupChatId: event.GetAggregateId().AsString()}
 	c.JSON(http.StatusOK, response)
 }
 

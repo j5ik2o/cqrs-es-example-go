@@ -53,9 +53,9 @@ func (g *GroupChat) ApplyEvent(event esa.Event) *GroupChat {
 	}
 }
 
-func NewGroupChat(name *models.GroupChatName, administratorId *models.UserAccountId, executorId *models.UserAccountId) (*GroupChat, events.GroupChatEvent) {
+func NewGroupChat(name *models.GroupChatName, executorId *models.UserAccountId) (*GroupChat, events.GroupChatEvent) {
 	id := models.NewGroupChatId()
-	members := models.NewMembers(administratorId)
+	members := models.NewMembers(executorId)
 	seqNr := uint64(1)
 	version := uint64(1)
 	return &GroupChat{id, name, members, models.NewMessages(), seqNr, version, false},
