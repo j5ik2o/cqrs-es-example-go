@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestGroupChat_AddMember(t *testing.T) {
+func Test_GroupChat_AddMember(t *testing.T) {
 	// Given
 	adminId := models.NewUserAccountId()
 	groupChatName := models.NewGroupChatName("test").MustGet()
@@ -29,7 +29,7 @@ func TestGroupChat_AddMember(t *testing.T) {
 	require.Equal(t, groupChat.seqNr+1, tuple.V2.GetSeqNr())
 }
 
-func TestGroupChat_RemoveMemberByUserAccountId(t *testing.T) {
+func Test_GroupChat_RemoveMemberByUserAccountId(t *testing.T) {
 	// Given
 	adminId := models.NewUserAccountId()
 	groupChatName := models.NewGroupChatName("test").MustGet()
@@ -52,7 +52,7 @@ func TestGroupChat_RemoveMemberByUserAccountId(t *testing.T) {
 	require.Equal(t, groupChat.seqNr+1, tuple.V2.GetSeqNr())
 }
 
-func TestGroupChat_Rename(t *testing.T) {
+func Test_GroupChat_Rename(t *testing.T) {
 	// Given
 	adminId := models.NewUserAccountId()
 	groupChatName := models.NewGroupChatName("test").MustGet()
@@ -72,7 +72,7 @@ func TestGroupChat_Rename(t *testing.T) {
 	require.Equal(t, groupChat.seqNr+1, tuple.V2.GetSeqNr())
 }
 
-func TestGroupChat_Delete(t *testing.T) {
+func Test_GroupChat_Delete(t *testing.T) {
 	// Given
 	adminId := models.NewUserAccountId()
 	groupChatName := models.NewGroupChatName("test").MustGet()
@@ -91,7 +91,7 @@ func TestGroupChat_Delete(t *testing.T) {
 	require.Equal(t, groupChat.seqNr+1, tuple.V2.GetSeqNr())
 }
 
-func TestGroupChat_PostMessage(t *testing.T) {
+func Test_GroupChat_PostMessage(t *testing.T) {
 	// Given
 	adminId := models.NewUserAccountId()
 	groupChatName := models.NewGroupChatName("test").MustGet()
@@ -113,7 +113,7 @@ func TestGroupChat_PostMessage(t *testing.T) {
 	require.Equal(t, message, tuple.V1.GetMessages().Get(messageId).MustGet())
 }
 
-func TestGroupChat_DeleteMessage(t *testing.T) {
+func Test_GroupChat_DeleteMessage(t *testing.T) {
 	// Given
 	adminId := models.NewUserAccountId()
 	groupChatName := models.NewGroupChatName("test").MustGet()
