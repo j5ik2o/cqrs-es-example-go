@@ -35,3 +35,7 @@ WRITE_API_SERVER_BASE_URL=http://localhost:18080 ./tools/scripts/curl-post-creat
 $ GROUP_CHAT_ID=GroupChat-01HGDR3R6KFHRHTF0K54GMW5XF make get-group-chat
 {"data":{"getGroupChat":{"id":"GroupChat-01HGDR3R6KFHRHTF0K54GMW5XF"}}}%
 ```
+
+## Links
+
+- [for Rust](https://github.com/j5ik2o/cqrs-es-example-rs)
