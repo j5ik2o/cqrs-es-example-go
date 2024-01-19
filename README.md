@@ -4,6 +4,8 @@
 
 This is an example of CQRS/Event Sourcing implemented in Go.
 
+This project uses [j5ik2o/event-store-adapter-go](https://github.com/j5ik2o/event-store-adapter-go) for Event Sourcing.
+
 ## Usage
 
 ### Local Environment
