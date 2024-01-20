@@ -32,7 +32,7 @@ func NewReadModelUpdater(dao GroupChatDao) *ReadModelUpdater {
 // UpdateReadModel は DynamoDB のストリームからのイベントを処理して、リードモデルを更新します。
 func (r *ReadModelUpdater) UpdateReadModel(ctx context.Context, event dynamodbevents.DynamoDBEvent) error {
 	for _, record := range event.Records {
-		fmt.Printf("Processing request data for event ID %s, type %s.\n", record.EventID, record.EventName)
+		fmt.Printf("Processing request data for event GetId %s, type %s.\n", record.EventID, record.EventName)
 		attributeValues := record.Change.NewImage
 		payloadBytes := convertToBytes(attributeValues["payload"])
 		typeValueStr, err := getTypeString(payloadBytes).Get()
