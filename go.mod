@@ -24,7 +24,7 @@ require (
 	github.com/stretchr/testify v1.8.4
 	github.com/testcontainers/testcontainers-go v0.27.0
 	github.com/testcontainers/testcontainers-go/modules/localstack v0.27.0
-	github.com/testcontainers/testcontainers-go/modules/mysql v0.26.0
+	github.com/testcontainers/testcontainers-go/modules/mysql v0.27.0
 	github.com/vektah/gqlparser/v2 v2.5.11
 )
 
