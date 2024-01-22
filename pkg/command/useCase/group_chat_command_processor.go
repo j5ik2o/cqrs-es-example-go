@@ -11,12 +11,14 @@ type GroupChatCommandProcessor struct {
 	repository repository.GroupChatRepository
 }
 
+// NewGroupChatCommandProcessor is the constructor for GroupChatCommandProcessor.
 func NewGroupChatCommandProcessor(repository repository.GroupChatRepository) *GroupChatCommandProcessor {
 	return &GroupChatCommandProcessor{
 		repository,
 	}
 }
 
+// CreateGroupChat is the command handler for CreateGroupChat.
 func (g *GroupChatCommandProcessor) CreateGroupChat(name *models.GroupChatName, executorId *models.UserAccountId) (events.GroupChatEvent, error) {
 	groupChat, event := domain.NewGroupChat(name, executorId)
 	err := g.repository.StoreEventWithSnapshot(event, groupChat)
@@ -26,6 +28,7 @@ func (g *GroupChatCommandProcessor) CreateGroupChat(name *models.GroupChatName, 
 	return event, nil
 }
 
+// DeleteGroupChat is the command handler for DeleteGroupChat.
 func (g *GroupChatCommandProcessor) DeleteGroupChat(groupChatId *models.GroupChatId, executorId *models.UserAccountId) (events.GroupChatEvent, error) {
 	groupChat, err := g.repository.FindById(groupChatId).Get()
 	if err != nil {
@@ -42,6 +45,7 @@ func (g *GroupChatCommandProcessor) DeleteGroupChat(groupChatId *models.GroupCha
 	return pair.V2, nil
 }
 
+// RenameGroupChat is the command handler for RenameGroupChat.
 func (g *GroupChatCommandProcessor) RenameGroupChat(groupChatId *models.GroupChatId, name *models.GroupChatName, executorId *models.UserAccountId) (events.GroupChatEvent, error) {
 	groupChat, err := g.repository.FindById(groupChatId).Get()
 	if err != nil {
@@ -58,6 +62,7 @@ func (g *GroupChatCommandProcessor) RenameGroupChat(groupChatId *models.GroupCha
 	return pair.V2, nil
 }
 
+// AddMember is the command handler for AddMember.
 func (g *GroupChatCommandProcessor) AddMember(groupChatId *models.GroupChatId, userAccountId *models.UserAccountId, role models.Role, executorId *models.UserAccountId) (events.GroupChatEvent, error) {
 	groupChat, err := g.repository.FindById(groupChatId).Get()
 	if err != nil {
@@ -75,6 +80,7 @@ func (g *GroupChatCommandProcessor) AddMember(groupChatId *models.GroupChatId, u
 	return pair.V2, nil
 }
 
+// RemoveMember is the command handler for RemoveMember.
 func (g *GroupChatCommandProcessor) RemoveMember(groupChatId *models.GroupChatId, userAccountId *models.UserAccountId, executorId *models.UserAccountId) (events.GroupChatEvent, error) {
 	groupChat, err := g.repository.FindById(groupChatId).Get()
 	if err != nil {
@@ -91,6 +97,7 @@ func (g *GroupChatCommandProcessor) RemoveMember(groupChatId *models.GroupChatId
 	return pair.V2, nil
 }
 
+// PostMessage is the command handler for PostMessage.
 func (g *GroupChatCommandProcessor) PostMessage(groupChatId *models.GroupChatId, message *models.Message, executorId *models.UserAccountId) (events.GroupChatEvent, error) {
 	groupChat, err := g.repository.FindById(groupChatId).Get()
 	if err != nil {
@@ -107,6 +114,7 @@ func (g *GroupChatCommandProcessor) PostMessage(groupChatId *models.GroupChatId,
 	return pair.V2, nil
 }
 
+// DeleteMessage is the command handler for DeleteMessage.
 func (g *GroupChatCommandProcessor) DeleteMessage(groupChatId *models.GroupChatId, messageId *models.MessageId, executorId *models.UserAccountId) (events.GroupChatEvent, error) {
 	groupChat, err := g.repository.FindById(groupChatId).Get()
 	if err != nil {

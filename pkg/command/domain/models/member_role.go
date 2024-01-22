@@ -4,5 +4,5 @@ type Role int
 
 const (
 	MemberRole = iota
-	AdminRole  = iota
+	AdminRole
 )

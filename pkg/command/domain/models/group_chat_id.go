@@ -45,6 +45,10 @@ func (g *GroupChatId) String() string {
 	return g.AsString()
 }
 
+func (g *GroupChatId) Equals(other *GroupChatId) bool {
+	return g.value == other.value
+}
+
 func ConvertGroupChatIdFromJSON(value map[string]interface{}) mo.Result[*GroupChatId] {
 	return NewGroupChatIdFromString(value["value"].(string))
 }
