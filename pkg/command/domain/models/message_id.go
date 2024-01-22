@@ -32,6 +32,10 @@ func (m *MessageId) GetValue() string {
 	return m.value
 }
 
+func (m *MessageId) Equals(other *MessageId) bool {
+	return m.value == other.value
+}
+
 func (m *MessageId) String() string {
 	return m.value
 }

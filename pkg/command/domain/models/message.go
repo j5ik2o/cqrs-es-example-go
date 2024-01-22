@@ -39,3 +39,7 @@ func (m *Message) GetText() string {
 func (m *Message) GetSenderId() *UserAccountId {
 	return m.senderId
 }
+
+func (m *Message) Equals(other *Message) bool {
+	return m.id.Equals(other.id)
+}
