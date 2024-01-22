@@ -137,51 +137,85 @@ func (g *GroupChat) String() string {
 
 // IsDeleted returns whether the aggregate is deleted.
 // IsDeleted は集約が削除されたかどうかを返します。
+//
+// # Returns / 戻り値:
+// - true if the aggregate is deleted / 集約が削除された場合は true
 func (g *GroupChat) IsDeleted() bool {
 	return g.deleted
 }
 
 // WithName returns a new aggregate with the specified name.
 // WithName は指定された名前の新しい集約を返します。
+//
+// # Returns / 戻り値:
+// - The new aggregate / 新しい集約
 func (g *GroupChat) WithName(name *models.GroupChatName) *GroupChat {
 	return NewGroupChatFrom(g.id, name, g.members, g.messages, g.seqNr, g.version, g.deleted)
 }
 
 // WithMembers returns a new aggregate with the specified members.
 // WithMembers は指定されたメンバーの新しい集約を返します。
+//
+// # Returns / 戻り値:
+// - The new aggregate / 新しい集約
 func (g *GroupChat) WithMembers(members *models.Members) *GroupChat {
 	return NewGroupChatFrom(g.id, g.name, members, g.messages, g.seqNr, g.version, g.deleted)
 }
 
 // WithMessages returns a new aggregate with the specified messages.
 // WithMessages は指定されたメッセージの新しい集約を返します。
+//
+// # Returns / 戻り値:
+// - The new aggregate / 新しい集約
 func (g *GroupChat) WithMessages(messages *models.Messages) *GroupChat {
 	return NewGroupChatFrom(g.id, g.name, g.members, messages, g.seqNr, g.version, g.deleted)
 }
 
 // WithVersion returns a new aggregate with the specified version.
 // WithVersion は指定されたバージョンの新しい集約を返します。
+//
+// # Returns / 戻り値:
+// - The new aggregate / 新しい集約
 func (g *GroupChat) WithVersion(version uint64) esa.Aggregate {
 	return NewGroupChatFrom(g.id, g.name, g.members, g.messages, g.seqNr, version, g.deleted)
 }
 
 // WithDeleted returns a new aggregate with the deleted flag.
 // WithDeleted は削除フラグのある新しい集約を返します。
+//
+// # Returns / 戻り値:
+// - The new aggregate / 新しい集約
 func (g *GroupChat) WithDeleted() *GroupChat {
 	return NewGroupChatFrom(g.id, g.name, g.members, g.messages, g.seqNr, g.version, true)
 }
 
 // AddMember adds a new member to the aggregate.
 // AddMember は新しいメンバーを集約に追加します。
-func (g *GroupChat) AddMember(memberId *models.MemberId, userAccountId *models.UserAccountId, role models.Role, executorId *models.UserAccountId) mo.Result[GroupChatWithEventPair] {
+//
+// # Parameters / 引数:
+// - memberId: The member ID to be assigned / 割り当てるメンバーID
+// - userAccountId: The user account ID of the member / メンバーのユーザーアカウントID
+// - role: The role of the member / メンバーの役割
+// - executorId: The user account ID of the executor / 実行者のユーザーアカウントID
+// # Constraints / 制約:
+// - The group chat is not deleted / グループチャットが削除されていないこと
+// - The userAccountId is not the member of the group chat / userAccountId がグループチャットのメンバーでないこと
+// - The executorId is the administrator of the group chat / executorId がグループチャットの管理者であること
+// # Returns / 戻り値:
+// - The result of the operation / 操作の結果
+func (g *GroupChat) AddMember(
+	memberId *models.MemberId,
+	userAccountId *models.UserAccountId,
+	role models.Role,
+	executorId *models.UserAccountId) mo.Result[GroupChatWithEventPair] {
 	if g.deleted {
 		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatAddMemberErr("The group chat is deleted"))
 	}
-	if !g.members.IsAdministrator(executorId) {
-		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatAddMemberErr("The executorId is not the member of the group chat"))
-	}
 	if g.members.IsMember(userAccountId) {
 		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatAddMemberErr("The userAccountId is already the member of the group chat"))
+	}
+	if !g.members.IsAdministrator(executorId) {
+		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatAddMemberErr("The executorId is not the member of the group chat"))
 	}
 	newMember := models.NewMember(memberId, userAccountId, role)
 	newState := g.WithMembers(g.members.AddMember(userAccountId))
@@ -193,15 +227,25 @@ func (g *GroupChat) AddMember(memberId *models.MemberId, userAccountId *models.U
 
 // RemoveMemberByUserAccountId removes the member from the aggregate.
 // RemoveMemberByUserAccountId はメンバーを集約から削除します。
+//
+// # Parameters / 引数:
+// - userAccountId: The user account ID of the member / メンバーのユーザーアカウントID
+// - executorId: The user account ID of the executor / 実行者のユーザーアカウントID
+// # Constraints / 制約:
+// - The group chat is not deleted / グループチャットが削除されていないこと
+// - The userAccountId is the administrator of the group chat / userAccountId がグループチャットのメンバーであること
+// - The executorId is the administrator of the group chat / executorId がグループチャットの管理者であること
+// # Returns / 戻り値:
+// - The result of the operation / 操作の結果
 func (g *GroupChat) RemoveMemberByUserAccountId(userAccountId *models.UserAccountId, executorId *models.UserAccountId) mo.Result[GroupChatWithEventPair] {
 	if g.deleted {
 		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatRemoveMemberErr("The group chat is deleted"))
 	}
-	if !g.members.IsAdministrator(executorId) {
-		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatRemoveMemberErr("The executorId is not the administrator of the group chat"))
-	}
 	if !g.members.IsMember(userAccountId) {
 		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatRemoveMemberErr("The userAccountId is not the member of the group chat"))
+	}
+	if !g.members.IsAdministrator(executorId) {
+		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatRemoveMemberErr("The executorId is not the administrator of the group chat"))
 	}
 	newState := g.WithMembers(g.members.RemoveMemberByUserAccountId(userAccountId))
 	newState.seqNr += 1
@@ -212,6 +256,16 @@ func (g *GroupChat) RemoveMemberByUserAccountId(userAccountId *models.UserAccoun
 
 // Rename renames the aggregate.
 // Rename は集約の名前を変更します。
+//
+// # Parameters / 引数:
+// - name: The new name of the aggregate / 集約の新しい名前
+// - executorId: The user account ID of the executor / 実行者のユーザーアカウントID
+// # Constraints / 制約:
+// - The group chat is not deleted / グループチャットが削除されていないこと
+// - The executorId is the administrator of the group chat / executorId がグループチャットの管理者であること
+// - The name is not the same as the current name / name が現在の名前と同じでないこと
+// # Returns / 戻り値:
+// - The result of the operation / 操作の結果
 func (g *GroupChat) Rename(name *models.GroupChatName, executorId *models.UserAccountId) mo.Result[GroupChatWithEventPair] {
 	if g.deleted {
 		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatAddMemberErr("The group chat is deleted"))
@@ -231,6 +285,14 @@ func (g *GroupChat) Rename(name *models.GroupChatName, executorId *models.UserAc
 
 // Delete deletes the aggregate.
 // Delete は集約を削除します。
+//
+// # Parameters / 引数:
+// - executorId: The user account ID of the executor / 実行者のユーザーアカウントID
+// # Constraints / 制約:
+// - The group chat is not deleted / グループチャットが削除されていないこと
+// - The executorId is the administrator of the group chat / executorId がグループチャットの管理者であること
+// # Returns / 戻り値:
+// - The result of the operation / 操作の結果
 func (g *GroupChat) Delete(executorId *models.UserAccountId) mo.Result[GroupChatWithEventPair] {
 	if g.deleted {
 		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatDeleteErr("The group chat is deleted"))
@@ -247,6 +309,17 @@ func (g *GroupChat) Delete(executorId *models.UserAccountId) mo.Result[GroupChat
 
 // PostMessage posts a new message to the aggregate.
 // PostMessage は新しいメッセージを集約に投稿します。
+//
+// # Parameters / 引数:
+// - message: The message to be posted / 投稿するメッセージ
+// - executorId: The user account ID of the executor / 実行者のユーザーアカウントID
+// # Constraints / 制約:
+// - The group chat is not deleted / グループチャットが削除されていないこと
+// - The Message#senderId is the member of the group chat / senderId がグループチャットのメンバーであること
+// - The executorId is the senderId of the message / executorId がメッセージの senderId であること
+// - The message is not already posted / メッセージがすでに投稿されていないこと
+// # Returns / 戻り値:
+// - The result of the operation / 操作の結果
 func (g *GroupChat) PostMessage(message *models.Message, executorId *models.UserAccountId) mo.Result[GroupChatWithEventPair] {
 	if g.deleted {
 		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatPostMessageErr("The group chat is deleted"))
@@ -273,6 +346,16 @@ func (g *GroupChat) PostMessage(message *models.Message, executorId *models.User
 
 // DeleteMessage deletes the message from the aggregate.
 // DeleteMessage はメッセージを集約から削除します。
+//
+// # Parameters / 引数:
+// - messageId: The ID of the message to be deleted / 削除するメッセージのID
+// - executorId: The user account ID of the executor / 実行者のユーザーアカウントID
+// # Constraints / 制約:
+// - The group chat is not deleted / グループチャットが削除されていないこと
+// - The executorId is the sender of the message / executorId がメッセージの senderId であること
+// - The message is not already deleted / メッセージがすでに削除されていないこと
+// # Returns / 戻り値:
+// - The result of the operation / 操作の結果
 func (g *GroupChat) DeleteMessage(messageId *models.MessageId, executorId *models.UserAccountId) mo.Result[GroupChatWithEventPair] {
 	if g.deleted {
 		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatDeleteMessageErr("The group chat is deleted"))
