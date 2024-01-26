@@ -9,7 +9,7 @@ func ValidateGroupChatId(id string) mo.Result[models.GroupChatId] {
 	return models.NewGroupChatIdFromString(id)
 }
 
-func ValidateGroupChatName(name string) mo.Result[*models.GroupChatName] {
+func ValidateGroupChatName(name string) mo.Result[models.GroupChatName] {
 	return models.NewGroupChatName(name)
 }
 

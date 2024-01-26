@@ -24,7 +24,7 @@ func Test_CreateGroupChat(t *testing.T) {
 	require.True(t, ok)
 	_, ok = event.GetAggregateId().(*models.GroupChatId)
 	require.True(t, ok)
-	require.Equal(t, groupName, event.GetName())
+	require.True(t, groupName.Equals(event.GetName()))
 }
 
 func Test_DeleteGroupChat(t *testing.T) {
@@ -64,7 +64,7 @@ func Test_RenameGroupChat(t *testing.T) {
 	actualGroupChatId, ok := event.GetAggregateId().(*models.GroupChatId)
 	require.True(t, ok)
 	require.True(t, groupChatId.Equals(actualGroupChatId))
-	require.Equal(t, newGroupName, event.GetName())
+	require.True(t, newGroupName.Equals(event.GetName()))
 }
 
 func Test_AddMember(t *testing.T) {

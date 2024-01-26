@@ -19,7 +19,7 @@ func NewGroupChatCommandProcessor(repository repository.GroupChatRepository) *Gr
 }
 
 // CreateGroupChat is the command handler for CreateGroupChat.
-func (g *GroupChatCommandProcessor) CreateGroupChat(name *models.GroupChatName, executorId models.UserAccountId) (events.GroupChatEvent, error) {
+func (g *GroupChatCommandProcessor) CreateGroupChat(name models.GroupChatName, executorId models.UserAccountId) (events.GroupChatEvent, error) {
 	groupChat, event := domain.NewGroupChat(name, executorId)
 	err := g.repository.StoreEventWithSnapshot(event, groupChat)
 	if err != nil {
@@ -46,7 +46,7 @@ func (g *GroupChatCommandProcessor) DeleteGroupChat(groupChatId *models.GroupCha
 }
 
 // RenameGroupChat is the command handler for RenameGroupChat.
-func (g *GroupChatCommandProcessor) RenameGroupChat(groupChatId *models.GroupChatId, name *models.GroupChatName, executorId models.UserAccountId) (events.GroupChatEvent, error) {
+func (g *GroupChatCommandProcessor) RenameGroupChat(groupChatId *models.GroupChatId, name models.GroupChatName, executorId models.UserAccountId) (events.GroupChatEvent, error) {
 	groupChat, err := g.repository.FindById(groupChatId).Get()
 	if err != nil {
 		return nil, err

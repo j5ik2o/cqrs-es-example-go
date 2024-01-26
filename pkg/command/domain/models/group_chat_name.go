@@ -11,15 +11,15 @@ type GroupChatName struct {
 }
 
 // NewGroupChatName is the constructor for GroupChatName.
-func NewGroupChatName(value string) mo.Result[*GroupChatName] {
+func NewGroupChatName(value string) mo.Result[GroupChatName] {
 	if value == "" {
-		return mo.Err[*GroupChatName](errors.New("GroupChatName is empty"))
+		return mo.Err[GroupChatName](errors.New("GroupChatName is empty"))
 	}
-	return mo.Ok(&GroupChatName{value})
+	return mo.Ok(GroupChatName{value})
 }
 
 // ConvertGroupChatNameFromJSON is a constructor for GroupChatName.
-func ConvertGroupChatNameFromJSON(value map[string]interface{}) mo.Result[*GroupChatName] {
+func ConvertGroupChatNameFromJSON(value map[string]interface{}) mo.Result[GroupChatName] {
 	return NewGroupChatName(value["value"].(string))
 }
 
@@ -34,4 +34,8 @@ func (g *GroupChatName) ToJSON() map[string]interface{} {
 
 func (g *GroupChatName) String() string {
 	return g.value
+}
+
+func (g *GroupChatName) Equals(other *GroupChatName) bool {
+	return g.value == other.value
 }
