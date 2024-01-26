@@ -87,7 +87,7 @@ func Test_AddMember(t *testing.T) {
 	require.True(t, ok)
 	require.True(t, groupChatId.Equals(actualGroupChatId))
 	require.Equal(t, memberRole, event.GetMember().GetRole())
-	require.Equal(t, memberUserAccountId, event.GetMember().GetUserAccountId())
+	require.True(t, memberUserAccountId.Equals(event.GetMember().GetUserAccountId()))
 }
 
 func Test_RemoveMember(t *testing.T) {

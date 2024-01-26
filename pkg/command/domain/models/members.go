@@ -10,7 +10,7 @@ type Members struct {
 }
 
 // NewMembers is the constructor for Members.
-func NewMembers(administratorId *UserAccountId) *Members {
+func NewMembers(administratorId UserAccountId) *Members {
 	return &Members{
 		values: []*Member{
 			NewMember(NewMemberId(), administratorId, AdminRole),
@@ -47,7 +47,7 @@ func (m *Members) ToJSON() map[string]interface{} {
 }
 
 // AddMember adds a member.
-func (m *Members) AddMember(userAccountId *UserAccountId) *Members {
+func (m *Members) AddMember(userAccountId UserAccountId) *Members {
 	newMembers := make([]*Member, len(m.values))
 	copy(newMembers, m.values)
 	newMembers = append(newMembers, NewMember(NewMemberId(), userAccountId, MemberRole))

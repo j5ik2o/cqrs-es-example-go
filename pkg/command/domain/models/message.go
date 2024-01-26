@@ -6,11 +6,11 @@ import "github.com/samber/mo"
 type Message struct {
 	id       *MessageId
 	text     string
-	senderId *UserAccountId
+	senderId UserAccountId
 }
 
 // NewMessage is the constructor for Message.
-func NewMessage(id *MessageId, text string, senderId *UserAccountId) mo.Result[*Message] {
+func NewMessage(id *MessageId, text string, senderId UserAccountId) mo.Result[*Message] {
 	return mo.Ok(&Message{id, text, senderId})
 }
 
@@ -44,10 +44,10 @@ func (m *Message) GetText() string {
 
 // GetSenderId returns sender id.
 func (m *Message) GetSenderId() *UserAccountId {
-	return m.senderId
+	return &m.senderId
 }
 
 // Equals returns whether the message is equal to the other.
 func (m *Message) Equals(other *Message) bool {
-	return m.id.Equals(other.id) && m.text == other.text && m.senderId.Equals(other.senderId)
+	return m.id.Equals(other.id) && m.text == other.text && m.senderId.Equals(&other.senderId)
 }

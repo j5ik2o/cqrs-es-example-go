@@ -3,12 +3,12 @@ package models
 // Member is the model of member.
 type Member struct {
 	id            *MemberId
-	userAccountId *UserAccountId
+	userAccountId UserAccountId
 	role          Role
 }
 
 // NewMember is the constructor of Member.
-func NewMember(id *MemberId, userAccountId *UserAccountId, role Role) *Member {
+func NewMember(id *MemberId, userAccountId UserAccountId, role Role) *Member {
 	return &Member{
 		id:            id,
 		userAccountId: userAccountId,
@@ -43,7 +43,7 @@ func (m *Member) GetId() *MemberId {
 
 // GetUserAccountId returns user account id.
 func (m *Member) GetUserAccountId() *UserAccountId {
-	return m.userAccountId
+	return &m.userAccountId
 }
 
 // GetRole returns role.

@@ -13,18 +13,18 @@ type GroupChatMemberAdded struct {
 	aggregateId *models.GroupChatId
 	member      *models.Member
 	seqNr       uint64
-	executorId  *models.UserAccountId
+	executorId  models.UserAccountId
 	occurredAt  uint64
 }
 
-func NewGroupChatMemberAdded(aggregateId *models.GroupChatId, member *models.Member, seqNr uint64, executorId *models.UserAccountId) *GroupChatMemberAdded {
+func NewGroupChatMemberAdded(aggregateId *models.GroupChatId, member *models.Member, seqNr uint64, executorId models.UserAccountId) *GroupChatMemberAdded {
 	id := ulid.Make().String()
 	now := time.Now()
 	occurredAt := uint64(now.UnixNano() / 1e6)
 	return &GroupChatMemberAdded{id, aggregateId, member, seqNr, executorId, occurredAt}
 }
 
-func NewGroupChatMemberAddedFrom(id string, aggregateId *models.GroupChatId, member *models.Member, seqNr uint64, executorId *models.UserAccountId, occurredAt uint64) *GroupChatMemberAdded {
+func NewGroupChatMemberAddedFrom(id string, aggregateId *models.GroupChatId, member *models.Member, seqNr uint64, executorId models.UserAccountId, occurredAt uint64) *GroupChatMemberAdded {
 	return &GroupChatMemberAdded{id, aggregateId, member, seqNr, executorId, occurredAt}
 }
 
@@ -60,7 +60,7 @@ func (g *GroupChatMemberAdded) GetMember() *models.Member {
 }
 
 func (g *GroupChatMemberAdded) GetExecutorId() *models.UserAccountId {
-	return g.executorId
+	return &g.executorId
 }
 
 func (g *GroupChatMemberAdded) IsCreated() bool {

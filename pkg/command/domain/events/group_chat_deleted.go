@@ -12,18 +12,18 @@ type GroupChatDeleted struct {
 	id          string
 	aggregateId *models2.GroupChatId
 	seqNr       uint64
-	executorId  *models2.UserAccountId
+	executorId  models2.UserAccountId
 	occurredAt  uint64
 }
 
-func NewGroupChatDeleted(aggregateId *models2.GroupChatId, seqNr uint64, executorId *models2.UserAccountId) *GroupChatDeleted {
+func NewGroupChatDeleted(aggregateId *models2.GroupChatId, seqNr uint64, executorId models2.UserAccountId) *GroupChatDeleted {
 	id := ulid.Make().String()
 	now := time.Now()
 	occurredAt := uint64(now.UnixNano() / 1e6)
 	return &GroupChatDeleted{id, aggregateId, seqNr, executorId, occurredAt}
 }
 
-func NewGroupChatDeletedFrom(id string, aggregateId *models2.GroupChatId, seqNr uint64, executorId *models2.UserAccountId, occurredAt uint64) *GroupChatDeleted {
+func NewGroupChatDeletedFrom(id string, aggregateId *models2.GroupChatId, seqNr uint64, executorId models2.UserAccountId, occurredAt uint64) *GroupChatDeleted {
 	return &GroupChatDeleted{id, aggregateId, seqNr, executorId, occurredAt}
 }
 
@@ -54,7 +54,7 @@ func (g *GroupChatDeleted) GetSeqNr() uint64 {
 }
 
 func (g *GroupChatDeleted) GetExecutorId() *models2.UserAccountId {
-	return g.executorId
+	return &g.executorId
 }
 
 func (g *GroupChatDeleted) IsCreated() bool {
