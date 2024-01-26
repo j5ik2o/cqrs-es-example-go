@@ -8,8 +8,8 @@ type Member struct {
 }
 
 // NewMember is the constructor of Member.
-func NewMember(id MemberId, userAccountId UserAccountId, role Role) *Member {
-	return &Member{
+func NewMember(id MemberId, userAccountId UserAccountId, role Role) Member {
+	return Member{
 		id:            id,
 		userAccountId: userAccountId,
 		role:          role,
@@ -17,7 +17,7 @@ func NewMember(id MemberId, userAccountId UserAccountId, role Role) *Member {
 }
 
 // ConvertMemberFromJSON converts JSON to Member.
-func ConvertMemberFromJSON(value map[string]interface{}) *Member {
+func ConvertMemberFromJSON(value map[string]interface{}) Member {
 	roleValue := value["role"]
 	role := Role(roleValue.(float64))
 	return NewMember(
