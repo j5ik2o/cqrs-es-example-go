@@ -7,27 +7,32 @@ import (
 	"github.com/samber/mo"
 )
 
+const UserAccountIdPrefix = "UserAccount"
+
 type UserAccountId struct {
 	value string
 }
 
-func NewUserAccountId() *UserAccountId {
+func NewUserAccountId() UserAccountId {
 	id := ulid.Make()
-	return &UserAccountId{value: id.String()}
+	return UserAccountId{value: id.String()}
 }
 
-func NewUserAccountIdFromString(value string) mo.Result[*UserAccountId] {
+func NewUserAccountIdFromString(value string) mo.Result[UserAccountId] {
 	if value == "" {
-		return mo.Err[*UserAccountId](errors.New("UserAccountId is empty"))
+		return mo.Err[UserAccountId](errors.New("UserAccountId is empty"))
+	}
+	if len(value) > len(UserAccountIdPrefix) && value[0:len(UserAccountIdPrefix)] == UserAccountIdPrefix {
+		value = value[len(UserAccountIdPrefix)+1:]
 	}
 	// 先頭がUserAccount-であれば、それを削除する
 	if len(value) > 12 && value[0:12] == "UserAccount" {
 		value = value[13:]
 	}
-	return mo.Ok(&UserAccountId{value: value})
+	return mo.Ok(UserAccountId{value: value})
 }
 
-func ConvertUserAccountIdFromJSON(value map[string]interface{}) mo.Result[*UserAccountId] {
+func ConvertUserAccountIdFromJSON(value map[string]interface{}) mo.Result[UserAccountId] {
 	return NewUserAccountIdFromString(value["value"].(string))
 }
 

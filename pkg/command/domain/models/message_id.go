@@ -9,16 +9,16 @@ type MessageId struct {
 	value string
 }
 
-func NewMessageId() *MessageId {
+func NewMessageId() MessageId {
 	id := ulid.Make()
-	return &MessageId{value: id.String()}
+	return MessageId{value: id.String()}
 }
 
-func NewMessageIdFromString(value string) mo.Result[*MessageId] {
-	return mo.Ok(&MessageId{value})
+func NewMessageIdFromString(value string) mo.Result[MessageId] {
+	return mo.Ok(MessageId{value})
 }
 
-func ConvertMessageIdFromJSON(value map[string]interface{}) *MessageId {
+func ConvertMessageIdFromJSON(value map[string]interface{}) MessageId {
 	return NewMessageIdFromString(value["value"].(string)).MustGet()
 }
 

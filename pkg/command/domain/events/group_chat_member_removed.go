@@ -1,7 +1,7 @@
 package events
 
 import (
-	models2 "cqrs-es-example-go/pkg/command/domain/models"
+	"cqrs-es-example-go/pkg/command/domain/models"
 	"fmt"
 	esa "github.com/j5ik2o/event-store-adapter-go"
 	"github.com/oklog/ulid/v2"
@@ -10,21 +10,21 @@ import (
 
 type GroupChatMemberRemoved struct {
 	id            string
-	aggregateId   *models2.GroupChatId
-	userAccountId *models2.UserAccountId
+	aggregateId   models.GroupChatId
+	userAccountId models.UserAccountId
 	seqNr         uint64
-	executorId    *models2.UserAccountId
+	executorId    models.UserAccountId
 	occurredAt    uint64
 }
 
-func NewGroupChatMemberRemoved(aggregateId *models2.GroupChatId, userAccountId *models2.UserAccountId, seqNr uint64, executorId *models2.UserAccountId) *GroupChatMemberRemoved {
+func NewGroupChatMemberRemoved(aggregateId models.GroupChatId, userAccountId models.UserAccountId, seqNr uint64, executorId models.UserAccountId) *GroupChatMemberRemoved {
 	id := ulid.Make().String()
 	now := time.Now()
 	occurredAt := uint64(now.UnixNano() / 1e6)
 	return &GroupChatMemberRemoved{id, aggregateId, userAccountId, seqNr, executorId, occurredAt}
 }
 
-func NewGroupChatMemberRemovedFrom(id string, aggregateId *models2.GroupChatId, userAccountId *models2.UserAccountId, seqNr uint64, executorId *models2.UserAccountId, occurredAt uint64) *GroupChatMemberRemoved {
+func NewGroupChatMemberRemovedFrom(id string, aggregateId models.GroupChatId, userAccountId models.UserAccountId, seqNr uint64, executorId models.UserAccountId, occurredAt uint64) *GroupChatMemberRemoved {
 	return &GroupChatMemberRemoved{id, aggregateId, userAccountId, seqNr, executorId, occurredAt}
 }
 
@@ -48,19 +48,19 @@ func (g *GroupChatMemberRemoved) GetTypeName() string {
 }
 
 func (g *GroupChatMemberRemoved) GetAggregateId() esa.AggregateId {
-	return g.aggregateId
+	return &g.aggregateId
 }
 
 func (g *GroupChatMemberRemoved) GetSeqNr() uint64 {
 	return g.seqNr
 }
 
-func (g *GroupChatMemberRemoved) GetUserAccountId() *models2.UserAccountId {
-	return g.userAccountId
+func (g *GroupChatMemberRemoved) GetUserAccountId() *models.UserAccountId {
+	return &g.userAccountId
 }
 
-func (g *GroupChatMemberRemoved) GetExecutorId() *models2.UserAccountId {
-	return g.executorId
+func (g *GroupChatMemberRemoved) GetExecutorId() *models.UserAccountId {
+	return &g.executorId
 }
 
 func (g *GroupChatMemberRemoved) IsCreated() bool {

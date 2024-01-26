@@ -13,10 +13,10 @@ import (
 // GroupChat is an aggregate of a group chat.
 // GroupChat はグループチャットの集約です。
 type GroupChat struct {
-	id       *models.GroupChatId
-	name     *models.GroupChatName
-	members  *models.Members
-	messages *models.Messages
+	id       models.GroupChatId
+	name     models.GroupChatName
+	members  models.Members
+	messages models.Messages
 	seqNr    uint64
 	version  uint64
 	deleted  bool
@@ -37,22 +37,22 @@ func ReplayGroupChat(events []esa.Event, snapshot *GroupChat) *GroupChat {
 func (g *GroupChat) ApplyEvent(event esa.Event) *GroupChat {
 	switch e := event.(type) {
 	case *events.GroupChatDeleted:
-		result := g.Delete(e.GetExecutorId()).MustGet()
+		result := g.Delete(*e.GetExecutorId()).MustGet()
 		return result.V1
 	case *events.GroupChatMemberAdded:
-		result := g.AddMember(e.GetMember().GetId(), e.GetMember().GetUserAccountId(), e.GetMember().GetRole(), e.GetExecutorId()).MustGet()
+		result := g.AddMember(*e.GetMember().GetId(), *e.GetMember().GetUserAccountId(), e.GetMember().GetRole(), *e.GetExecutorId()).MustGet()
 		return result.V1
 	case *events.GroupChatMemberRemoved:
-		result := g.RemoveMemberByUserAccountId(e.GetUserAccountId(), e.GetExecutorId()).MustGet()
+		result := g.RemoveMemberByUserAccountId(*e.GetUserAccountId(), *e.GetExecutorId()).MustGet()
 		return result.V1
 	case *events.GroupChatRenamed:
-		result := g.Rename(e.GetName(), e.GetExecutorId()).MustGet()
+		result := g.Rename(*e.GetName(), *e.GetExecutorId()).MustGet()
 		return result.V1
 	case *events.GroupChatMessagePosted:
-		result := g.PostMessage(e.GetMessage(), e.GetExecutorId()).MustGet()
+		result := g.PostMessage(*e.GetMessage(), *e.GetExecutorId()).MustGet()
 		return result.V1
 	case *events.GroupChatMessageDeleted:
-		result := g.DeleteMessage(e.GetMessageId(), e.GetExecutorId()).MustGet()
+		result := g.DeleteMessage(*e.GetMessageId(), *e.GetExecutorId()).MustGet()
 		return result.V1
 	default:
 		return g
@@ -61,7 +61,7 @@ func (g *GroupChat) ApplyEvent(event esa.Event) *GroupChat {
 
 // NewGroupChat creates a new group chat.
 // NewGroupChat は新しいグループチャットを作成します。
-func NewGroupChat(name *models.GroupChatName, executorId *models.UserAccountId) (*GroupChat, events.GroupChatEvent) {
+func NewGroupChat(name models.GroupChatName, executorId models.UserAccountId) (*GroupChat, events.GroupChatEvent) {
 	id := models.NewGroupChatId()
 	members := models.NewMembers(executorId)
 	seqNr := uint64(1)
@@ -72,7 +72,7 @@ func NewGroupChat(name *models.GroupChatName, executorId *models.UserAccountId) 
 
 // NewGroupChatFrom creates a new group chat from the specified parameters.
 // NewGroupChatFrom は指定されたパラメータから新しいグループチャットを作成します。
-func NewGroupChatFrom(id *models.GroupChatId, name *models.GroupChatName, members *models.Members, messages *models.Messages, seqNr uint64, version uint64, deleted bool) *GroupChat {
+func NewGroupChatFrom(id models.GroupChatId, name models.GroupChatName, members models.Members, messages models.Messages, seqNr uint64, version uint64, deleted bool) *GroupChat {
 	return &GroupChat{id, name, members, messages, seqNr, version, deleted}
 }
 
@@ -96,31 +96,31 @@ func (g *GroupChat) ToJSON() map[string]interface{} {
 // GetId returns the aggregate GetId.
 // GetId は集約の GetId を返します。
 func (g *GroupChat) GetId() esa.AggregateId {
-	return g.id
+	return &g.id
 }
 
 // GetGroupChatId returns the aggregate GetGroupChatId.
 // GetGroupChatId は集約の GetGroupChatId を返します。
 func (g *GroupChat) GetGroupChatId() *models.GroupChatId {
-	return g.id
+	return &g.id
 }
 
 // GetName returns the aggregate GetName.
 // GetName は集約の GetName を返します。
 func (g *GroupChat) GetName() *models.GroupChatName {
-	return g.name
+	return &g.name
 }
 
 // GetMembers returns the aggregate GetMembers.
 // GetMembers は集約の GetMembers を返します。
 func (g *GroupChat) GetMembers() *models.Members {
-	return g.members
+	return &g.members
 }
 
 // GetMessages returns the aggregate GetMessages.
 // GetMessages は集約の GetMessages を返します。
 func (g *GroupChat) GetMessages() *models.Messages {
-	return g.messages
+	return &g.messages
 }
 
 func (g *GroupChat) GetSeqNr() uint64 {
@@ -149,7 +149,7 @@ func (g *GroupChat) IsDeleted() bool {
 //
 // # Returns / 戻り値:
 // - The new aggregate / 新しい集約
-func (g *GroupChat) WithName(name *models.GroupChatName) *GroupChat {
+func (g *GroupChat) WithName(name models.GroupChatName) *GroupChat {
 	return NewGroupChatFrom(g.id, name, g.members, g.messages, g.seqNr, g.version, g.deleted)
 }
 
@@ -158,7 +158,7 @@ func (g *GroupChat) WithName(name *models.GroupChatName) *GroupChat {
 //
 // # Returns / 戻り値:
 // - The new aggregate / 新しい集約
-func (g *GroupChat) WithMembers(members *models.Members) *GroupChat {
+func (g *GroupChat) WithMembers(members models.Members) *GroupChat {
 	return NewGroupChatFrom(g.id, g.name, members, g.messages, g.seqNr, g.version, g.deleted)
 }
 
@@ -167,7 +167,7 @@ func (g *GroupChat) WithMembers(members *models.Members) *GroupChat {
 //
 // # Returns / 戻り値:
 // - The new aggregate / 新しい集約
-func (g *GroupChat) WithMessages(messages *models.Messages) *GroupChat {
+func (g *GroupChat) WithMessages(messages models.Messages) *GroupChat {
 	return NewGroupChatFrom(g.id, g.name, g.members, messages, g.seqNr, g.version, g.deleted)
 }
 
@@ -204,17 +204,17 @@ func (g *GroupChat) WithDeleted() *GroupChat {
 // # Returns / 戻り値:
 // - The result of the operation / 操作の結果
 func (g *GroupChat) AddMember(
-	memberId *models.MemberId,
-	userAccountId *models.UserAccountId,
+	memberId models.MemberId,
+	userAccountId models.UserAccountId,
 	role models.Role,
-	executorId *models.UserAccountId) mo.Result[GroupChatWithEventPair] {
+	executorId models.UserAccountId) mo.Result[GroupChatWithEventPair] {
 	if g.deleted {
 		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatAddMemberErr("The group chat is deleted"))
 	}
-	if g.members.IsMember(userAccountId) {
+	if g.members.IsMember(&userAccountId) {
 		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatAddMemberErr("The userAccountId is already the member of the group chat"))
 	}
-	if !g.members.IsAdministrator(executorId) {
+	if !g.members.IsAdministrator(&executorId) {
 		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatAddMemberErr("The executorId is not the member of the group chat"))
 	}
 	newMember := models.NewMember(memberId, userAccountId, role)
@@ -237,17 +237,17 @@ func (g *GroupChat) AddMember(
 // - The executorId is the administrator of the group chat / executorId がグループチャットの管理者であること
 // # Returns / 戻り値:
 // - The result of the operation / 操作の結果
-func (g *GroupChat) RemoveMemberByUserAccountId(userAccountId *models.UserAccountId, executorId *models.UserAccountId) mo.Result[GroupChatWithEventPair] {
+func (g *GroupChat) RemoveMemberByUserAccountId(userAccountId models.UserAccountId, executorId models.UserAccountId) mo.Result[GroupChatWithEventPair] {
 	if g.deleted {
 		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatRemoveMemberErr("The group chat is deleted"))
 	}
-	if !g.members.IsMember(userAccountId) {
+	if !g.members.IsMember(&userAccountId) {
 		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatRemoveMemberErr("The userAccountId is not the member of the group chat"))
 	}
-	if !g.members.IsAdministrator(executorId) {
+	if !g.members.IsAdministrator(&executorId) {
 		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatRemoveMemberErr("The executorId is not the administrator of the group chat"))
 	}
-	newState := g.WithMembers(g.members.RemoveMemberByUserAccountId(userAccountId))
+	newState := g.WithMembers(g.members.RemoveMemberByUserAccountId(&userAccountId))
 	newState.seqNr += 1
 	memberRemoved := events.NewGroupChatMemberRemoved(newState.id, userAccountId, newState.seqNr, executorId)
 	pair := gt.New2[*GroupChat, events.GroupChatEvent](newState, memberRemoved)
@@ -266,14 +266,14 @@ func (g *GroupChat) RemoveMemberByUserAccountId(userAccountId *models.UserAccoun
 // - The name is not the same as the current name / name が現在の名前と同じでないこと
 // # Returns / 戻り値:
 // - The result of the operation / 操作の結果
-func (g *GroupChat) Rename(name *models.GroupChatName, executorId *models.UserAccountId) mo.Result[GroupChatWithEventPair] {
+func (g *GroupChat) Rename(name models.GroupChatName, executorId models.UserAccountId) mo.Result[GroupChatWithEventPair] {
 	if g.deleted {
 		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatAddMemberErr("The group chat is deleted"))
 	}
-	if !g.members.IsAdministrator(executorId) {
+	if !g.members.IsAdministrator(&executorId) {
 		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatAddMemberErr("The executorId is not an administrator of the group chat"))
 	}
-	if g.name == name {
+	if g.name.Equals(&name) {
 		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatAddMemberErr("The name is already the same as the current name"))
 	}
 	newState := g.WithName(name)
@@ -293,11 +293,11 @@ func (g *GroupChat) Rename(name *models.GroupChatName, executorId *models.UserAc
 // - The executorId is the administrator of the group chat / executorId がグループチャットの管理者であること
 // # Returns / 戻り値:
 // - The result of the operation / 操作の結果
-func (g *GroupChat) Delete(executorId *models.UserAccountId) mo.Result[GroupChatWithEventPair] {
+func (g *GroupChat) Delete(executorId models.UserAccountId) mo.Result[GroupChatWithEventPair] {
 	if g.deleted {
 		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatDeleteErr("The group chat is deleted"))
 	}
-	if !g.members.IsAdministrator(executorId) {
+	if !g.members.IsAdministrator(&executorId) {
 		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatDeleteErr("The executorId is not the member of the group chat"))
 	}
 	newState := g.WithDeleted()
@@ -320,17 +320,17 @@ func (g *GroupChat) Delete(executorId *models.UserAccountId) mo.Result[GroupChat
 // - The message is not already posted / メッセージがすでに投稿されていないこと
 // # Returns / 戻り値:
 // - The result of the operation / 操作の結果
-func (g *GroupChat) PostMessage(message *models.Message, executorId *models.UserAccountId) mo.Result[GroupChatWithEventPair] {
+func (g *GroupChat) PostMessage(message models.Message, executorId models.UserAccountId) mo.Result[GroupChatWithEventPair] {
 	if g.deleted {
 		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatPostMessageErr("The group chat is deleted"))
 	}
 	if !g.members.IsMember(message.GetSenderId()) {
 		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatPostMessageErr("The senderId is not the member of the group chat"))
 	}
-	if !g.members.IsMember(executorId) {
+	if !g.members.IsMember(&executorId) {
 		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatPostMessageErr("The executorId is not the member of the group chat"))
 	}
-	if !message.GetSenderId().Equals(executorId) {
+	if !message.GetSenderId().Equals(&executorId) {
 		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatPostMessageErr("The executorId is not the senderId of the message"))
 	}
 	newMessages, exists := g.messages.Add(message).Get()
@@ -356,22 +356,22 @@ func (g *GroupChat) PostMessage(message *models.Message, executorId *models.User
 // - The message is not already deleted / メッセージがすでに削除されていないこと
 // # Returns / 戻り値:
 // - The result of the operation / 操作の結果
-func (g *GroupChat) DeleteMessage(messageId *models.MessageId, executorId *models.UserAccountId) mo.Result[GroupChatWithEventPair] {
+func (g *GroupChat) DeleteMessage(messageId models.MessageId, executorId models.UserAccountId) mo.Result[GroupChatWithEventPair] {
 	if g.deleted {
 		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatDeleteMessageErr("The group chat is deleted"))
 	}
-	if !g.members.IsMember(executorId) {
+	if !g.members.IsMember(&executorId) {
 		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatPostMessageErr("The executorId is not the member of the group chat"))
 	}
-	message, exists := g.messages.Get(messageId).Get()
+	message, exists := g.messages.Get(&messageId).Get()
 	if !exists {
 		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatDeleteMessageErr("The message is not found"))
 	}
 	member := g.members.FindByUserAccountId(message.GetSenderId()).MustGet()
-	if !member.GetUserAccountId().Equals(executorId) {
+	if !member.GetUserAccountId().Equals(&executorId) {
 		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatDeleteMessageErr("The executorId is not the sender of the message"))
 	}
-	newState := g.WithMessages(g.messages.Remove(messageId).MustGet())
+	newState := g.WithMessages(g.messages.Remove(&messageId).MustGet())
 	newState.seqNr += 1
 	messageDeleted := events.NewGroupChatMessageDeleted(newState.id, messageId, newState.seqNr, executorId)
 	pair := gt.New2[*GroupChat, events.GroupChatEvent](newState, messageDeleted)
