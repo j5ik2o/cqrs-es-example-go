@@ -1,7 +1,7 @@
 package events
 
 import (
-	models "cqrs-es-example-go/pkg/command/domain/models"
+	"cqrs-es-example-go/pkg/command/domain/models"
 	"fmt"
 	esa "github.com/j5ik2o/event-store-adapter-go"
 	"github.com/oklog/ulid/v2"

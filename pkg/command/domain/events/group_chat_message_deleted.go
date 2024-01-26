@@ -1,7 +1,7 @@
 package events
 
 import (
-	models2 "cqrs-es-example-go/pkg/command/domain/models"
+	"cqrs-es-example-go/pkg/command/domain/models"
 	"fmt"
 	esa "github.com/j5ik2o/event-store-adapter-go"
 	"github.com/oklog/ulid/v2"
@@ -10,21 +10,21 @@ import (
 
 type GroupChatMessageDeleted struct {
 	id          string
-	aggregateId models2.GroupChatId
-	messageId   models2.MessageId
+	aggregateId models.GroupChatId
+	messageId   models.MessageId
 	seqNr       uint64
-	executorId  models2.UserAccountId
+	executorId  models.UserAccountId
 	occurredAt  uint64
 }
 
-func NewGroupChatMessageDeleted(aggregateId models2.GroupChatId, messageId models2.MessageId, seqNr uint64, executorId models2.UserAccountId) *GroupChatMessageDeleted {
+func NewGroupChatMessageDeleted(aggregateId models.GroupChatId, messageId models.MessageId, seqNr uint64, executorId models.UserAccountId) *GroupChatMessageDeleted {
 	id := ulid.Make().String()
 	now := time.Now()
 	occurredAt := uint64(now.UnixNano() / 1e6)
 	return &GroupChatMessageDeleted{id, aggregateId, messageId, seqNr, executorId, occurredAt}
 }
 
-func NewGroupChatMessageDeletedFrom(id string, aggregateId models2.GroupChatId, messageId models2.MessageId, seqNr uint64, executorId models2.UserAccountId, occurredAt uint64) *GroupChatMessageDeleted {
+func NewGroupChatMessageDeletedFrom(id string, aggregateId models.GroupChatId, messageId models.MessageId, seqNr uint64, executorId models.UserAccountId, occurredAt uint64) *GroupChatMessageDeleted {
 	return &GroupChatMessageDeleted{id, aggregateId, messageId, seqNr, executorId, occurredAt}
 }
 
@@ -55,11 +55,11 @@ func (g *GroupChatMessageDeleted) GetSeqNr() uint64 {
 	return g.seqNr
 }
 
-func (g *GroupChatMessageDeleted) GetMessageId() *models2.MessageId {
+func (g *GroupChatMessageDeleted) GetMessageId() *models.MessageId {
 	return &g.messageId
 }
 
-func (g *GroupChatMessageDeleted) GetExecutorId() *models2.UserAccountId {
+func (g *GroupChatMessageDeleted) GetExecutorId() *models.UserAccountId {
 	return &g.executorId
 }
 
