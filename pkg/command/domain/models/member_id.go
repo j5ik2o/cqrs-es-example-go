@@ -9,16 +9,16 @@ type MemberId struct {
 	value string
 }
 
-func NewMemberId() *MemberId {
+func NewMemberId() MemberId {
 	id := ulid.Make()
-	return &MemberId{value: id.String()}
+	return MemberId{value: id.String()}
 }
 
-func NewMemberIdFromString(value string) mo.Result[*MemberId] {
-	return mo.Ok(&MemberId{value: value})
+func NewMemberIdFromString(value string) mo.Result[MemberId] {
+	return mo.Ok(MemberId{value: value})
 }
 
-func ConvertMemberIdFromJSON(value map[string]interface{}) mo.Result[*MemberId] {
+func ConvertMemberIdFromJSON(value map[string]interface{}) mo.Result[MemberId] {
 	return NewMemberIdFromString(value["value"].(string))
 }
 

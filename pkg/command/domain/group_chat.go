@@ -40,7 +40,7 @@ func (g *GroupChat) ApplyEvent(event esa.Event) *GroupChat {
 		result := g.Delete(*e.GetExecutorId()).MustGet()
 		return result.V1
 	case *events.GroupChatMemberAdded:
-		result := g.AddMember(e.GetMember().GetId(), *e.GetMember().GetUserAccountId(), e.GetMember().GetRole(), *e.GetExecutorId()).MustGet()
+		result := g.AddMember(*e.GetMember().GetId(), *e.GetMember().GetUserAccountId(), e.GetMember().GetRole(), *e.GetExecutorId()).MustGet()
 		return result.V1
 	case *events.GroupChatMemberRemoved:
 		result := g.RemoveMemberByUserAccountId(*e.GetUserAccountId(), *e.GetExecutorId()).MustGet()
@@ -204,7 +204,7 @@ func (g *GroupChat) WithDeleted() *GroupChat {
 // # Returns / 戻り値:
 // - The result of the operation / 操作の結果
 func (g *GroupChat) AddMember(
-	memberId *models.MemberId,
+	memberId models.MemberId,
 	userAccountId models.UserAccountId,
 	role models.Role,
 	executorId models.UserAccountId) mo.Result[GroupChatWithEventPair] {

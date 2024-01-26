@@ -2,13 +2,13 @@ package models
 
 // Member is the model of member.
 type Member struct {
-	id            *MemberId
+	id            MemberId
 	userAccountId UserAccountId
 	role          Role
 }
 
 // NewMember is the constructor of Member.
-func NewMember(id *MemberId, userAccountId UserAccountId, role Role) *Member {
+func NewMember(id MemberId, userAccountId UserAccountId, role Role) *Member {
 	return &Member{
 		id:            id,
 		userAccountId: userAccountId,
@@ -38,7 +38,7 @@ func (m *Member) ToJSON() map[string]interface{} {
 
 // GetId returns id.
 func (m *Member) GetId() *MemberId {
-	return m.id
+	return &m.id
 }
 
 // GetUserAccountId returns user account id.
