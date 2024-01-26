@@ -275,11 +275,11 @@ func Test_GroupChat_DeleteMessage(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 200, recorder.Code)
 
-	messageId, err := getMessageId(recorder)
+	messageIdString, err := getMessageId(recorder)
 	require.NoError(t, err)
 
 	recorder = httptest.NewRecorder()
-	err = sender.sendDeleteMessageCommand(recorder, groupChatIdString, messageId, userAccountIdString)
+	err = sender.sendDeleteMessageCommand(recorder, groupChatIdString, messageIdString, userAccountIdString)
 	require.NoError(t, err)
 	require.Equal(t, 200, recorder.Code)
 
@@ -291,7 +291,8 @@ func Test_GroupChat_DeleteMessage(t *testing.T) {
 	require.Equal(t, executorId, actualGroupChat.GetMembers().GetAdministrator().GetUserAccountId().GetValue())
 	userAccountId := models.NewUserAccountIdFromString(userAccountIdString).MustGet()
 	require.True(t, actualGroupChat.GetMembers().FindByUserAccountId(&userAccountId).IsPresent())
-	require.False(t, actualGroupChat.GetMessages().Contains(models.NewMessageIdFromString(messageId).MustGet()))
+	messageId := models.NewMessageIdFromString(messageIdString).MustGet()
+	require.False(t, actualGroupChat.GetMessages().Contains(&messageId))
 }
 
 type RequestSender struct {

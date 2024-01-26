@@ -4,13 +4,13 @@ import "github.com/samber/mo"
 
 // Message is a value object that represents a message.
 type Message struct {
-	id       *MessageId
+	id       MessageId
 	text     string
 	senderId UserAccountId
 }
 
 // NewMessage is the constructor for Message.
-func NewMessage(id *MessageId, text string, senderId UserAccountId) mo.Result[*Message] {
+func NewMessage(id MessageId, text string, senderId UserAccountId) mo.Result[*Message] {
 	return mo.Ok(&Message{id, text, senderId})
 }
 
@@ -34,7 +34,7 @@ func (m *Message) ToJSON() map[string]interface{} {
 
 // GetId returns id.
 func (m *Message) GetId() *MessageId {
-	return m.id
+	return &m.id
 }
 
 // GetText returns text.
@@ -49,5 +49,5 @@ func (m *Message) GetSenderId() *UserAccountId {
 
 // Equals returns whether the message is equal to the other.
 func (m *Message) Equals(other *Message) bool {
-	return m.id.Equals(other.id) && m.text == other.text && m.senderId.Equals(&other.senderId)
+	return m.id.Equals(&other.id) && m.text == other.text && m.senderId.Equals(&other.senderId)
 }

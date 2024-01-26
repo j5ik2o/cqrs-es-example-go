@@ -17,10 +17,10 @@ func ValidateUserAccountId(id string) mo.Result[models.UserAccountId] {
 	return models.NewUserAccountIdFromString(id)
 }
 
-func ValidateMessage(id *models.MessageId, message string, senderId models.UserAccountId) mo.Result[*models.Message] {
+func ValidateMessage(id models.MessageId, message string, senderId models.UserAccountId) mo.Result[*models.Message] {
 	return models.NewMessage(id, message, senderId)
 }
 
-func ValidateMessageId(id string) mo.Result[*models.MessageId] {
+func ValidateMessageId(id string) mo.Result[models.MessageId] {
 	return models.NewMessageIdFromString(id)
 }

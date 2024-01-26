@@ -103,8 +103,8 @@ func Test_GroupChat_PostMessage(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, groupChat.id, tuple2.V1.id)
 	require.Equal(t, groupChat.seqNr+1, tuple2.V1.seqNr)
-	require.True(t, tuple2.V1.GetMessages().Get(messageId).IsPresent())
-	require.Equal(t, message, tuple2.V1.GetMessages().Get(messageId).MustGet())
+	require.True(t, tuple2.V1.GetMessages().Get(&messageId).IsPresent())
+	require.Equal(t, message, tuple2.V1.GetMessages().Get(&messageId).MustGet())
 }
 
 func Test_GroupChat_DeleteMessage(t *testing.T) {
@@ -126,5 +126,5 @@ func Test_GroupChat_DeleteMessage(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, groupChat.id, tuple2.V1.id)
 	require.Equal(t, groupChat.seqNr+2, tuple2.V1.seqNr)
-	require.True(t, tuple2.V1.GetMessages().Get(messageId).IsAbsent())
+	require.True(t, tuple2.V1.GetMessages().Get(&messageId).IsAbsent())
 }

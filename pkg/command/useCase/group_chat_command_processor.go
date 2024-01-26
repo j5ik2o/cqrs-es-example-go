@@ -115,7 +115,7 @@ func (g *GroupChatCommandProcessor) PostMessage(groupChatId *models.GroupChatId,
 }
 
 // DeleteMessage is the command handler for DeleteMessage.
-func (g *GroupChatCommandProcessor) DeleteMessage(groupChatId *models.GroupChatId, messageId *models.MessageId, executorId models.UserAccountId) (events.GroupChatEvent, error) {
+func (g *GroupChatCommandProcessor) DeleteMessage(groupChatId *models.GroupChatId, messageId models.MessageId, executorId models.UserAccountId) (events.GroupChatEvent, error) {
 	groupChat, err := g.repository.FindById(groupChatId).Get()
 	if err != nil {
 		return nil, err

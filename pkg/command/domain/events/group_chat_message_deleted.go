@@ -11,20 +11,20 @@ import (
 type GroupChatMessageDeleted struct {
 	id          string
 	aggregateId models2.GroupChatId
-	messageId   *models2.MessageId
+	messageId   models2.MessageId
 	seqNr       uint64
 	executorId  models2.UserAccountId
 	occurredAt  uint64
 }
 
-func NewGroupChatMessageDeleted(aggregateId models2.GroupChatId, messageId *models2.MessageId, seqNr uint64, executorId models2.UserAccountId) *GroupChatMessageDeleted {
+func NewGroupChatMessageDeleted(aggregateId models2.GroupChatId, messageId models2.MessageId, seqNr uint64, executorId models2.UserAccountId) *GroupChatMessageDeleted {
 	id := ulid.Make().String()
 	now := time.Now()
 	occurredAt := uint64(now.UnixNano() / 1e6)
 	return &GroupChatMessageDeleted{id, aggregateId, messageId, seqNr, executorId, occurredAt}
 }
 
-func NewGroupChatMessageDeletedFrom(id string, aggregateId models2.GroupChatId, messageId *models2.MessageId, seqNr uint64, executorId models2.UserAccountId, occurredAt uint64) *GroupChatMessageDeleted {
+func NewGroupChatMessageDeletedFrom(id string, aggregateId models2.GroupChatId, messageId models2.MessageId, seqNr uint64, executorId models2.UserAccountId, occurredAt uint64) *GroupChatMessageDeleted {
 	return &GroupChatMessageDeleted{id, aggregateId, messageId, seqNr, executorId, occurredAt}
 }
 
@@ -56,7 +56,7 @@ func (g *GroupChatMessageDeleted) GetSeqNr() uint64 {
 }
 
 func (g *GroupChatMessageDeleted) GetMessageId() *models2.MessageId {
-	return g.messageId
+	return &g.messageId
 }
 
 func (g *GroupChatMessageDeleted) GetExecutorId() *models2.UserAccountId {

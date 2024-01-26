@@ -52,7 +52,7 @@ func (g *GroupChat) ApplyEvent(event esa.Event) *GroupChat {
 		result := g.PostMessage(e.GetMessage(), *e.GetExecutorId()).MustGet()
 		return result.V1
 	case *events.GroupChatMessageDeleted:
-		result := g.DeleteMessage(e.GetMessageId(), *e.GetExecutorId()).MustGet()
+		result := g.DeleteMessage(*e.GetMessageId(), *e.GetExecutorId()).MustGet()
 		return result.V1
 	default:
 		return g
@@ -356,14 +356,14 @@ func (g *GroupChat) PostMessage(message *models.Message, executorId models.UserA
 // - The message is not already deleted / メッセージがすでに削除されていないこと
 // # Returns / 戻り値:
 // - The result of the operation / 操作の結果
-func (g *GroupChat) DeleteMessage(messageId *models.MessageId, executorId models.UserAccountId) mo.Result[GroupChatWithEventPair] {
+func (g *GroupChat) DeleteMessage(messageId models.MessageId, executorId models.UserAccountId) mo.Result[GroupChatWithEventPair] {
 	if g.deleted {
 		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatDeleteMessageErr("The group chat is deleted"))
 	}
 	if !g.members.IsMember(&executorId) {
 		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatPostMessageErr("The executorId is not the member of the group chat"))
 	}
-	message, exists := g.messages.Get(messageId).Get()
+	message, exists := g.messages.Get(&messageId).Get()
 	if !exists {
 		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatDeleteMessageErr("The message is not found"))
 	}
@@ -371,7 +371,7 @@ func (g *GroupChat) DeleteMessage(messageId *models.MessageId, executorId models
 	if !member.GetUserAccountId().Equals(&executorId) {
 		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatDeleteMessageErr("The executorId is not the sender of the message"))
 	}
-	newState := g.WithMessages(g.messages.Remove(messageId).MustGet())
+	newState := g.WithMessages(g.messages.Remove(&messageId).MustGet())
 	newState.seqNr += 1
 	messageDeleted := events.NewGroupChatMessageDeleted(newState.id, messageId, newState.seqNr, executorId)
 	pair := gt.New2[*GroupChat, events.GroupChatEvent](newState, messageDeleted)
