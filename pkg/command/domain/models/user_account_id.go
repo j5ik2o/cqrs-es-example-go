@@ -7,6 +7,8 @@ import (
 	"github.com/samber/mo"
 )
 
+const UserAccountIdPrefix = "UserAccount"
+
 type UserAccountId struct {
 	value string
 }
@@ -19,6 +21,9 @@ func NewUserAccountId() *UserAccountId {
 func NewUserAccountIdFromString(value string) mo.Result[*UserAccountId] {
 	if value == "" {
 		return mo.Err[*UserAccountId](errors.New("UserAccountId is empty"))
+	}
+	if len(value) > len(UserAccountIdPrefix) && value[0:len(UserAccountIdPrefix)] == UserAccountIdPrefix {
+		value = value[len(UserAccountIdPrefix)+1:]
 	}
 	// 先頭がUserAccount-であれば、それを削除する
 	if len(value) > 12 && value[0:12] == "UserAccount" {
