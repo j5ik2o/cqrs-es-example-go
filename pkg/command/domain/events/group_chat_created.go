@@ -12,20 +12,20 @@ type GroupChatCreated struct {
 	id          string
 	aggregateId models2.GroupChatId
 	name        models2.GroupChatName
-	members     *models2.Members
+	members     models2.Members
 	seqNr       uint64
 	executorId  models2.UserAccountId
 	occurredAt  uint64
 }
 
-func NewGroupChatCreated(aggregateId models2.GroupChatId, name models2.GroupChatName, members *models2.Members, seqNr uint64, executorId models2.UserAccountId) *GroupChatCreated {
+func NewGroupChatCreated(aggregateId models2.GroupChatId, name models2.GroupChatName, members models2.Members, seqNr uint64, executorId models2.UserAccountId) *GroupChatCreated {
 	id := ulid.Make().String()
 	now := time.Now()
 	occurredAt := uint64(now.UnixNano() / 1e6)
 	return &GroupChatCreated{id, aggregateId, name, members, seqNr, executorId, occurredAt}
 }
 
-func NewGroupChatCreatedFrom(id string, aggregateId models2.GroupChatId, name models2.GroupChatName, members *models2.Members, seqNr uint64, executorId models2.UserAccountId, occurredAt uint64) *GroupChatCreated {
+func NewGroupChatCreatedFrom(id string, aggregateId models2.GroupChatId, name models2.GroupChatName, members models2.Members, seqNr uint64, executorId models2.UserAccountId, occurredAt uint64) *GroupChatCreated {
 	return &GroupChatCreated{id, aggregateId, name, members, seqNr, executorId, occurredAt}
 }
 
@@ -59,7 +59,7 @@ func (g *GroupChatCreated) GetName() *models2.GroupChatName {
 }
 
 func (g *GroupChatCreated) GetMembers() *models2.Members {
-	return g.members
+	return &g.members
 }
 
 func (g *GroupChatCreated) GetSeqNr() uint64 {

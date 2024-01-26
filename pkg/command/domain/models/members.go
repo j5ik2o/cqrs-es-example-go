@@ -10,8 +10,8 @@ type Members struct {
 }
 
 // NewMembers is the constructor for Members.
-func NewMembers(administratorId UserAccountId) *Members {
-	return &Members{
+func NewMembers(administratorId UserAccountId) Members {
+	return Members{
 		values: []Member{
 			NewMember(NewMemberId(), administratorId, AdminRole),
 		},
@@ -19,14 +19,14 @@ func NewMembers(administratorId UserAccountId) *Members {
 }
 
 // NewMembersFrom is the constructor for Members.
-func NewMembersFrom(values []Member) *Members {
-	return &Members{
+func NewMembersFrom(values []Member) Members {
+	return Members{
 		values: values,
 	}
 }
 
 // ConvertMembersFromJSON is a constructor for Members.
-func ConvertMembersFromJSON(value map[string]interface{}) *Members {
+func ConvertMembersFromJSON(value map[string]interface{}) Members {
 	values := value["values"].([]interface{})
 	members := make([]Member, len(values))
 	for i, v := range values {
@@ -47,24 +47,24 @@ func (m *Members) ToJSON() map[string]interface{} {
 }
 
 // AddMember adds a member.
-func (m *Members) AddMember(userAccountId UserAccountId) *Members {
+func (m *Members) AddMember(userAccountId UserAccountId) Members {
 	newMembers := make([]Member, len(m.values))
 	copy(newMembers, m.values)
 	newMembers = append(newMembers, NewMember(NewMemberId(), userAccountId, MemberRole))
-	return &Members{
+	return Members{
 		values: newMembers,
 	}
 }
 
 // RemoveMemberByUserAccountId removes a member.
-func (m *Members) RemoveMemberByUserAccountId(userAccountId *UserAccountId) *Members {
+func (m *Members) RemoveMemberByUserAccountId(userAccountId *UserAccountId) Members {
 	newMembers := make([]Member, 0, len(m.values))
 	for _, member := range m.values {
 		if !member.userAccountId.Equals(userAccountId) {
 			newMembers = append(newMembers, member)
 		}
 	}
-	return &Members{
+	return Members{
 		values: newMembers,
 	}
 }

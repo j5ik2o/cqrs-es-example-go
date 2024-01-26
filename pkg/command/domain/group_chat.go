@@ -15,7 +15,7 @@ import (
 type GroupChat struct {
 	id       models.GroupChatId
 	name     models.GroupChatName
-	members  *models.Members
+	members  models.Members
 	messages *models.Messages
 	seqNr    uint64
 	version  uint64
@@ -72,7 +72,7 @@ func NewGroupChat(name models.GroupChatName, executorId models.UserAccountId) (*
 
 // NewGroupChatFrom creates a new group chat from the specified parameters.
 // NewGroupChatFrom は指定されたパラメータから新しいグループチャットを作成します。
-func NewGroupChatFrom(id models.GroupChatId, name models.GroupChatName, members *models.Members, messages *models.Messages, seqNr uint64, version uint64, deleted bool) *GroupChat {
+func NewGroupChatFrom(id models.GroupChatId, name models.GroupChatName, members models.Members, messages *models.Messages, seqNr uint64, version uint64, deleted bool) *GroupChat {
 	return &GroupChat{id, name, members, messages, seqNr, version, deleted}
 }
 
@@ -114,7 +114,7 @@ func (g *GroupChat) GetName() *models.GroupChatName {
 // GetMembers returns the aggregate GetMembers.
 // GetMembers は集約の GetMembers を返します。
 func (g *GroupChat) GetMembers() *models.Members {
-	return g.members
+	return &g.members
 }
 
 // GetMessages returns the aggregate GetMessages.
@@ -158,7 +158,7 @@ func (g *GroupChat) WithName(name models.GroupChatName) *GroupChat {
 //
 // # Returns / 戻り値:
 // - The new aggregate / 新しい集約
-func (g *GroupChat) WithMembers(members *models.Members) *GroupChat {
+func (g *GroupChat) WithMembers(members models.Members) *GroupChat {
 	return NewGroupChatFrom(g.id, g.name, members, g.messages, g.seqNr, g.version, g.deleted)
 }
 
