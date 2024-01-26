@@ -11,20 +11,20 @@ import (
 type GroupChatMessagePosted struct {
 	id          string
 	aggregateId models2.GroupChatId
-	message     *models2.Message
+	message     models2.Message
 	seqNr       uint64
 	executorId  models2.UserAccountId
 	occurredAt  uint64
 }
 
-func NewGroupChatMessagePosted(aggregateId models2.GroupChatId, message *models2.Message, seqNr uint64, executorId models2.UserAccountId) *GroupChatMessagePosted {
+func NewGroupChatMessagePosted(aggregateId models2.GroupChatId, message models2.Message, seqNr uint64, executorId models2.UserAccountId) *GroupChatMessagePosted {
 	id := ulid.Make().String()
 	now := time.Now()
 	occurredAt := uint64(now.UnixNano() / 1e6)
 	return &GroupChatMessagePosted{id, aggregateId, message, seqNr, executorId, occurredAt}
 }
 
-func NewGroupChatMessagePostedFrom(id string, aggregateId models2.GroupChatId, message *models2.Message, seqNr uint64, executorId models2.UserAccountId, occurredAt uint64) *GroupChatMessagePosted {
+func NewGroupChatMessagePostedFrom(id string, aggregateId models2.GroupChatId, message models2.Message, seqNr uint64, executorId models2.UserAccountId, occurredAt uint64) *GroupChatMessagePosted {
 	return &GroupChatMessagePosted{id, aggregateId, message, seqNr, executorId, occurredAt}
 }
 
@@ -56,7 +56,7 @@ func (g *GroupChatMessagePosted) GetSeqNr() uint64 {
 }
 
 func (g *GroupChatMessagePosted) GetMessage() *models2.Message {
-	return g.message
+	return &g.message
 }
 
 func (g *GroupChatMessagePosted) GetExecutorId() *models2.UserAccountId {

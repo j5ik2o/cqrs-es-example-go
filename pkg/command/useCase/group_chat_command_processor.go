@@ -98,7 +98,7 @@ func (g *GroupChatCommandProcessor) RemoveMember(groupChatId *models.GroupChatId
 }
 
 // PostMessage is the command handler for PostMessage.
-func (g *GroupChatCommandProcessor) PostMessage(groupChatId *models.GroupChatId, message *models.Message, executorId models.UserAccountId) (events.GroupChatEvent, error) {
+func (g *GroupChatCommandProcessor) PostMessage(groupChatId *models.GroupChatId, message models.Message, executorId models.UserAccountId) (events.GroupChatEvent, error) {
 	groupChat, err := g.repository.FindById(groupChatId).Get()
 	if err != nil {
 		return nil, err

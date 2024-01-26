@@ -16,7 +16,7 @@ type GroupChat struct {
 	id       models.GroupChatId
 	name     models.GroupChatName
 	members  models.Members
-	messages *models.Messages
+	messages models.Messages
 	seqNr    uint64
 	version  uint64
 	deleted  bool
@@ -49,7 +49,7 @@ func (g *GroupChat) ApplyEvent(event esa.Event) *GroupChat {
 		result := g.Rename(*e.GetName(), *e.GetExecutorId()).MustGet()
 		return result.V1
 	case *events.GroupChatMessagePosted:
-		result := g.PostMessage(e.GetMessage(), *e.GetExecutorId()).MustGet()
+		result := g.PostMessage(*e.GetMessage(), *e.GetExecutorId()).MustGet()
 		return result.V1
 	case *events.GroupChatMessageDeleted:
 		result := g.DeleteMessage(*e.GetMessageId(), *e.GetExecutorId()).MustGet()
@@ -72,7 +72,7 @@ func NewGroupChat(name models.GroupChatName, executorId models.UserAccountId) (*
 
 // NewGroupChatFrom creates a new group chat from the specified parameters.
 // NewGroupChatFrom は指定されたパラメータから新しいグループチャットを作成します。
-func NewGroupChatFrom(id models.GroupChatId, name models.GroupChatName, members models.Members, messages *models.Messages, seqNr uint64, version uint64, deleted bool) *GroupChat {
+func NewGroupChatFrom(id models.GroupChatId, name models.GroupChatName, members models.Members, messages models.Messages, seqNr uint64, version uint64, deleted bool) *GroupChat {
 	return &GroupChat{id, name, members, messages, seqNr, version, deleted}
 }
 
@@ -120,7 +120,7 @@ func (g *GroupChat) GetMembers() *models.Members {
 // GetMessages returns the aggregate GetMessages.
 // GetMessages は集約の GetMessages を返します。
 func (g *GroupChat) GetMessages() *models.Messages {
-	return g.messages
+	return &g.messages
 }
 
 func (g *GroupChat) GetSeqNr() uint64 {
@@ -167,7 +167,7 @@ func (g *GroupChat) WithMembers(members models.Members) *GroupChat {
 //
 // # Returns / 戻り値:
 // - The new aggregate / 新しい集約
-func (g *GroupChat) WithMessages(messages *models.Messages) *GroupChat {
+func (g *GroupChat) WithMessages(messages models.Messages) *GroupChat {
 	return NewGroupChatFrom(g.id, g.name, g.members, messages, g.seqNr, g.version, g.deleted)
 }
 
@@ -320,7 +320,7 @@ func (g *GroupChat) Delete(executorId models.UserAccountId) mo.Result[GroupChatW
 // - The message is not already posted / メッセージがすでに投稿されていないこと
 // # Returns / 戻り値:
 // - The result of the operation / 操作の結果
-func (g *GroupChat) PostMessage(message *models.Message, executorId models.UserAccountId) mo.Result[GroupChatWithEventPair] {
+func (g *GroupChat) PostMessage(message models.Message, executorId models.UserAccountId) mo.Result[GroupChatWithEventPair] {
 	if g.deleted {
 		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatPostMessageErr("The group chat is deleted"))
 	}
