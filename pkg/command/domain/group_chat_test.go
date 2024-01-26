@@ -15,18 +15,15 @@ func Test_GroupChat_AddMember(t *testing.T) {
 	userAccountId := models.NewUserAccountId()
 
 	// When
-	result := groupChat.AddMember(memberId, userAccountId, models.MemberRole, adminId)
+	tuple2, err := groupChat.AddMember(memberId, userAccountId, models.MemberRole, adminId).Get()
 
 	// Then
-	require.True(t, result.IsOk())
-	tuple, _ := result.Get()
-
-	require.Equal(t, groupChat.id, tuple.V1.id)
-	require.Equal(t, groupChat.seqNr+1, tuple.V1.seqNr)
-	require.True(t, tuple.V1.GetMembers().FindByUserAccountId(userAccountId).IsPresent())
-
-	require.Equal(t, groupChat.id, tuple.V2.GetAggregateId())
-	require.Equal(t, groupChat.seqNr+1, tuple.V2.GetSeqNr())
+	require.NoError(t, err)
+	require.Equal(t, groupChat.id, tuple2.V1.id)
+	require.Equal(t, groupChat.seqNr+1, tuple2.V1.seqNr)
+	require.True(t, tuple2.V1.GetMembers().FindByUserAccountId(userAccountId).IsPresent())
+	require.Equal(t, groupChat.id, tuple2.V2.GetAggregateId())
+	require.Equal(t, groupChat.seqNr+1, tuple2.V2.GetSeqNr())
 }
 
 func Test_GroupChat_RemoveMemberByUserAccountId(t *testing.T) {
@@ -41,16 +38,15 @@ func Test_GroupChat_RemoveMemberByUserAccountId(t *testing.T) {
 	groupChat = result.MustGet().V1
 
 	// When
-	result = groupChat.RemoveMemberByUserAccountId(userAccountId, adminId)
+	tuple2, err := groupChat.RemoveMemberByUserAccountId(userAccountId, adminId).Get()
 
 	// Then
-	require.True(t, result.IsOk())
-	tuple, _ := result.Get()
-	require.Equal(t, groupChat.id, tuple.V1.id)
-	require.Equal(t, groupChat.seqNr+1, tuple.V1.seqNr)
-	require.False(t, tuple.V1.GetMembers().FindByUserAccountId(userAccountId).IsPresent())
-	require.Equal(t, groupChat.id, tuple.V2.GetAggregateId())
-	require.Equal(t, groupChat.seqNr+1, tuple.V2.GetSeqNr())
+	require.NoError(t, err)
+	require.Equal(t, groupChat.id, tuple2.V1.id)
+	require.Equal(t, groupChat.seqNr+1, tuple2.V1.seqNr)
+	require.False(t, tuple2.V1.GetMembers().FindByUserAccountId(userAccountId).IsPresent())
+	require.Equal(t, groupChat.id, tuple2.V2.GetAggregateId())
+	require.Equal(t, groupChat.seqNr+1, tuple2.V2.GetSeqNr())
 }
 
 func Test_GroupChat_Rename(t *testing.T) {
@@ -61,16 +57,15 @@ func Test_GroupChat_Rename(t *testing.T) {
 	name := models.NewGroupChatName("test2").MustGet()
 
 	// When
-	result := groupChat.Rename(name, adminId)
+	tuple2, err := groupChat.Rename(name, adminId).Get()
 
 	// Then
-	require.True(t, result.IsOk())
-	tuple, _ := result.Get()
-	require.Equal(t, groupChat.id, tuple.V1.id)
-	require.Equal(t, groupChat.seqNr+1, tuple.V1.seqNr)
-	require.Equal(t, "test2", tuple.V1.GetName().String())
-	require.Equal(t, groupChat.id, tuple.V2.GetAggregateId())
-	require.Equal(t, groupChat.seqNr+1, tuple.V2.GetSeqNr())
+	require.NoError(t, err)
+	require.Equal(t, groupChat.id, tuple2.V1.id)
+	require.Equal(t, groupChat.seqNr+1, tuple2.V1.seqNr)
+	require.Equal(t, "test2", tuple2.V1.GetName().String())
+	require.Equal(t, groupChat.id, tuple2.V2.GetAggregateId())
+	require.Equal(t, groupChat.seqNr+1, tuple2.V2.GetSeqNr())
 }
 
 func Test_GroupChat_Delete(t *testing.T) {
@@ -80,16 +75,15 @@ func Test_GroupChat_Delete(t *testing.T) {
 	groupChat, _ := NewGroupChat(groupChatName, adminId)
 
 	// When
-	result := groupChat.Delete(adminId)
+	tuple2, err := groupChat.Delete(adminId).Get()
 
 	// Then
-	require.True(t, result.IsOk())
-	tuple, _ := result.Get()
-	require.Equal(t, groupChat.id, tuple.V1.id)
-	require.Equal(t, groupChat.seqNr+1, tuple.V1.seqNr)
-	require.True(t, tuple.V1.IsDeleted())
-	require.Equal(t, groupChat.id, tuple.V2.GetAggregateId())
-	require.Equal(t, groupChat.seqNr+1, tuple.V2.GetSeqNr())
+	require.NoError(t, err)
+	require.Equal(t, groupChat.id, tuple2.V1.id)
+	require.Equal(t, groupChat.seqNr+1, tuple2.V1.seqNr)
+	require.True(t, tuple2.V1.IsDeleted())
+	require.Equal(t, groupChat.id, tuple2.V2.GetAggregateId())
+	require.Equal(t, groupChat.seqNr+1, tuple2.V2.GetSeqNr())
 }
 
 func Test_GroupChat_PostMessage(t *testing.T) {
@@ -103,15 +97,14 @@ func Test_GroupChat_PostMessage(t *testing.T) {
 	message := models.NewMessage(messageId, "test", userAccountId).MustGet()
 
 	// When
-	result := groupChat.PostMessage(message, userAccountId)
+	tuple2, err := groupChat.PostMessage(message, userAccountId).Get()
 
 	// Then
-	require.True(t, result.IsOk())
-	tuple, _ := result.Get()
-	require.Equal(t, groupChat.id, tuple.V1.id)
-	require.Equal(t, groupChat.seqNr+1, tuple.V1.seqNr)
-	require.True(t, tuple.V1.GetMessages().Get(messageId).IsPresent())
-	require.Equal(t, message, tuple.V1.GetMessages().Get(messageId).MustGet())
+	require.NoError(t, err)
+	require.Equal(t, groupChat.id, tuple2.V1.id)
+	require.Equal(t, groupChat.seqNr+1, tuple2.V1.seqNr)
+	require.True(t, tuple2.V1.GetMessages().Get(messageId).IsPresent())
+	require.Equal(t, message, tuple2.V1.GetMessages().Get(messageId).MustGet())
 }
 
 func Test_GroupChat_DeleteMessage(t *testing.T) {
@@ -127,11 +120,10 @@ func Test_GroupChat_DeleteMessage(t *testing.T) {
 	tuple1 := result1.MustGet()
 
 	// When
-	result2 := tuple1.V1.DeleteMessage(messageId, userAccountId)
+	tuple2, err := tuple1.V1.DeleteMessage(messageId, userAccountId).Get()
 
 	// Then
-	require.True(t, result2.IsOk())
-	tuple2 := result2.MustGet()
+	require.NoError(t, err)
 	require.Equal(t, groupChat.id, tuple2.V1.id)
 	require.Equal(t, groupChat.seqNr+2, tuple2.V1.seqNr)
 	require.True(t, tuple2.V1.GetMessages().Get(messageId).IsAbsent())
