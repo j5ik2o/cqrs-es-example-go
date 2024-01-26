@@ -167,7 +167,7 @@ func (g *GroupChatController) DeleteGroupChat(c *gin.Context) {
 	}
 
 	commandProcessor := useCase.NewGroupChatCommandProcessor(g.repository)
-	event, err := commandProcessor.DeleteGroupChat(groupChatId, executorId)
+	event, err := commandProcessor.DeleteGroupChat(&groupChatId, executorId)
 
 	if err != nil {
 		response := GroupChatResponseErrorBody{Message: err.Error()}
@@ -207,7 +207,7 @@ func (g *GroupChatController) RenameGroupChat(c *gin.Context) {
 	}
 
 	commandProcessor := useCase.NewGroupChatCommandProcessor(g.repository)
-	event, err := commandProcessor.RenameGroupChat(groupChatId, groupChatName, executorId)
+	event, err := commandProcessor.RenameGroupChat(&groupChatId, groupChatName, executorId)
 
 	if err != nil {
 		response := GroupChatResponseErrorBody{Message: err.Error()}
@@ -249,7 +249,7 @@ func (g *GroupChatController) AddMember(c *gin.Context) {
 	role := getRole(jsonRequestBody)
 
 	commandProcessor := useCase.NewGroupChatCommandProcessor(g.repository)
-	event, err := commandProcessor.AddMember(groupChatId, accountId, role, executorId)
+	event, err := commandProcessor.AddMember(&groupChatId, accountId, role, executorId)
 
 	if err != nil {
 		response := GroupChatResponseErrorBody{Message: err.Error()}
@@ -289,7 +289,7 @@ func (g *GroupChatController) RemoveMember(c *gin.Context) {
 	}
 
 	commandProcessor := useCase.NewGroupChatCommandProcessor(g.repository)
-	event, err := commandProcessor.RemoveMember(groupChatId, accountId, executorId)
+	event, err := commandProcessor.RemoveMember(&groupChatId, accountId, executorId)
 
 	if err != nil {
 		response := GroupChatResponseErrorBody{Message: err.Error()}
@@ -337,7 +337,7 @@ func (g *GroupChatController) PostMessage(c *gin.Context) {
 	}
 
 	commandProcessor := useCase.NewGroupChatCommandProcessor(g.repository)
-	event, err := commandProcessor.PostMessage(groupChatId, message, executorId)
+	event, err := commandProcessor.PostMessage(&groupChatId, message, executorId)
 
 	if err != nil {
 		response := GroupChatResponseErrorBody{Message: err.Error()}
@@ -376,7 +376,7 @@ func (g *GroupChatController) DeleteMessage(c *gin.Context) {
 	}
 
 	commandProcessor := useCase.NewGroupChatCommandProcessor(g.repository)
-	event, err := commandProcessor.DeleteMessage(groupChatId, messageId, executorId)
+	event, err := commandProcessor.DeleteMessage(&groupChatId, messageId, executorId)
 
 	if err != nil {
 		response := GroupChatResponseErrorBody{Message: err.Error()}

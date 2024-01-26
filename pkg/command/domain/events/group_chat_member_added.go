@@ -10,21 +10,21 @@ import (
 
 type GroupChatMemberAdded struct {
 	id          string
-	aggregateId *models.GroupChatId
+	aggregateId models.GroupChatId
 	member      *models.Member
 	seqNr       uint64
 	executorId  models.UserAccountId
 	occurredAt  uint64
 }
 
-func NewGroupChatMemberAdded(aggregateId *models.GroupChatId, member *models.Member, seqNr uint64, executorId models.UserAccountId) *GroupChatMemberAdded {
+func NewGroupChatMemberAdded(aggregateId models.GroupChatId, member *models.Member, seqNr uint64, executorId models.UserAccountId) *GroupChatMemberAdded {
 	id := ulid.Make().String()
 	now := time.Now()
 	occurredAt := uint64(now.UnixNano() / 1e6)
 	return &GroupChatMemberAdded{id, aggregateId, member, seqNr, executorId, occurredAt}
 }
 
-func NewGroupChatMemberAddedFrom(id string, aggregateId *models.GroupChatId, member *models.Member, seqNr uint64, executorId models.UserAccountId, occurredAt uint64) *GroupChatMemberAdded {
+func NewGroupChatMemberAddedFrom(id string, aggregateId models.GroupChatId, member *models.Member, seqNr uint64, executorId models.UserAccountId, occurredAt uint64) *GroupChatMemberAdded {
 	return &GroupChatMemberAdded{id, aggregateId, member, seqNr, executorId, occurredAt}
 }
 
@@ -48,7 +48,7 @@ func (g *GroupChatMemberAdded) GetTypeName() string {
 }
 
 func (g *GroupChatMemberAdded) GetAggregateId() esa.AggregateId {
-	return g.aggregateId
+	return &g.aggregateId
 }
 
 func (g *GroupChatMemberAdded) GetSeqNr() uint64 {

@@ -1,7 +1,7 @@
 package events
 
 import (
-	models2 "cqrs-es-example-go/pkg/command/domain/models"
+	models "cqrs-es-example-go/pkg/command/domain/models"
 	"fmt"
 	esa "github.com/j5ik2o/event-store-adapter-go"
 	"github.com/oklog/ulid/v2"
@@ -10,20 +10,20 @@ import (
 
 type GroupChatDeleted struct {
 	id          string
-	aggregateId *models2.GroupChatId
+	aggregateId models.GroupChatId
 	seqNr       uint64
-	executorId  models2.UserAccountId
+	executorId  models.UserAccountId
 	occurredAt  uint64
 }
 
-func NewGroupChatDeleted(aggregateId *models2.GroupChatId, seqNr uint64, executorId models2.UserAccountId) *GroupChatDeleted {
+func NewGroupChatDeleted(aggregateId models.GroupChatId, seqNr uint64, executorId models.UserAccountId) *GroupChatDeleted {
 	id := ulid.Make().String()
 	now := time.Now()
 	occurredAt := uint64(now.UnixNano() / 1e6)
 	return &GroupChatDeleted{id, aggregateId, seqNr, executorId, occurredAt}
 }
 
-func NewGroupChatDeletedFrom(id string, aggregateId *models2.GroupChatId, seqNr uint64, executorId models2.UserAccountId, occurredAt uint64) *GroupChatDeleted {
+func NewGroupChatDeletedFrom(id string, aggregateId models.GroupChatId, seqNr uint64, executorId models.UserAccountId, occurredAt uint64) *GroupChatDeleted {
 	return &GroupChatDeleted{id, aggregateId, seqNr, executorId, occurredAt}
 }
 
@@ -46,14 +46,14 @@ func (g *GroupChatDeleted) GetTypeName() string {
 }
 
 func (g *GroupChatDeleted) GetAggregateId() esa.AggregateId {
-	return g.aggregateId
+	return &g.aggregateId
 }
 
 func (g *GroupChatDeleted) GetSeqNr() uint64 {
 	return g.seqNr
 }
 
-func (g *GroupChatDeleted) GetExecutorId() *models2.UserAccountId {
+func (g *GroupChatDeleted) GetExecutorId() *models.UserAccountId {
 	return &g.executorId
 }
 

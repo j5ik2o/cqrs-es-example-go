@@ -22,7 +22,7 @@ func Test_GroupChat_AddMember(t *testing.T) {
 	require.Equal(t, groupChat.id, tuple2.V1.id)
 	require.Equal(t, groupChat.seqNr+1, tuple2.V1.seqNr)
 	require.True(t, tuple2.V1.GetMembers().FindByUserAccountId(&userAccountId).IsPresent())
-	require.Equal(t, groupChat.id, tuple2.V2.GetAggregateId())
+	require.Equal(t, &groupChat.id, tuple2.V2.GetAggregateId())
 	require.Equal(t, groupChat.seqNr+1, tuple2.V2.GetSeqNr())
 }
 
@@ -45,7 +45,7 @@ func Test_GroupChat_RemoveMemberByUserAccountId(t *testing.T) {
 	require.Equal(t, groupChat.id, tuple2.V1.id)
 	require.Equal(t, groupChat.seqNr+1, tuple2.V1.seqNr)
 	require.False(t, tuple2.V1.GetMembers().FindByUserAccountId(&userAccountId).IsPresent())
-	require.Equal(t, groupChat.id, tuple2.V2.GetAggregateId())
+	require.Equal(t, &groupChat.id, tuple2.V2.GetAggregateId())
 	require.Equal(t, groupChat.seqNr+1, tuple2.V2.GetSeqNr())
 }
 
@@ -64,7 +64,7 @@ func Test_GroupChat_Rename(t *testing.T) {
 	require.Equal(t, groupChat.id, tuple2.V1.id)
 	require.Equal(t, groupChat.seqNr+1, tuple2.V1.seqNr)
 	require.Equal(t, "test2", tuple2.V1.GetName().String())
-	require.Equal(t, groupChat.id, tuple2.V2.GetAggregateId())
+	require.Equal(t, &groupChat.id, tuple2.V2.GetAggregateId())
 	require.Equal(t, groupChat.seqNr+1, tuple2.V2.GetSeqNr())
 }
 
@@ -82,7 +82,7 @@ func Test_GroupChat_Delete(t *testing.T) {
 	require.Equal(t, groupChat.id, tuple2.V1.id)
 	require.Equal(t, groupChat.seqNr+1, tuple2.V1.seqNr)
 	require.True(t, tuple2.V1.IsDeleted())
-	require.Equal(t, groupChat.id, tuple2.V2.GetAggregateId())
+	require.Equal(t, &groupChat.id, tuple2.V2.GetAggregateId())
 	require.Equal(t, groupChat.seqNr+1, tuple2.V2.GetSeqNr())
 }
 

@@ -13,7 +13,7 @@ import (
 // GroupChat is an aggregate of a group chat.
 // GroupChat はグループチャットの集約です。
 type GroupChat struct {
-	id       *models.GroupChatId
+	id       models.GroupChatId
 	name     *models.GroupChatName
 	members  *models.Members
 	messages *models.Messages
@@ -72,7 +72,7 @@ func NewGroupChat(name *models.GroupChatName, executorId models.UserAccountId) (
 
 // NewGroupChatFrom creates a new group chat from the specified parameters.
 // NewGroupChatFrom は指定されたパラメータから新しいグループチャットを作成します。
-func NewGroupChatFrom(id *models.GroupChatId, name *models.GroupChatName, members *models.Members, messages *models.Messages, seqNr uint64, version uint64, deleted bool) *GroupChat {
+func NewGroupChatFrom(id models.GroupChatId, name *models.GroupChatName, members *models.Members, messages *models.Messages, seqNr uint64, version uint64, deleted bool) *GroupChat {
 	return &GroupChat{id, name, members, messages, seqNr, version, deleted}
 }
 
@@ -96,13 +96,13 @@ func (g *GroupChat) ToJSON() map[string]interface{} {
 // GetId returns the aggregate GetId.
 // GetId は集約の GetId を返します。
 func (g *GroupChat) GetId() esa.AggregateId {
-	return g.id
+	return &g.id
 }
 
 // GetGroupChatId returns the aggregate GetGroupChatId.
 // GetGroupChatId は集約の GetGroupChatId を返します。
 func (g *GroupChat) GetGroupChatId() *models.GroupChatId {
-	return g.id
+	return &g.id
 }
 
 // GetName returns the aggregate GetName.

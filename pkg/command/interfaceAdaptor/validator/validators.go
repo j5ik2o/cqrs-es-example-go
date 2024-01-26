@@ -5,7 +5,7 @@ import (
 	"github.com/samber/mo"
 )
 
-func ValidateGroupChatId(id string) mo.Result[*models.GroupChatId] {
+func ValidateGroupChatId(id string) mo.Result[models.GroupChatId] {
 	return models.NewGroupChatIdFromString(id)
 }
 

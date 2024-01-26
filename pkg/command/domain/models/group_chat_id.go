@@ -16,21 +16,21 @@ type GroupChatId struct {
 
 // NewGroupChatId is a constructor for GroupChatId
 // It generates new GroupChatId
-func NewGroupChatId() *GroupChatId {
+func NewGroupChatId() GroupChatId {
 	id := ulid.Make()
-	return &GroupChatId{value: id.String()}
+	return GroupChatId{value: id.String()}
 }
 
 // NewGroupChatIdFromString is a constructor for GroupChatId
 // It creates GroupChatId from string
-func NewGroupChatIdFromString(value string) mo.Result[*GroupChatId] {
+func NewGroupChatIdFromString(value string) mo.Result[GroupChatId] {
 	if value == "" {
-		return mo.Err[*GroupChatId](errors.New("GroupChatId is empty"))
+		return mo.Err[GroupChatId](errors.New("GroupChatId is empty"))
 	}
 	if len(value) > len(GroupChatIdPrefix) && value[0:len(GroupChatIdPrefix)] == GroupChatIdPrefix {
 		value = value[len(GroupChatIdPrefix)+1:]
 	}
-	return mo.Ok(&GroupChatId{value: value})
+	return mo.Ok(GroupChatId{value: value})
 }
 
 // ToJSON converts to JSON.
@@ -66,6 +66,6 @@ func (g *GroupChatId) Equals(other *GroupChatId) bool {
 }
 
 // ConvertGroupChatIdFromJSON converts from JSON.
-func ConvertGroupChatIdFromJSON(value map[string]interface{}) mo.Result[*GroupChatId] {
+func ConvertGroupChatIdFromJSON(value map[string]interface{}) mo.Result[GroupChatId] {
 	return NewGroupChatIdFromString(value["value"].(string))
 }

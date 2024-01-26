@@ -10,21 +10,21 @@ import (
 
 type GroupChatMemberRemoved struct {
 	id            string
-	aggregateId   *models2.GroupChatId
+	aggregateId   models2.GroupChatId
 	userAccountId models2.UserAccountId
 	seqNr         uint64
 	executorId    models2.UserAccountId
 	occurredAt    uint64
 }
 
-func NewGroupChatMemberRemoved(aggregateId *models2.GroupChatId, userAccountId models2.UserAccountId, seqNr uint64, executorId models2.UserAccountId) *GroupChatMemberRemoved {
+func NewGroupChatMemberRemoved(aggregateId models2.GroupChatId, userAccountId models2.UserAccountId, seqNr uint64, executorId models2.UserAccountId) *GroupChatMemberRemoved {
 	id := ulid.Make().String()
 	now := time.Now()
 	occurredAt := uint64(now.UnixNano() / 1e6)
 	return &GroupChatMemberRemoved{id, aggregateId, userAccountId, seqNr, executorId, occurredAt}
 }
 
-func NewGroupChatMemberRemovedFrom(id string, aggregateId *models2.GroupChatId, userAccountId models2.UserAccountId, seqNr uint64, executorId models2.UserAccountId, occurredAt uint64) *GroupChatMemberRemoved {
+func NewGroupChatMemberRemovedFrom(id string, aggregateId models2.GroupChatId, userAccountId models2.UserAccountId, seqNr uint64, executorId models2.UserAccountId, occurredAt uint64) *GroupChatMemberRemoved {
 	return &GroupChatMemberRemoved{id, aggregateId, userAccountId, seqNr, executorId, occurredAt}
 }
 
@@ -48,7 +48,7 @@ func (g *GroupChatMemberRemoved) GetTypeName() string {
 }
 
 func (g *GroupChatMemberRemoved) GetAggregateId() esa.AggregateId {
-	return g.aggregateId
+	return &g.aggregateId
 }
 
 func (g *GroupChatMemberRemoved) GetSeqNr() uint64 {
