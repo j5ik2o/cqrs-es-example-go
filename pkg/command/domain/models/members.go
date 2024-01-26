@@ -4,10 +4,12 @@ import (
 	"github.com/samber/mo"
 )
 
+// Members is the fist-class collection of Member.
 type Members struct {
 	values []*Member
 }
 
+// NewMembers is the constructor for Members.
 func NewMembers(administratorId *UserAccountId) *Members {
 	return &Members{
 		values: []*Member{
@@ -16,12 +18,14 @@ func NewMembers(administratorId *UserAccountId) *Members {
 	}
 }
 
+// NewMembersFrom is the constructor for Members.
 func NewMembersFrom(values []*Member) *Members {
 	return &Members{
 		values: values,
 	}
 }
 
+// ConvertMembersFromJSON is a constructor for Members.
 func ConvertMembersFromJSON(value map[string]interface{}) *Members {
 	values := value["values"].([]interface{})
 	members := make([]*Member, len(values))
@@ -31,6 +35,7 @@ func ConvertMembersFromJSON(value map[string]interface{}) *Members {
 	return NewMembersFrom(members)
 }
 
+// ToJSON converts to JSON.
 func (m *Members) ToJSON() map[string]interface{} {
 	values := make([]map[string]interface{}, len(m.values))
 	for i, v := range m.values {
@@ -41,6 +46,7 @@ func (m *Members) ToJSON() map[string]interface{} {
 	}
 }
 
+// AddMember adds a member.
 func (m *Members) AddMember(userAccountId *UserAccountId) *Members {
 	newMembers := make([]*Member, len(m.values))
 	copy(newMembers, m.values)
@@ -50,6 +56,7 @@ func (m *Members) AddMember(userAccountId *UserAccountId) *Members {
 	}
 }
 
+// RemoveMemberByUserAccountId removes a member.
 func (m *Members) RemoveMemberByUserAccountId(userAccountId *UserAccountId) *Members {
 	newMembers := make([]*Member, 0, len(m.values))
 	for _, member := range m.values {
@@ -62,6 +69,7 @@ func (m *Members) RemoveMemberByUserAccountId(userAccountId *UserAccountId) *Mem
 	}
 }
 
+// GetAdministrator returns administrator.
 func (m *Members) GetAdministrator() *Member {
 	for _, member := range m.values {
 		if member.role == AdminRole {
@@ -71,6 +79,7 @@ func (m *Members) GetAdministrator() *Member {
 	return nil
 }
 
+// IsAdministrator checks if the user is administrator.
 func (m *Members) IsAdministrator(userAccountId *UserAccountId) bool {
 	for _, member := range m.values {
 		if member.userAccountId.Equals(userAccountId) && member.role == AdminRole {
@@ -80,6 +89,7 @@ func (m *Members) IsAdministrator(userAccountId *UserAccountId) bool {
 	return false
 }
 
+// IsMember checks if the user is member.
 func (m *Members) IsMember(userAccountId *UserAccountId) bool {
 	for _, member := range m.values {
 		if member.userAccountId.Equals(userAccountId) {
@@ -89,6 +99,7 @@ func (m *Members) IsMember(userAccountId *UserAccountId) bool {
 	return false
 }
 
+// FindByMemberId finds a member by member id.
 func (m *Members) FindByMemberId(memberId *MemberId) mo.Option[*Member] {
 	for _, member := range m.values {
 		if member.id.Equals(memberId) {
@@ -98,6 +109,7 @@ func (m *Members) FindByMemberId(memberId *MemberId) mo.Option[*Member] {
 	return mo.None[*Member]()
 }
 
+// FindByUserAccountId finds a member by user account id.
 func (m *Members) FindByUserAccountId(userAccountId *UserAccountId) mo.Option[*Member] {
 	for _, member := range m.values {
 		if member.userAccountId.Equals(userAccountId) {
@@ -107,6 +119,7 @@ func (m *Members) FindByUserAccountId(userAccountId *UserAccountId) mo.Option[*M
 	return mo.None[*Member]()
 }
 
+// ToSlice converts to slice.
 func (m *Members) ToSlice() []*Member {
 	copiedMembers := make([]*Member, len(m.values))
 	copy(copiedMembers, m.values)
