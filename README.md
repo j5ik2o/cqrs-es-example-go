@@ -6,8 +6,13 @@ This is an example of CQRS/Event Sourcing implemented in Go.
 
 This project uses [j5ik2o/event-store-adapter-go](https://github.com/j5ik2o/event-store-adapter-go) for Event Sourcing.
 
-## TODO
+## Feature
 
+- [x] Write API Server(REST)
+- [x] Read API Server(GraphQL)
+- [x] Read Model Updater on Local
+- [x] Docker Compose Support
+- [ ] Read Model Updater on AWS Lambda
 - [ ] Implement deployment to AWS
 
 ## Usage
