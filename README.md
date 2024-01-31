@@ -13,7 +13,7 @@ This project uses [j5ik2o/event-store-adapter-go](https://github.com/j5ik2o/even
 - [x] Read Model Updater on Local
 - [x] Docker Compose Support
 - [ ] Read Model Updater on AWS Lambda
-- [ ] Implement deployment to AWS
+- [ ] Deployment to AWS
 
 ## Usage
 
