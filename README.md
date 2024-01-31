@@ -50,3 +50,4 @@ $ GROUP_CHAT_ID=GroupChat-01HGDR3R6KFHRHTF0K54GMW5XF make get-group-chat
 ## Links
 
 - [for Rust](https://github.com/j5ik2o/cqrs-es-example-rs)
+- [Documents](https://github.com/j5ik2o/cqrs-es-example-docs)
