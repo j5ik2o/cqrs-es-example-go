@@ -6,6 +6,8 @@ This is an example of CQRS/Event Sourcing implemented in Go.
 
 This project uses [j5ik2o/event-store-adapter-go](https://github.com/j5ik2o/event-store-adapter-go) for Event Sourcing.
 
+[日本語](./README.ja.md)
+
 ## Feature
 
 - [x] Write API Server(REST)
@@ -50,4 +52,4 @@ $ GROUP_CHAT_ID=GroupChat-01HGDR3R6KFHRHTF0K54GMW5XF make get-group-chat
 ## Links
 
 - [for Rust](https://github.com/j5ik2o/cqrs-es-example-rs)
-- [Ｃｏｍｍｏｎ Documents](https://github.com/j5ik2o/cqrs-es-example-docs)
+- [Common Documents](https://github.com/j5ik2o/cqrs-es-example-docs)
