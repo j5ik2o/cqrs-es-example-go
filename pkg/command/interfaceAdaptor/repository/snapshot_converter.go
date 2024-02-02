@@ -24,5 +24,5 @@ func SnapshotConverter(m map[string]interface{}) (esa.Aggregate, error) {
 	version := uint64(m["version"].(float64))
 	deleted := m["deleted"].(bool)
 	result := domain.NewGroupChatFrom(groupChatId, name, members, messages, seqNr, version, deleted)
-	return result, nil
+	return &result, nil
 }

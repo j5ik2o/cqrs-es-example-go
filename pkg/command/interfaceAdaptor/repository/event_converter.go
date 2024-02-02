@@ -26,7 +26,7 @@ func EventConverter(m map[string]interface{}) (esa.Event, error) {
 	occurredAt := uint64(m["occurred_at"].(float64))
 	switch m["type_name"].(string) {
 	case "GroupChatCreated":
-		return events.NewGroupChatCreatedFrom(
+		event := events.NewGroupChatCreatedFrom(
 			eventId,
 			groupChatId,
 			groupChatName,
@@ -34,28 +34,31 @@ func EventConverter(m map[string]interface{}) (esa.Event, error) {
 			seqNr,
 			executorId,
 			occurredAt,
-		), nil
+		)
+		return &event, nil
 	case "GroupChatDeleted":
-		return events.NewGroupChatDeletedFrom(
+		event := events.NewGroupChatDeletedFrom(
 			eventId,
 			groupChatId,
 			seqNr,
 			executorId,
 			occurredAt,
-		), nil
+		)
+		return &event, nil
 	case "GroupChatRenamed":
 		name, err := models.NewGroupChatName(m["name"].(string)).Get()
 		if err != nil {
 			return nil, err
 		}
-		return events.NewGroupChatRenamedFrom(
+		event := events.NewGroupChatRenamedFrom(
 			eventId,
 			groupChatId,
 			name,
 			seqNr,
 			executorId,
 			occurredAt,
-		), nil
+		)
+		return &event, nil
 	case "GroupChatMemberAdded":
 		memberObj := m["member"].(map[string]interface{})
 		memberId, err := models.ConvertMemberIdFromJSON(memberObj["member_id"].(map[string]interface{})).Get()
@@ -68,50 +71,54 @@ func EventConverter(m map[string]interface{}) (esa.Event, error) {
 		}
 		role := models.Role(memberObj["role"].(int))
 		member := models.NewMember(memberId, userAccountId, role)
-		return events.NewGroupChatMemberAddedFrom(
+		event := events.NewGroupChatMemberAddedFrom(
 			eventId,
 			groupChatId,
 			member,
 			seqNr,
 			executorId,
 			occurredAt,
-		), nil
+		)
+		return &event, nil
 	case "GroupChatMemberRemoved":
 		userAccountId, err := models.ConvertUserAccountIdFromJSON(m["user_account_id"].(map[string]interface{})).Get()
 		if err != nil {
 			return nil, err
 		}
-		return events.NewGroupChatMemberRemovedFrom(
+		event := events.NewGroupChatMemberRemovedFrom(
 			eventId,
 			groupChatId,
 			userAccountId,
 			seqNr,
 			executorId,
 			occurredAt,
-		), nil
+		)
+		return &event, nil
 	case "GroupChatMessagePosted":
 		message, err := models.ConvertMessageFromJSON(m["message"].(map[string]interface{})).Get()
 		if err != nil {
 			return nil, err
 		}
-		return events.NewGroupChatMessagePostedFrom(
+		event := events.NewGroupChatMessagePostedFrom(
 			eventId,
 			groupChatId,
 			message,
 			seqNr,
 			executorId,
 			occurredAt,
-		), nil
+		)
+		return &event, nil
 	case "GroupChatMessageDeleted":
 		messageId := models.ConvertMessageIdFromJSON(m["message_id"].(map[string]interface{}))
-		return events.NewGroupChatMessageDeletedFrom(
+		event := events.NewGroupChatMessageDeletedFrom(
 			eventId,
 			groupChatId,
 			messageId,
 			seqNr,
 			executorId,
 			occurredAt,
-		), nil
+		)
+		return &event, nil
 	default:
 		return nil, fmt.Errorf("unknown event type: %s", m["type_name"].(string))
 	}

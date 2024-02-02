@@ -21,7 +21,7 @@ func NewGroupChatCommandProcessor(repository repository.GroupChatRepository) *Gr
 // CreateGroupChat is the command handler for CreateGroupChat.
 func (g *GroupChatCommandProcessor) CreateGroupChat(name models.GroupChatName, executorId models.UserAccountId) (events.GroupChatEvent, error) {
 	groupChat, event := domain.NewGroupChat(name, executorId)
-	err := g.repository.StoreEventWithSnapshot(event, groupChat)
+	err := g.repository.StoreEventWithSnapshot(event, &groupChat)
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +38,7 @@ func (g *GroupChatCommandProcessor) DeleteGroupChat(groupChatId *models.GroupCha
 	if err != nil {
 		return nil, err
 	}
-	err = g.repository.StoreEventWithSnapshot(pair.V2, pair.V1)
+	err = g.repository.StoreEventWithSnapshot(pair.V2, &pair.V1)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +55,7 @@ func (g *GroupChatCommandProcessor) RenameGroupChat(groupChatId *models.GroupCha
 	if err != nil {
 		return nil, err
 	}
-	err = g.repository.StoreEventWithSnapshot(pair.V2, pair.V1)
+	err = g.repository.StoreEventWithSnapshot(pair.V2, &pair.V1)
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +73,7 @@ func (g *GroupChatCommandProcessor) AddMember(groupChatId *models.GroupChatId, u
 	if err != nil {
 		return nil, err
 	}
-	err = g.repository.StoreEventWithSnapshot(pair.V2, pair.V1)
+	err = g.repository.StoreEventWithSnapshot(pair.V2, &pair.V1)
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +90,7 @@ func (g *GroupChatCommandProcessor) RemoveMember(groupChatId *models.GroupChatId
 	if err != nil {
 		return nil, err
 	}
-	err = g.repository.StoreEventWithSnapshot(pair.V2, pair.V1)
+	err = g.repository.StoreEventWithSnapshot(pair.V2, &pair.V1)
 	if err != nil {
 		return nil, err
 	}
@@ -107,7 +107,7 @@ func (g *GroupChatCommandProcessor) PostMessage(groupChatId *models.GroupChatId,
 	if err != nil {
 		return nil, err
 	}
-	err = g.repository.StoreEventWithSnapshot(pair.V2, pair.V1)
+	err = g.repository.StoreEventWithSnapshot(pair.V2, &pair.V1)
 	if err != nil {
 		return nil, err
 	}
@@ -124,7 +124,7 @@ func (g *GroupChatCommandProcessor) DeleteMessage(groupChatId *models.GroupChatI
 	if err != nil {
 		return nil, err
 	}
-	err = g.repository.StoreEventWithSnapshot(pair.V2, pair.V1)
+	err = g.repository.StoreEventWithSnapshot(pair.V2, &pair.V1)
 	if err != nil {
 		return nil, err
 	}

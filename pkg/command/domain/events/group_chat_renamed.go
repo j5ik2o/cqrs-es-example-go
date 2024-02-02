@@ -17,15 +17,15 @@ type GroupChatRenamed struct {
 	occurredAt  uint64
 }
 
-func NewGroupChatRenamed(aggregateId models.GroupChatId, name models.GroupChatName, seqNr uint64, executorId models.UserAccountId) *GroupChatRenamed {
+func NewGroupChatRenamed(aggregateId models.GroupChatId, name models.GroupChatName, seqNr uint64, executorId models.UserAccountId) GroupChatRenamed {
 	id := ulid.Make().String()
 	now := time.Now()
 	occurredAt := uint64(now.UnixNano() / 1e6)
-	return &GroupChatRenamed{id, aggregateId, name, seqNr, executorId, occurredAt}
+	return GroupChatRenamed{id, aggregateId, name, seqNr, executorId, occurredAt}
 }
 
-func NewGroupChatRenamedFrom(id string, aggregateId models.GroupChatId, name models.GroupChatName, seqNr uint64, executorId models.UserAccountId, occurredAt uint64) *GroupChatRenamed {
-	return &GroupChatRenamed{id, aggregateId, name, seqNr, executorId, occurredAt}
+func NewGroupChatRenamedFrom(id string, aggregateId models.GroupChatId, name models.GroupChatName, seqNr uint64, executorId models.UserAccountId, occurredAt uint64) GroupChatRenamed {
+	return GroupChatRenamed{id, aggregateId, name, seqNr, executorId, occurredAt}
 }
 
 func (g *GroupChatRenamed) ToJSON() map[string]interface{} {

@@ -17,15 +17,15 @@ type GroupChatMemberRemoved struct {
 	occurredAt    uint64
 }
 
-func NewGroupChatMemberRemoved(aggregateId models.GroupChatId, userAccountId models.UserAccountId, seqNr uint64, executorId models.UserAccountId) *GroupChatMemberRemoved {
+func NewGroupChatMemberRemoved(aggregateId models.GroupChatId, userAccountId models.UserAccountId, seqNr uint64, executorId models.UserAccountId) GroupChatMemberRemoved {
 	id := ulid.Make().String()
 	now := time.Now()
 	occurredAt := uint64(now.UnixNano() / 1e6)
-	return &GroupChatMemberRemoved{id, aggregateId, userAccountId, seqNr, executorId, occurredAt}
+	return GroupChatMemberRemoved{id, aggregateId, userAccountId, seqNr, executorId, occurredAt}
 }
 
-func NewGroupChatMemberRemovedFrom(id string, aggregateId models.GroupChatId, userAccountId models.UserAccountId, seqNr uint64, executorId models.UserAccountId, occurredAt uint64) *GroupChatMemberRemoved {
-	return &GroupChatMemberRemoved{id, aggregateId, userAccountId, seqNr, executorId, occurredAt}
+func NewGroupChatMemberRemovedFrom(id string, aggregateId models.GroupChatId, userAccountId models.UserAccountId, seqNr uint64, executorId models.UserAccountId, occurredAt uint64) GroupChatMemberRemoved {
+	return GroupChatMemberRemoved{id, aggregateId, userAccountId, seqNr, executorId, occurredAt}
 }
 
 func (g *GroupChatMemberRemoved) ToJSON() map[string]interface{} {

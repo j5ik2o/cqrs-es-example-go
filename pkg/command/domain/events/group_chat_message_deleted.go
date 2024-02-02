@@ -17,15 +17,15 @@ type GroupChatMessageDeleted struct {
 	occurredAt  uint64
 }
 
-func NewGroupChatMessageDeleted(aggregateId models.GroupChatId, messageId models.MessageId, seqNr uint64, executorId models.UserAccountId) *GroupChatMessageDeleted {
+func NewGroupChatMessageDeleted(aggregateId models.GroupChatId, messageId models.MessageId, seqNr uint64, executorId models.UserAccountId) GroupChatMessageDeleted {
 	id := ulid.Make().String()
 	now := time.Now()
 	occurredAt := uint64(now.UnixNano() / 1e6)
-	return &GroupChatMessageDeleted{id, aggregateId, messageId, seqNr, executorId, occurredAt}
+	return GroupChatMessageDeleted{id, aggregateId, messageId, seqNr, executorId, occurredAt}
 }
 
-func NewGroupChatMessageDeletedFrom(id string, aggregateId models.GroupChatId, messageId models.MessageId, seqNr uint64, executorId models.UserAccountId, occurredAt uint64) *GroupChatMessageDeleted {
-	return &GroupChatMessageDeleted{id, aggregateId, messageId, seqNr, executorId, occurredAt}
+func NewGroupChatMessageDeletedFrom(id string, aggregateId models.GroupChatId, messageId models.MessageId, seqNr uint64, executorId models.UserAccountId, occurredAt uint64) GroupChatMessageDeleted {
+	return GroupChatMessageDeleted{id, aggregateId, messageId, seqNr, executorId, occurredAt}
 }
 
 func (g *GroupChatMessageDeleted) ToJSON() map[string]interface{} {
