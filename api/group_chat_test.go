@@ -15,7 +15,7 @@ import (
 
 func Test_GroupChat_Create(t *testing.T) {
 	groupChatRepository := repository.NewGroupChatRepository(eventstoreadaptergo.NewEventStoreOnMemory())
-	groupChatController := NewGroupChatController(groupChatRepository)
+	groupChatController := NewGroupChatController(&groupChatRepository)
 
 	engine := gin.Default()
 	groupChat := engine.Group("/group-chats")
@@ -44,7 +44,7 @@ func Test_GroupChat_Create(t *testing.T) {
 
 func Test_GroupChat_Delete(t *testing.T) {
 	groupChatRepository := repository.NewGroupChatRepository(eventstoreadaptergo.NewEventStoreOnMemory())
-	groupChatController := NewGroupChatController(groupChatRepository)
+	groupChatController := NewGroupChatController(&groupChatRepository)
 
 	engine := gin.Default()
 	groupChat := engine.Group("/group-chats")
@@ -77,7 +77,7 @@ func Test_GroupChat_Delete(t *testing.T) {
 
 func Test_GroupChat_Rename(t *testing.T) {
 	groupChatRepository := repository.NewGroupChatRepository(eventstoreadaptergo.NewEventStoreOnMemory())
-	groupChatController := NewGroupChatController(groupChatRepository)
+	groupChatController := NewGroupChatController(&groupChatRepository)
 
 	engine := gin.Default()
 	groupChat := engine.Group("/group-chats")
@@ -113,7 +113,7 @@ func Test_GroupChat_Rename(t *testing.T) {
 
 func Test_GroupChat_AddMember(t *testing.T) {
 	groupChatRepository := repository.NewGroupChatRepository(eventstoreadaptergo.NewEventStoreOnMemory())
-	groupChatController := NewGroupChatController(groupChatRepository)
+	groupChatController := NewGroupChatController(&groupChatRepository)
 
 	engine := gin.Default()
 	groupChat := engine.Group("/group-chats")
@@ -151,7 +151,7 @@ func Test_GroupChat_AddMember(t *testing.T) {
 
 func Test_GroupChat_RemoveMember(t *testing.T) {
 	groupChatRepository := repository.NewGroupChatRepository(eventstoreadaptergo.NewEventStoreOnMemory())
-	groupChatController := NewGroupChatController(groupChatRepository)
+	groupChatController := NewGroupChatController(&groupChatRepository)
 
 	engine := gin.Default()
 	groupChat := engine.Group("/group-chats")
@@ -195,7 +195,7 @@ func Test_GroupChat_RemoveMember(t *testing.T) {
 
 func Test_GroupChat_PostMessage(t *testing.T) {
 	groupChatRepository := repository.NewGroupChatRepository(eventstoreadaptergo.NewEventStoreOnMemory())
-	groupChatController := NewGroupChatController(groupChatRepository)
+	groupChatController := NewGroupChatController(&groupChatRepository)
 
 	engine := gin.Default()
 	groupChat := engine.Group("/group-chats")
@@ -241,7 +241,7 @@ func Test_GroupChat_PostMessage(t *testing.T) {
 
 func Test_GroupChat_DeleteMessage(t *testing.T) {
 	groupChatRepository := repository.NewGroupChatRepository(eventstoreadaptergo.NewEventStoreOnMemory())
-	groupChatController := NewGroupChatController(groupChatRepository)
+	groupChatController := NewGroupChatController(&groupChatRepository)
 
 	engine := gin.Default()
 	groupChat := engine.Group("/group-chats")

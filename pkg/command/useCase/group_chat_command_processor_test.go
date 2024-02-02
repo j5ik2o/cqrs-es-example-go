@@ -12,7 +12,7 @@ import (
 func Test_CreateGroupChat(t *testing.T) {
 	// Given
 	groupChatRepository := repository.NewGroupChatRepository(event_store_adapter_go.NewEventStoreOnMemory())
-	commandProcessor := NewGroupChatCommandProcessor(groupChatRepository)
+	commandProcessor := NewGroupChatCommandProcessor(&groupChatRepository)
 	groupName := models.NewGroupChatName("test").MustGet()
 	executorId := models.NewUserAccountId()
 	// When
@@ -30,7 +30,7 @@ func Test_CreateGroupChat(t *testing.T) {
 func Test_DeleteGroupChat(t *testing.T) {
 	// Given
 	groupChatRepository := repository.NewGroupChatRepository(event_store_adapter_go.NewEventStoreOnMemory())
-	commandProcessor := NewGroupChatCommandProcessor(groupChatRepository)
+	commandProcessor := NewGroupChatCommandProcessor(&groupChatRepository)
 	groupName := models.NewGroupChatName("test").MustGet()
 	executorId := models.NewUserAccountId()
 	result, _ := commandProcessor.CreateGroupChat(groupName, executorId)
@@ -49,7 +49,7 @@ func Test_DeleteGroupChat(t *testing.T) {
 func Test_RenameGroupChat(t *testing.T) {
 	// Given
 	groupChatRepository := repository.NewGroupChatRepository(event_store_adapter_go.NewEventStoreOnMemory())
-	commandProcessor := NewGroupChatCommandProcessor(groupChatRepository)
+	commandProcessor := NewGroupChatCommandProcessor(&groupChatRepository)
 	groupName := models.NewGroupChatName("test").MustGet()
 	executorId := models.NewUserAccountId()
 	result, _ := commandProcessor.CreateGroupChat(groupName, executorId)
@@ -70,7 +70,7 @@ func Test_RenameGroupChat(t *testing.T) {
 func Test_AddMember(t *testing.T) {
 	// Given
 	groupChatRepository := repository.NewGroupChatRepository(event_store_adapter_go.NewEventStoreOnMemory())
-	commandProcessor := NewGroupChatCommandProcessor(groupChatRepository)
+	commandProcessor := NewGroupChatCommandProcessor(&groupChatRepository)
 	groupName := models.NewGroupChatName("test").MustGet()
 	executorId := models.NewUserAccountId()
 	result, _ := commandProcessor.CreateGroupChat(groupName, executorId)
@@ -93,7 +93,7 @@ func Test_AddMember(t *testing.T) {
 func Test_RemoveMember(t *testing.T) {
 	// Given
 	groupChatRepository := repository.NewGroupChatRepository(event_store_adapter_go.NewEventStoreOnMemory())
-	commandProcessor := NewGroupChatCommandProcessor(groupChatRepository)
+	commandProcessor := NewGroupChatCommandProcessor(&groupChatRepository)
 	groupName := models.NewGroupChatName("test").MustGet()
 	executorId := models.NewUserAccountId()
 	result, _ := commandProcessor.CreateGroupChat(groupName, executorId)
@@ -116,7 +116,7 @@ func Test_RemoveMember(t *testing.T) {
 func Test_PostMessage(t *testing.T) {
 	// Given
 	groupChatRepository := repository.NewGroupChatRepository(event_store_adapter_go.NewEventStoreOnMemory())
-	commandProcessor := NewGroupChatCommandProcessor(groupChatRepository)
+	commandProcessor := NewGroupChatCommandProcessor(&groupChatRepository)
 	groupName := models.NewGroupChatName("test").MustGet()
 	executorId := models.NewUserAccountId()
 	result, _ := commandProcessor.CreateGroupChat(groupName, executorId)
@@ -141,7 +141,7 @@ func Test_PostMessage(t *testing.T) {
 func Test_DeleteMessage(t *testing.T) {
 	// Given
 	groupChatRepository := repository.NewGroupChatRepository(event_store_adapter_go.NewEventStoreOnMemory())
-	commandProcessor := NewGroupChatCommandProcessor(groupChatRepository)
+	commandProcessor := NewGroupChatCommandProcessor(&groupChatRepository)
 	groupName := models.NewGroupChatName("test").MustGet()
 	executorId := models.NewUserAccountId()
 	result, _ := commandProcessor.CreateGroupChat(groupName, executorId)

@@ -86,7 +86,7 @@ var writeApiCmd = &cobra.Command{
 		}
 
 		groupChatRepository := repository.NewGroupChatRepository(eventStore)
-		groupChatController := api.NewGroupChatController(groupChatRepository)
+		groupChatController := api.NewGroupChatController(&groupChatRepository)
 
 		engine := gin.Default()
 

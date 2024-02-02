@@ -17,15 +17,15 @@ type GroupChatMessagePosted struct {
 	occurredAt  uint64
 }
 
-func NewGroupChatMessagePosted(aggregateId models.GroupChatId, message models.Message, seqNr uint64, executorId models.UserAccountId) *GroupChatMessagePosted {
+func NewGroupChatMessagePosted(aggregateId models.GroupChatId, message models.Message, seqNr uint64, executorId models.UserAccountId) GroupChatMessagePosted {
 	id := ulid.Make().String()
 	now := time.Now()
 	occurredAt := uint64(now.UnixNano() / 1e6)
-	return &GroupChatMessagePosted{id, aggregateId, message, seqNr, executorId, occurredAt}
+	return GroupChatMessagePosted{id, aggregateId, message, seqNr, executorId, occurredAt}
 }
 
-func NewGroupChatMessagePostedFrom(id string, aggregateId models.GroupChatId, message models.Message, seqNr uint64, executorId models.UserAccountId, occurredAt uint64) *GroupChatMessagePosted {
-	return &GroupChatMessagePosted{id, aggregateId, message, seqNr, executorId, occurredAt}
+func NewGroupChatMessagePostedFrom(id string, aggregateId models.GroupChatId, message models.Message, seqNr uint64, executorId models.UserAccountId, occurredAt uint64) GroupChatMessagePosted {
+	return GroupChatMessagePosted{id, aggregateId, message, seqNr, executorId, occurredAt}
 }
 
 func (g *GroupChatMessagePosted) ToJSON() map[string]interface{} {

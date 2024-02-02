@@ -12,15 +12,15 @@ import (
 type GroupChatRepository interface {
 	StoreEvent(event events.GroupChatEvent, version uint64) error
 	StoreEventWithSnapshot(event events.GroupChatEvent, snapshot *domain.GroupChat) error
-	FindById(id *models.GroupChatId) mo.Result[*domain.GroupChat]
+	FindById(id *models.GroupChatId) mo.Result[domain.GroupChat]
 }
 
 type GroupChatRepositoryImpl struct {
 	eventStore esa.EventStore
 }
 
-func NewGroupChatRepository(eventStore esa.EventStore) *GroupChatRepositoryImpl {
-	return &GroupChatRepositoryImpl{eventStore}
+func NewGroupChatRepository(eventStore esa.EventStore) GroupChatRepositoryImpl {
+	return GroupChatRepositoryImpl{eventStore}
 }
 
 func (g *GroupChatRepositoryImpl) StoreEvent(event events.GroupChatEvent, version uint64) error {
@@ -31,18 +31,18 @@ func (g *GroupChatRepositoryImpl) StoreEventWithSnapshot(event events.GroupChatE
 	return g.eventStore.PersistEventAndSnapshot(event, snapshot)
 }
 
-func (g *GroupChatRepositoryImpl) FindById(id *models.GroupChatId) mo.Result[*domain.GroupChat] {
+func (g *GroupChatRepositoryImpl) FindById(id *models.GroupChatId) mo.Result[domain.GroupChat] {
 	result, err := g.eventStore.GetLatestSnapshotById(id)
 	if err != nil {
-		return mo.Err[*domain.GroupChat](err)
+		return mo.Err[domain.GroupChat](err)
 	}
 	if result.Empty() {
-		return mo.Err[*domain.GroupChat](fmt.Errorf("not found"))
+		return mo.Err[domain.GroupChat](fmt.Errorf("not found"))
 	} else {
 		eventsByIdSinceSeqNr, err := g.eventStore.GetEventsByIdSinceSeqNr(id, result.Aggregate().GetSeqNr()+1)
 		if err != nil {
-			return mo.Err[*domain.GroupChat](err)
+			return mo.Err[domain.GroupChat](err)
 		}
-		return mo.Ok[*domain.GroupChat](domain.ReplayGroupChat(eventsByIdSinceSeqNr, result.Aggregate().(*domain.GroupChat)))
+		return mo.Ok[domain.GroupChat](domain.ReplayGroupChat(eventsByIdSinceSeqNr, *result.Aggregate().(*domain.GroupChat)))
 	}
 }

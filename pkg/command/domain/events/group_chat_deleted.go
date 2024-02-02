@@ -16,15 +16,15 @@ type GroupChatDeleted struct {
 	occurredAt  uint64
 }
 
-func NewGroupChatDeleted(aggregateId models.GroupChatId, seqNr uint64, executorId models.UserAccountId) *GroupChatDeleted {
+func NewGroupChatDeleted(aggregateId models.GroupChatId, seqNr uint64, executorId models.UserAccountId) GroupChatDeleted {
 	id := ulid.Make().String()
 	now := time.Now()
 	occurredAt := uint64(now.UnixNano() / 1e6)
-	return &GroupChatDeleted{id, aggregateId, seqNr, executorId, occurredAt}
+	return GroupChatDeleted{id, aggregateId, seqNr, executorId, occurredAt}
 }
 
-func NewGroupChatDeletedFrom(id string, aggregateId models.GroupChatId, seqNr uint64, executorId models.UserAccountId, occurredAt uint64) *GroupChatDeleted {
-	return &GroupChatDeleted{id, aggregateId, seqNr, executorId, occurredAt}
+func NewGroupChatDeletedFrom(id string, aggregateId models.GroupChatId, seqNr uint64, executorId models.UserAccountId, occurredAt uint64) GroupChatDeleted {
+	return GroupChatDeleted{id, aggregateId, seqNr, executorId, occurredAt}
 }
 
 func (g *GroupChatDeleted) ToJSON() map[string]interface{} {

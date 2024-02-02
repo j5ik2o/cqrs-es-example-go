@@ -5,4 +5,4 @@ import (
 	gt "github.com/barweiss/go-tuple"
 )
 
-type GroupChatWithEventPair = gt.Pair[*GroupChat, events.GroupChatEvent]
+type GroupChatWithEventPair = gt.Pair[GroupChat, events.GroupChatEvent]

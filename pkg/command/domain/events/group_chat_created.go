@@ -18,15 +18,15 @@ type GroupChatCreated struct {
 	occurredAt  uint64
 }
 
-func NewGroupChatCreated(aggregateId models.GroupChatId, name models.GroupChatName, members models.Members, seqNr uint64, executorId models.UserAccountId) *GroupChatCreated {
+func NewGroupChatCreated(aggregateId models.GroupChatId, name models.GroupChatName, members models.Members, seqNr uint64, executorId models.UserAccountId) GroupChatCreated {
 	id := ulid.Make().String()
 	now := time.Now()
 	occurredAt := uint64(now.UnixNano() / 1e6)
-	return &GroupChatCreated{id, aggregateId, name, members, seqNr, executorId, occurredAt}
+	return GroupChatCreated{id, aggregateId, name, members, seqNr, executorId, occurredAt}
 }
 
-func NewGroupChatCreatedFrom(id string, aggregateId models.GroupChatId, name models.GroupChatName, members models.Members, seqNr uint64, executorId models.UserAccountId, occurredAt uint64) *GroupChatCreated {
-	return &GroupChatCreated{id, aggregateId, name, members, seqNr, executorId, occurredAt}
+func NewGroupChatCreatedFrom(id string, aggregateId models.GroupChatId, name models.GroupChatName, members models.Members, seqNr uint64, executorId models.UserAccountId, occurredAt uint64) GroupChatCreated {
+	return GroupChatCreated{id, aggregateId, name, members, seqNr, executorId, occurredAt}
 }
 
 func (g *GroupChatCreated) ToJSON() map[string]interface{} {
