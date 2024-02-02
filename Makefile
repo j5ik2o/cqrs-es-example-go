@@ -79,9 +79,17 @@ docker-build:
 docker-build-rmu:
 	docker build -t cqrs-es-example-go-rmu:latest -f Dockerfile.rmu .
 
+.PHONY: docker-compose-build
+docker-compose-build:
+	./tools/scripts/docker-compose-build.sh
+
 .PHONY: docker-compose-up
 docker-compose-up:
 	./tools/scripts/docker-compose-up.sh
+
+.PHONY: docker-compose-ps
+docker-compose-ps:
+	./tools/scripts/docker-compose-ps.sh
 
 .PHONY: docker-compose-down
 docker-compose-down:
