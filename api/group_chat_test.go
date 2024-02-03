@@ -376,12 +376,12 @@ func (r *RequestSender) sendRenameGroupChatCommand(w *httptest.ResponseRecorder,
 	return nil
 }
 
-func (r *RequestSender) sendAddMemberCommand(w *httptest.ResponseRecorder, groupChatID string, accountId string, executorId string) error {
+func (r *RequestSender) sendAddMemberCommand(w *httptest.ResponseRecorder, groupChatID string, userAccountId string, executorId string) error {
 	requestBodyJson, err := json.Marshal(AddMemberRequestBody{
-		GroupChatId: groupChatID,
-		AccountId:   accountId,
-		Role:        "admin",
-		ExecutorId:  executorId,
+		GroupChatId:   groupChatID,
+		UserAccountId: userAccountId,
+		Role:          "admin",
+		ExecutorId:    executorId,
 	})
 	if err != nil {
 		return err
@@ -392,11 +392,11 @@ func (r *RequestSender) sendAddMemberCommand(w *httptest.ResponseRecorder, group
 	return nil
 }
 
-func (r *RequestSender) sendRemoveMemberCommand(w *httptest.ResponseRecorder, groupChatID string, accountId string, executorId string) error {
+func (r *RequestSender) sendRemoveMemberCommand(w *httptest.ResponseRecorder, groupChatID string, userAccountId string, executorId string) error {
 	requestBodyJson, err := json.Marshal(RemoveMemberRequestBody{
-		GroupChatId: groupChatID,
-		AccountId:   accountId,
-		ExecutorId:  executorId,
+		GroupChatId:   groupChatID,
+		UserAccountId: userAccountId,
+		ExecutorId:    executorId,
 	})
 	if err != nil {
 		return err
@@ -407,12 +407,12 @@ func (r *RequestSender) sendRemoveMemberCommand(w *httptest.ResponseRecorder, gr
 	return nil
 }
 
-func (r *RequestSender) sendPostMessageCommand(w *httptest.ResponseRecorder, groupChatID string, accountId string, message string, executorId string) error {
+func (r *RequestSender) sendPostMessageCommand(w *httptest.ResponseRecorder, groupChatID string, userAccountId string, message string, executorId string) error {
 	requestBodyJson, err := json.Marshal(PostMessageRequestBody{
-		GroupChatId: groupChatID,
-		AccountId:   accountId,
-		Message:     message,
-		ExecutorId:  executorId,
+		GroupChatId:   groupChatID,
+		UserAccountId: userAccountId,
+		Message:       message,
+		ExecutorId:    executorId,
 	})
 	if err != nil {
 		return err
