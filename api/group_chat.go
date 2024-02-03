@@ -44,10 +44,10 @@ type RenameGroupChatResponseSuccessBody struct {
 // ---
 
 type AddMemberRequestBody struct {
-	GroupChatId string `json:"group_chat_id"`
-	AccountId   string `json:"account_id"`
-	Role        string `json:"role"`
-	ExecutorId  string `json:"executor_id"`
+	GroupChatId   string `json:"group_chat_id"`
+	UserAccountId string `json:"user_account_id"`
+	Role          string `json:"role"`
+	ExecutorId    string `json:"executor_id"`
 }
 
 type AddMemberResponseSuccessBody struct {
@@ -57,9 +57,9 @@ type AddMemberResponseSuccessBody struct {
 // ---
 
 type RemoveMemberRequestBody struct {
-	GroupChatId string `json:"group_chat_id"`
-	AccountId   string `json:"account_id"`
-	ExecutorId  string `json:"executor_id"`
+	GroupChatId   string `json:"group_chat_id"`
+	UserAccountId string `json:"user_account_id"`
+	ExecutorId    string `json:"executor_id"`
 }
 
 type RemoveMemberResponseSuccessBody struct {
@@ -69,10 +69,10 @@ type RemoveMemberResponseSuccessBody struct {
 // ---
 
 type PostMessageRequestBody struct {
-	GroupChatId string `json:"group_chat_id"`
-	Message     string `json:"message"`
-	AccountId   string `json:"account_id"`
-	ExecutorId  string `json:"executor_id"`
+	GroupChatId   string `json:"group_chat_id"`
+	Message       string `json:"message"`
+	UserAccountId string `json:"user_account_id"`
+	ExecutorId    string `json:"executor_id"`
 }
 
 type PostMessageResponseSuccessBody struct {
@@ -83,10 +83,10 @@ type PostMessageResponseSuccessBody struct {
 // ---
 
 type DeleteMessageRequestBody struct {
-	GroupChatId string `json:"group_chat_id"`
-	MessageId   string `json:"message_id"`
-	AccountId   string `json:"account_id"`
-	ExecutorId  string `json:"executor_id"`
+	GroupChatId   string `json:"group_chat_id"`
+	MessageId     string `json:"message_id"`
+	UserAccountId string `json:"user_account_id"`
+	ExecutorId    string `json:"executor_id"`
 }
 
 type DeleteMessageResponseSuccessBody struct {
@@ -234,7 +234,7 @@ func (g *GroupChatController) AddMember(c *gin.Context) {
 		return
 	}
 
-	accountId, err := validator.ValidateUserAccountId(jsonRequestBody.AccountId).Get()
+	accountId, err := validator.ValidateUserAccountId(jsonRequestBody.UserAccountId).Get()
 	if err != nil {
 		handleClientError(c, http.StatusBadRequest, err)
 		return
@@ -276,7 +276,7 @@ func (g *GroupChatController) RemoveMember(c *gin.Context) {
 		return
 	}
 
-	accountId, err := validator.ValidateUserAccountId(jsonRequestBody.AccountId).Get()
+	accountId, err := validator.ValidateUserAccountId(jsonRequestBody.UserAccountId).Get()
 	if err != nil {
 		handleClientError(c, http.StatusBadRequest, err)
 		return
@@ -318,7 +318,7 @@ func (g *GroupChatController) PostMessage(c *gin.Context) {
 
 	messageId := models.NewMessageId()
 
-	senderId, err := validator.ValidateUserAccountId(jsonRequestBody.AccountId).Get()
+	senderId, err := validator.ValidateUserAccountId(jsonRequestBody.UserAccountId).Get()
 	if err != nil {
 		handleClientError(c, http.StatusBadRequest, err)
 		return

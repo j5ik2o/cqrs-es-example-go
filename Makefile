@@ -97,8 +97,14 @@ docker-compose-down:
 
 .PHONY: create-group-chat
 create-group-chat:
-	WRITE_API_SERVER_BASE_URL=$(WRITE_API_SERVER_BASE_URL) ./tools/scripts/curl-post-create-group-chat.sh
+	WRITE_API_SERVER_BASE_URL=$(WRITE_API_SERVER_BASE_URL) ./tools/scripts/curl-create-group-chat.sh
 
 .PHONY: get-group-chat
 get-group-chat:
-	READ_API_SERVER_BASE_URL=$(READ_API_SERVER_BASE_URL) ./tools/scripts/curl-post-get-group-chat.sh
+	READ_API_SERVER_BASE_URL=$(READ_API_SERVER_BASE_URL) ./tools/scripts/curl-get-group-chat.sh
+
+.PHONY: create-and-get-group-chat
+create-and-get-group-chat:
+	WRITE_API_SERVER_BASE_URL=$(WRITE_API_SERVER_BASE_URL) \
+	READ_API_SERVER_BASE_URL=$(READ_API_SERVER_BASE_URL) \
+	./tools/scripts/curl-create-and-get-group-chat.sh
