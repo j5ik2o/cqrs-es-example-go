@@ -56,6 +56,11 @@ func (r *ReadModelUpdater) UpdateReadModel(ctx context.Context, event dynamodbev
 			case *events.GroupChatDeleted:
 			case *events.GroupChatRenamed:
 			case *events.GroupChatMemberAdded:
+				ev := event.(*events.GroupChatMemberAdded)
+				err2 := addMember(ev, r)
+				if err2 != nil {
+					return err2
+				}
 			case *events.GroupChatMemberRemoved:
 			case *events.GroupChatMessagePosted:
 				ev := event.(*events.GroupChatMessagePosted)
@@ -90,6 +95,19 @@ func createGroupChat(ev *events.GroupChatCreated, r *ReadModelUpdater) error {
 	memberId := administrator.GetId()
 	accountId := administrator.GetUserAccountId()
 	err = r.dao.AddMember(memberId, groupChatId, accountId, models.AdminRole, occurredAt)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("createGroupChat: finished\n")
+	return nil
+}
+
+func addMember(ev *events.GroupChatMemberAdded, r *ReadModelUpdater) error {
+	groupChatId := ev.GetAggregateId().(*models.GroupChatId)
+	memberId := ev.GetMember().GetId()
+	accountId := ev.GetMember().GetUserAccountId()
+	occurredAt := convertToTime(ev.GetOccurredAt())
+	err := r.dao.AddMember(memberId, groupChatId, accountId, models.AdminRole, occurredAt)
 	if err != nil {
 		return err
 	}
