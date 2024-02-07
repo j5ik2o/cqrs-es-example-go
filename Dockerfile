@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM golang:1.21 AS build
+FROM golang:1.22 AS build
 ARG TARGETARCH
 COPY . /app
 WORKDIR /app
