@@ -8,6 +8,7 @@ import (
 	"time"
 )
 
+// GroupChatMemberRemoved is a domain event for group chat member removed.
 type GroupChatMemberRemoved struct {
 	id            string
 	aggregateId   models.GroupChatId
@@ -17,6 +18,7 @@ type GroupChatMemberRemoved struct {
 	occurredAt    uint64
 }
 
+// NewGroupChatMemberRemoved is a constructor for GroupChatMemberRemoved with generating id.
 func NewGroupChatMemberRemoved(aggregateId models.GroupChatId, userAccountId models.UserAccountId, seqNr uint64, executorId models.UserAccountId) GroupChatMemberRemoved {
 	id := ulid.Make().String()
 	now := time.Now()
@@ -24,6 +26,7 @@ func NewGroupChatMemberRemoved(aggregateId models.GroupChatId, userAccountId mod
 	return GroupChatMemberRemoved{id, aggregateId, userAccountId, seqNr, executorId, occurredAt}
 }
 
+// NewGroupChatMemberRemovedFrom is a constructor for GroupChatMemberRemoved
 func NewGroupChatMemberRemovedFrom(id string, aggregateId models.GroupChatId, userAccountId models.UserAccountId, seqNr uint64, executorId models.UserAccountId, occurredAt uint64) GroupChatMemberRemoved {
 	return GroupChatMemberRemoved{id, aggregateId, userAccountId, seqNr, executorId, occurredAt}
 }

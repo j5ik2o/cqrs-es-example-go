@@ -28,6 +28,8 @@ func ConvertMemberFromJSON(value map[string]interface{}) Member {
 }
 
 // ToJSON converts to JSON.
+//
+// However, this method is out of layer.
 func (m *Member) ToJSON() map[string]interface{} {
 	return map[string]interface{}{
 		"id":              m.id.ToJSON(),

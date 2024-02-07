@@ -8,6 +8,7 @@ import (
 	"time"
 )
 
+// GroupChatMessagePosted is a domain event for group chat message posted.
 type GroupChatMessagePosted struct {
 	id          string
 	aggregateId models.GroupChatId
@@ -17,6 +18,7 @@ type GroupChatMessagePosted struct {
 	occurredAt  uint64
 }
 
+// NewGroupChatMessagePosted is a constructor for GroupChatMessagePosted with generating id.
 func NewGroupChatMessagePosted(aggregateId models.GroupChatId, message models.Message, seqNr uint64, executorId models.UserAccountId) GroupChatMessagePosted {
 	id := ulid.Make().String()
 	now := time.Now()
@@ -24,6 +26,7 @@ func NewGroupChatMessagePosted(aggregateId models.GroupChatId, message models.Me
 	return GroupChatMessagePosted{id, aggregateId, message, seqNr, executorId, occurredAt}
 }
 
+// NewGroupChatMessagePostedFrom is a constructor for GroupChatMessagePosted
 func NewGroupChatMessagePostedFrom(id string, aggregateId models.GroupChatId, message models.Message, seqNr uint64, executorId models.UserAccountId, occurredAt uint64) GroupChatMessagePosted {
 	return GroupChatMessagePosted{id, aggregateId, message, seqNr, executorId, occurredAt}
 }

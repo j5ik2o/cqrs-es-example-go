@@ -15,6 +15,7 @@ const (
 	EventTypeGroupChatMessageDeleted = "GroupChatMessageDeleted"
 )
 
+// GroupChatEvent is a domain event for group chat.
 type GroupChatEvent interface {
 	esa.Event
 	GetExecutorId() *models.UserAccountId

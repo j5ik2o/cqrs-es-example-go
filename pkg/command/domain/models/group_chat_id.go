@@ -14,8 +14,7 @@ type GroupChatId struct {
 	value string
 }
 
-// NewGroupChatId is a constructor for GroupChatId
-// It generates new GroupChatId
+// NewGroupChatId is a constructor for GroupChatId with generating id.
 func NewGroupChatId() GroupChatId {
 	id := ulid.Make()
 	return GroupChatId{value: id.String()}
@@ -34,10 +33,8 @@ func NewGroupChatIdFromString(value string) mo.Result[GroupChatId] {
 }
 
 // ToJSON converts to JSON.
-// ToJSON は JSON に変換します。
 //
 // However, this method is out of layer.
-// ただし、このメソッドはレイヤーを逸脱しています。
 func (g *GroupChatId) ToJSON() map[string]interface{} {
 	return map[string]interface{}{
 		"value": g.value,

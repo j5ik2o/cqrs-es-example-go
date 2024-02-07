@@ -95,34 +95,9 @@ docker-compose-ps:
 docker-compose-down:
 	./tools/scripts/docker-compose-down.sh
 
-.PHONY: create-group-chat
-create-group-chat:
-	ADMIN_ID="UserAccount-01H42K4ABWQ5V2XQEP3A48VE0Z" \
-	WRITE_API_SERVER_BASE_URL=$(WRITE_API_SERVER_BASE_URL) \
-	./tools/scripts/curl-create-group-chat.sh
-
-.PHONY: get-group-chat
-get-group-chat:
-	ADMIN_ID="UserAccount-01H42K4ABWQ5V2XQEP3A48VE0Z" \
-	READ_API_SERVER_BASE_URL=$(READ_API_SERVER_BASE_URL) \
-	./tools/scripts/curl-get-group-chat.sh
-
-.PHONY: add-member
-add-member:
-	ADMIN_ID="UserAccount-01H42K4ABWQ5V2XQEP3A48VE0Z" \
-	USER_ACCOUNT_ID="UserAccount-01H7C6DWMK1BKS1JYH1XZE529M" \
-	WRITE_API_SERVER_BASE_URL=$(WRITE_API_SERVER_BASE_URL) \
-	./tools/scripts/curl-add-member.sh
-
-.PHONY: post-message
-post-message:
-	USER_ACCOUNT_ID="UserAccount-01H42K4ABWQ5V2XQEP3A48VE0Z" \
-	WRITE_API_SERVER_BASE_URL=$(WRITE_API_SERVER_BASE_URL) \
-	./tools/scripts/curl-post-message.sh
-
-.PHONY: create-and-get-group-chat
-create-and-get-group-chat:
+.PHONY: verify-group-chat
+verify-group-chat:
 	ADMIN_ID="UserAccount-01H42K4ABWQ5V2XQEP3A48VE0Z" \
 	WRITE_API_SERVER_BASE_URL=$(WRITE_API_SERVER_BASE_URL) \
 	READ_API_SERVER_BASE_URL=$(READ_API_SERVER_BASE_URL) \
-	./tools/scripts/curl-create-and-get-group-chat.sh
+	./tools/scripts/verify-group-chat.sh

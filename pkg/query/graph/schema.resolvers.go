@@ -40,17 +40,101 @@ func (r *queryRootResolver) GetGroupChat(ctx context.Context, groupChatID string
 
 // GetGroupChats is the resolver for the getGroupChats field.
 func (r *queryRootResolver) GetGroupChats(ctx context.Context, userAccountID string) ([]*query.GroupChat, error) {
-	panic(fmt.Errorf("not implemented: GetGroupChats - getGroupChats"))
+	stmt, err := r.db.Prepare(`SELECT gc.id, gc.name, gc.owner_id, gc.created_at FROM group_chats AS gc JOIN members AS m ON gc.id = m.group_chat_id WHERE m.account_id = ?`)
+	defer stmt.Close()
+	if err != nil {
+		return nil, err
+	}
+	rows, err := stmt.Query(userAccountID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	results := make([]*query.GroupChat, 0)
+	for rows.Next() {
+		var id string
+		var name string
+		var ownerID string
+		var createdAt time.Time
+		err = rows.Scan(&id, &name, &ownerID, &createdAt)
+		if err != nil {
+			return nil, err
+		}
+		results = append(results, &query.GroupChat{
+			ID:        id,
+			Name:      name,
+			OwnerID:   ownerID,
+			CreatedAt: createdAt.String(),
+		})
+
+	}
+	return results, nil
 }
 
 // GetMember is the resolver for the getMember field.
 func (r *queryRootResolver) GetMember(ctx context.Context, groupChatID string, userAccountID string) (*query.Member, error) {
-	panic(fmt.Errorf("not implemented: GetMember - getMember"))
+	stmt, err := r.db.Prepare(`SELECT id, group_chat_id, account_id, role, created_at FROM members WHERE group_chat_id = ? AND account_id = ?`)
+	defer stmt.Close()
+	if err != nil {
+		return nil, err
+	}
+	row := stmt.QueryRow(groupChatID, userAccountID)
+	if row != nil {
+		var id string
+		var groupChatId string
+		var userAccountId string
+		var role string
+		var createdAt time.Time
+		err = row.Scan(&id, &groupChatId, &userAccountId, &role, &createdAt)
+		if err != nil {
+			return nil, err
+		}
+		return &query.Member{
+			ID:            id,
+			GroupChatID:   groupChatId,
+			UserAccountID: userAccountId,
+			Role:          role,
+			CreatedAt:     createdAt.String(),
+		}, nil
+	}
+	return nil, nil
 }
 
 // GetMembers is the resolver for the getMembers field.
 func (r *queryRootResolver) GetMembers(ctx context.Context, groupChatID string, userAccountID string) ([]*query.Member, error) {
-	panic(fmt.Errorf("not implemented: GetMembers - getMembers"))
+	stmt, err := r.db.Prepare(`SELECT id, group_chat_id, account_id, role, created_at FROM members WHERE group_chat_id = ? AND EXISTS (SELECT 1 FROM members AS m2 WHERE m2.group_chat_id = members.group_chat_id AND m2.account_id = ?)`)
+	defer stmt.Close()
+	if err != nil {
+		return nil, err
+	}
+	rows, err := stmt.Query(groupChatID, userAccountID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	results := make([]*query.Member, 0)
+	for rows.Next() {
+		var id string
+		var groupChatId string
+		var userAccountId string
+		var role string
+		var createdAt time.Time
+		err = rows.Scan(&id, &groupChatId, &userAccountId, &role, &createdAt)
+		if err != nil {
+			return nil, err
+		}
+		results = append(results, &query.Member{
+			ID:            id,
+			GroupChatID:   groupChatId,
+			UserAccountID: userAccountId,
+			Role:          role,
+			CreatedAt:     createdAt.String(),
+		})
+
+	}
+	return results, nil
 }
 
 // GetMessage is the resolver for the getMessage field.
@@ -84,7 +168,38 @@ func (r *queryRootResolver) GetMessage(ctx context.Context, messageID string, us
 
 // GetMessages is the resolver for the getMessages field.
 func (r *queryRootResolver) GetMessages(ctx context.Context, groupChatID string, userAccountID string) ([]*query.Message, error) {
-	panic(fmt.Errorf("not implemented: GetMessages - getMessages"))
+	stmt, err := r.db.Prepare(`SELECT m.id, m.group_chat_id, m.account_id, m.text, m.created_at FROM messages AS m WHERE m.group_chat_id = ? AND EXISTS (SELECT 1 FROM members AS mem WHERE mem.group_chat_id = m.group_chat_id AND mem.account_id = ?)`)
+	defer stmt.Close()
+	if err != nil {
+		return nil, err
+	}
+	rows, err := stmt.Query(groupChatID, userAccountID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	results := make([]*query.Message, 0)
+	for rows.Next() {
+		var id string
+		var groupChatId string
+		var userAccountId string
+		var text string
+		var createdAt time.Time
+		err = rows.Scan(&id, &groupChatId, &userAccountId, &text, &createdAt)
+		if err != nil {
+			return nil, err
+		}
+		results = append(results, &query.Message{
+			ID:            id,
+			GroupChatID:   groupChatId,
+			UserAccountID: userAccountId,
+			Text:          text,
+			CreatedAt:     createdAt.String(),
+		})
+
+	}
+	return results, nil
 }
 
 // GroupChats is the resolver for the groupChats field.

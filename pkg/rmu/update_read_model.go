@@ -106,8 +106,9 @@ func addMember(ev *events.GroupChatMemberAdded, r *ReadModelUpdater) error {
 	groupChatId := ev.GetAggregateId().(*models.GroupChatId)
 	memberId := ev.GetMember().GetId()
 	accountId := ev.GetMember().GetUserAccountId()
+	role := ev.GetMember().GetRole()
 	occurredAt := convertToTime(ev.GetOccurredAt())
-	err := r.dao.AddMember(memberId, groupChatId, accountId, models.AdminRole, occurredAt)
+	err := r.dao.AddMember(memberId, groupChatId, accountId, role, occurredAt)
 	if err != nil {
 		return err
 	}
