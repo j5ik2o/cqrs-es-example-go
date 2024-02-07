@@ -380,7 +380,7 @@ func (r *RequestSender) sendAddMemberCommand(w *httptest.ResponseRecorder, group
 	requestBodyJson, err := json.Marshal(AddMemberRequestBody{
 		GroupChatId:   groupChatID,
 		UserAccountId: userAccountId,
-		Role:          "admin",
+		Role:          models.Role(models.AdminRole).String(),
 		ExecutorId:    executorId,
 	})
 	if err != nil {

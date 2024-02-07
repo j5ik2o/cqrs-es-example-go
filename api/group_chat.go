@@ -246,7 +246,7 @@ func (g *GroupChatController) AddMember(c *gin.Context) {
 		return
 	}
 
-	role := getRole(jsonRequestBody)
+	role := models.StringToRole(jsonRequestBody.Role)
 
 	commandProcessor := useCase.NewGroupChatCommandProcessor(g.repository)
 	event, err := commandProcessor.AddMember(&groupChatId, accountId, role, executorId)
@@ -386,17 +386,6 @@ func (g *GroupChatController) DeleteMessage(c *gin.Context) {
 
 	response := DeleteMessageResponseSuccessBody{GroupChatId: event.GetAggregateId().AsString()}
 	c.JSON(http.StatusOK, response)
-}
-
-// getRole はリクエストボディからロールを取得します。
-func getRole(jsonRequestBody AddMemberRequestBody) models.Role {
-	var role models.Role
-	if jsonRequestBody.Role == "admin" {
-		role = models.AdminRole
-	} else {
-		role = models.MemberRole
-	}
-	return role
 }
 
 // handleClientError はクライアントエラーを処理します。

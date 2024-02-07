@@ -43,14 +43,7 @@ func (dao *GroupChatDaoImpl) AddMember(id *models.MemberId, aggregateId *models.
 		return err
 	}
 	dt := at.Format("2006-01-02 15:04:05")
-	var roleStr string
-	switch role {
-	case models.AdminRole:
-		roleStr = "admin"
-	case models.MemberRole:
-		roleStr = "member"
-	}
-	_, err = stmt.Exec(id.String(), aggregateId.AsString(), accountId.AsString(), roleStr, dt)
+	_, err = stmt.Exec(id.String(), aggregateId.AsString(), accountId.AsString(), role.String(), dt)
 	if err != nil {
 		return err
 	}
