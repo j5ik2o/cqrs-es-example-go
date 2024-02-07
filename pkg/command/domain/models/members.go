@@ -36,6 +36,8 @@ func ConvertMembersFromJSON(value map[string]interface{}) Members {
 }
 
 // ToJSON converts to JSON.
+//
+// However, this method is out of layer.
 func (m *Members) ToJSON() map[string]interface{} {
 	values := make([]map[string]interface{}, len(m.values))
 	for i, v := range m.values {

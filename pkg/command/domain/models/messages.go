@@ -2,14 +2,17 @@ package models
 
 import "github.com/samber/mo"
 
+// Messages is a value object that represents a list of messages.
 type Messages struct {
 	values map[string]Message
 }
 
+// NewMessages is the constructor for Messages.
 func NewMessages() Messages {
 	return Messages{values: map[string]Message{}}
 }
 
+// NewMessagesFromMap is the constructor for Messages.
 func NewMessagesFromMap(values map[string]Message) Messages {
 	m := make(map[string]Message, len(values))
 	for k, v := range values {
@@ -18,6 +21,7 @@ func NewMessagesFromMap(values map[string]Message) Messages {
 	return Messages{values: m}
 }
 
+// ConvertMessagesFromJSON is a constructor for Messages.
 func ConvertMessagesFromJSON(value map[string]interface{}) mo.Result[Messages] {
 	values := value["values"].([]interface{})
 	m := NewMessages()
@@ -61,6 +65,9 @@ func (m *Messages) Get(id *MessageId) mo.Option[Message] {
 	return mo.Some[Message](m.values[id.GetValue()])
 }
 
+// ToJSON converts to JSON.
+//
+// However, this method is out of layer.
 func (m *Messages) ToJSON() map[string]interface{} {
 	values := make([]map[string]interface{}, len(m.values))
 	i := 0

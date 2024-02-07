@@ -8,6 +8,7 @@ import (
 	"time"
 )
 
+// GroupChatRenamed is a domain event for group chat renamed.
 type GroupChatRenamed struct {
 	id          string
 	aggregateId models.GroupChatId
@@ -17,6 +18,7 @@ type GroupChatRenamed struct {
 	occurredAt  uint64
 }
 
+// NewGroupChatRenamed is a constructor for GroupChatRenamed with generating id.
 func NewGroupChatRenamed(aggregateId models.GroupChatId, name models.GroupChatName, seqNr uint64, executorId models.UserAccountId) GroupChatRenamed {
 	id := ulid.Make().String()
 	now := time.Now()
@@ -24,6 +26,7 @@ func NewGroupChatRenamed(aggregateId models.GroupChatId, name models.GroupChatNa
 	return GroupChatRenamed{id, aggregateId, name, seqNr, executorId, occurredAt}
 }
 
+// NewGroupChatRenamedFrom is a constructor for GroupChatRenamed
 func NewGroupChatRenamedFrom(id string, aggregateId models.GroupChatId, name models.GroupChatName, seqNr uint64, executorId models.UserAccountId, occurredAt uint64) GroupChatRenamed {
 	return GroupChatRenamed{id, aggregateId, name, seqNr, executorId, occurredAt}
 }

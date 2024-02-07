@@ -24,6 +24,8 @@ func ConvertMessageFromJSON(value map[string]interface{}) mo.Result[Message] {
 }
 
 // ToJSON converts to JSON.
+//
+// However, this method is out of layer.
 func (m *Message) ToJSON() map[string]interface{} {
 	return map[string]interface{}{
 		"id":        m.id.ToJSON(),
