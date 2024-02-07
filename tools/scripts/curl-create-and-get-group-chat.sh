@@ -10,7 +10,7 @@ SLEEP_TIME=1
 
 for i in $(seq 1 $MAX_RETRIES); do
     ACTUAL_ID=$(./tools/scripts/curl-get-group-chat.sh | jq -r .data.getGroupChat.id)
-    echo "get-group-chat (attempt ${i}): ACTUAL_GROUP_CHAT_ID=${ACTUAL_ID}"
+    echo "get-group-chat (attempt ${i}): ACTUAL_ID=${ACTUAL_ID}"
 
     if [ "${GROUP_CHAT_ID}" = "${ACTUAL_ID}" ]; then
         echo "OK"

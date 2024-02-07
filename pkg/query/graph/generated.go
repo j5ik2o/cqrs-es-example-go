@@ -5,7 +5,7 @@ package graph
 import (
 	"bytes"
 	"context"
-	"cqrs-es-example-go/pkg/query/graph/model"
+	query "cqrs-es-example-go/pkg/query/graph/model"
 	"embed"
 	"errors"
 	"fmt"
@@ -56,28 +56,28 @@ type ComplexityRoot struct {
 	}
 
 	Member struct {
-		AccountID   func(childComplexity int) int
-		CreatedAt   func(childComplexity int) int
-		GroupChatID func(childComplexity int) int
-		ID          func(childComplexity int) int
-		Role        func(childComplexity int) int
+		CreatedAt     func(childComplexity int) int
+		GroupChatID   func(childComplexity int) int
+		ID            func(childComplexity int) int
+		Role          func(childComplexity int) int
+		UserAccountID func(childComplexity int) int
 	}
 
 	Message struct {
-		AccountID   func(childComplexity int) int
-		CreatedAt   func(childComplexity int) int
-		GroupChatID func(childComplexity int) int
-		ID          func(childComplexity int) int
-		Text        func(childComplexity int) int
+		CreatedAt     func(childComplexity int) int
+		GroupChatID   func(childComplexity int) int
+		ID            func(childComplexity int) int
+		Text          func(childComplexity int) int
+		UserAccountID func(childComplexity int) int
 	}
 
 	QueryRoot struct {
-		GetGroupChat  func(childComplexity int, groupChatID string, accountID string) int
-		GetGroupChats func(childComplexity int, accountID string) int
-		GetMember     func(childComplexity int, groupChatID string, accountID string) int
-		GetMembers    func(childComplexity int, groupChatID string, accountID string) int
-		GetMessage    func(childComplexity int, messageID string, accountID string) int
-		GetMessages   func(childComplexity int, groupChatID string, accountID string) int
+		GetGroupChat  func(childComplexity int, groupChatID string, userAccountID string) int
+		GetGroupChats func(childComplexity int, userAccountID string) int
+		GetMember     func(childComplexity int, groupChatID string, userAccountID string) int
+		GetMembers    func(childComplexity int, groupChatID string, userAccountID string) int
+		GetMessage    func(childComplexity int, messageID string, userAccountID string) int
+		GetMessages   func(childComplexity int, groupChatID string, userAccountID string) int
 	}
 
 	SubscriptionRoot struct {
@@ -86,12 +86,12 @@ type ComplexityRoot struct {
 }
 
 type QueryRootResolver interface {
-	GetGroupChat(ctx context.Context, groupChatID string, accountID string) (*query.GroupChat, error)
-	GetGroupChats(ctx context.Context, accountID string) ([]*query.GroupChat, error)
-	GetMember(ctx context.Context, groupChatID string, accountID string) (*query.Member, error)
-	GetMembers(ctx context.Context, groupChatID string, accountID string) ([]*query.Member, error)
-	GetMessage(ctx context.Context, messageID string, accountID string) (*query.Message, error)
-	GetMessages(ctx context.Context, groupChatID string, accountID string) ([]*query.Message, error)
+	GetGroupChat(ctx context.Context, groupChatID string, userAccountID string) (*query.GroupChat, error)
+	GetGroupChats(ctx context.Context, userAccountID string) ([]*query.GroupChat, error)
+	GetMember(ctx context.Context, groupChatID string, userAccountID string) (*query.Member, error)
+	GetMembers(ctx context.Context, groupChatID string, userAccountID string) ([]*query.Member, error)
+	GetMessage(ctx context.Context, messageID string, userAccountID string) (*query.Message, error)
+	GetMessages(ctx context.Context, groupChatID string, userAccountID string) ([]*query.Message, error)
 }
 type SubscriptionRootResolver interface {
 	GroupChats(ctx context.Context, groupChatID string) (<-chan string, error)
@@ -144,13 +144,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.GroupChat.OwnerID(childComplexity), true
 
-	case "Member.accountId":
-		if e.complexity.Member.AccountID == nil {
-			break
-		}
-
-		return e.complexity.Member.AccountID(childComplexity), true
-
 	case "Member.createdAt":
 		if e.complexity.Member.CreatedAt == nil {
 			break
@@ -179,12 +172,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Member.Role(childComplexity), true
 
-	case "Message.accountId":
-		if e.complexity.Message.AccountID == nil {
+	case "Member.userAccountId":
+		if e.complexity.Member.UserAccountID == nil {
 			break
 		}
 
-		return e.complexity.Message.AccountID(childComplexity), true
+		return e.complexity.Member.UserAccountID(childComplexity), true
 
 	case "Message.createdAt":
 		if e.complexity.Message.CreatedAt == nil {
@@ -214,6 +207,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Message.Text(childComplexity), true
 
+	case "Message.userAccountId":
+		if e.complexity.Message.UserAccountID == nil {
+			break
+		}
+
+		return e.complexity.Message.UserAccountID(childComplexity), true
+
 	case "QueryRoot.getGroupChat":
 		if e.complexity.QueryRoot.GetGroupChat == nil {
 			break
@@ -224,7 +224,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.QueryRoot.GetGroupChat(childComplexity, args["groupChatId"].(string), args["accountId"].(string)), true
+		return e.complexity.QueryRoot.GetGroupChat(childComplexity, args["groupChatId"].(string), args["userAccountId"].(string)), true
 
 	case "QueryRoot.getGroupChats":
 		if e.complexity.QueryRoot.GetGroupChats == nil {
@@ -236,7 +236,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.QueryRoot.GetGroupChats(childComplexity, args["accountId"].(string)), true
+		return e.complexity.QueryRoot.GetGroupChats(childComplexity, args["userAccountId"].(string)), true
 
 	case "QueryRoot.getMember":
 		if e.complexity.QueryRoot.GetMember == nil {
@@ -248,7 +248,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.QueryRoot.GetMember(childComplexity, args["groupChatId"].(string), args["accountId"].(string)), true
+		return e.complexity.QueryRoot.GetMember(childComplexity, args["groupChatId"].(string), args["userAccountId"].(string)), true
 
 	case "QueryRoot.getMembers":
 		if e.complexity.QueryRoot.GetMembers == nil {
@@ -260,7 +260,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.QueryRoot.GetMembers(childComplexity, args["groupChatId"].(string), args["accountId"].(string)), true
+		return e.complexity.QueryRoot.GetMembers(childComplexity, args["groupChatId"].(string), args["userAccountId"].(string)), true
 
 	case "QueryRoot.getMessage":
 		if e.complexity.QueryRoot.GetMessage == nil {
@@ -272,7 +272,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.QueryRoot.GetMessage(childComplexity, args["messageId"].(string), args["accountId"].(string)), true
+		return e.complexity.QueryRoot.GetMessage(childComplexity, args["messageId"].(string), args["userAccountId"].(string)), true
 
 	case "QueryRoot.getMessages":
 		if e.complexity.QueryRoot.GetMessages == nil {
@@ -284,7 +284,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.QueryRoot.GetMessages(childComplexity, args["groupChatId"].(string), args["accountId"].(string)), true
+		return e.complexity.QueryRoot.GetMessages(childComplexity, args["groupChatId"].(string), args["userAccountId"].(string)), true
 
 	case "SubscriptionRoot.groupChats":
 		if e.complexity.SubscriptionRoot.GroupChats == nil {
@@ -451,14 +451,14 @@ func (ec *executionContext) field_QueryRoot_getGroupChat_args(ctx context.Contex
 	}
 	args["groupChatId"] = arg0
 	var arg1 string
-	if tmp, ok := rawArgs["accountId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("accountId"))
+	if tmp, ok := rawArgs["userAccountId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userAccountId"))
 		arg1, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["accountId"] = arg1
+	args["userAccountId"] = arg1
 	return args, nil
 }
 
@@ -466,14 +466,14 @@ func (ec *executionContext) field_QueryRoot_getGroupChats_args(ctx context.Conte
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
-	if tmp, ok := rawArgs["accountId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("accountId"))
+	if tmp, ok := rawArgs["userAccountId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userAccountId"))
 		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["accountId"] = arg0
+	args["userAccountId"] = arg0
 	return args, nil
 }
 
@@ -490,14 +490,14 @@ func (ec *executionContext) field_QueryRoot_getMember_args(ctx context.Context, 
 	}
 	args["groupChatId"] = arg0
 	var arg1 string
-	if tmp, ok := rawArgs["accountId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("accountId"))
+	if tmp, ok := rawArgs["userAccountId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userAccountId"))
 		arg1, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["accountId"] = arg1
+	args["userAccountId"] = arg1
 	return args, nil
 }
 
@@ -514,14 +514,14 @@ func (ec *executionContext) field_QueryRoot_getMembers_args(ctx context.Context,
 	}
 	args["groupChatId"] = arg0
 	var arg1 string
-	if tmp, ok := rawArgs["accountId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("accountId"))
+	if tmp, ok := rawArgs["userAccountId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userAccountId"))
 		arg1, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["accountId"] = arg1
+	args["userAccountId"] = arg1
 	return args, nil
 }
 
@@ -538,14 +538,14 @@ func (ec *executionContext) field_QueryRoot_getMessage_args(ctx context.Context,
 	}
 	args["messageId"] = arg0
 	var arg1 string
-	if tmp, ok := rawArgs["accountId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("accountId"))
+	if tmp, ok := rawArgs["userAccountId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userAccountId"))
 		arg1, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["accountId"] = arg1
+	args["userAccountId"] = arg1
 	return args, nil
 }
 
@@ -562,14 +562,14 @@ func (ec *executionContext) field_QueryRoot_getMessages_args(ctx context.Context
 	}
 	args["groupChatId"] = arg0
 	var arg1 string
-	if tmp, ok := rawArgs["accountId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("accountId"))
+	if tmp, ok := rawArgs["userAccountId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userAccountId"))
 		arg1, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["accountId"] = arg1
+	args["userAccountId"] = arg1
 	return args, nil
 }
 
@@ -890,8 +890,8 @@ func (ec *executionContext) fieldContext_Member_groupChatId(ctx context.Context,
 	return fc, nil
 }
 
-func (ec *executionContext) _Member_accountId(ctx context.Context, field graphql.CollectedField, obj *query.Member) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Member_accountId(ctx, field)
+func (ec *executionContext) _Member_userAccountId(ctx context.Context, field graphql.CollectedField, obj *query.Member) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Member_userAccountId(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -904,7 +904,7 @@ func (ec *executionContext) _Member_accountId(ctx context.Context, field graphql
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.AccountID, nil
+		return obj.UserAccountID, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -921,7 +921,7 @@ func (ec *executionContext) _Member_accountId(ctx context.Context, field graphql
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Member_accountId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Member_userAccountId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Member",
 		Field:      field,
@@ -1110,8 +1110,8 @@ func (ec *executionContext) fieldContext_Message_groupChatId(ctx context.Context
 	return fc, nil
 }
 
-func (ec *executionContext) _Message_accountId(ctx context.Context, field graphql.CollectedField, obj *query.Message) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Message_accountId(ctx, field)
+func (ec *executionContext) _Message_userAccountId(ctx context.Context, field graphql.CollectedField, obj *query.Message) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Message_userAccountId(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1124,7 +1124,7 @@ func (ec *executionContext) _Message_accountId(ctx context.Context, field graphq
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.AccountID, nil
+		return obj.UserAccountID, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1141,7 +1141,7 @@ func (ec *executionContext) _Message_accountId(ctx context.Context, field graphq
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Message_accountId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Message_userAccountId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Message",
 		Field:      field,
@@ -1256,7 +1256,7 @@ func (ec *executionContext) _QueryRoot_getGroupChat(ctx context.Context, field g
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.QueryRoot().GetGroupChat(rctx, fc.Args["groupChatId"].(string), fc.Args["accountId"].(string))
+		return ec.resolvers.QueryRoot().GetGroupChat(rctx, fc.Args["groupChatId"].(string), fc.Args["userAccountId"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1270,7 +1270,7 @@ func (ec *executionContext) _QueryRoot_getGroupChat(ctx context.Context, field g
 	}
 	res := resTmp.(*query.GroupChat)
 	fc.Result = res
-	return ec.marshalNGroupChat2ᚖcqrsᚑesᚑexampleᚑgoᚋqueryᚋgraphᚋmodelᚐGroupChat(ctx, field.Selections, res)
+	return ec.marshalNGroupChat2ᚖcqrsᚑesᚑexampleᚑgoᚋpkgᚋqueryᚋgraphᚋmodelᚐGroupChat(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_QueryRoot_getGroupChat(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1321,7 +1321,7 @@ func (ec *executionContext) _QueryRoot_getGroupChats(ctx context.Context, field 
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.QueryRoot().GetGroupChats(rctx, fc.Args["accountId"].(string))
+		return ec.resolvers.QueryRoot().GetGroupChats(rctx, fc.Args["userAccountId"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1335,7 +1335,7 @@ func (ec *executionContext) _QueryRoot_getGroupChats(ctx context.Context, field 
 	}
 	res := resTmp.([]*query.GroupChat)
 	fc.Result = res
-	return ec.marshalNGroupChat2ᚕᚖcqrsᚑesᚑexampleᚑgoᚋqueryᚋgraphᚋmodelᚐGroupChatᚄ(ctx, field.Selections, res)
+	return ec.marshalNGroupChat2ᚕᚖcqrsᚑesᚑexampleᚑgoᚋpkgᚋqueryᚋgraphᚋmodelᚐGroupChatᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_QueryRoot_getGroupChats(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1386,7 +1386,7 @@ func (ec *executionContext) _QueryRoot_getMember(ctx context.Context, field grap
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.QueryRoot().GetMember(rctx, fc.Args["groupChatId"].(string), fc.Args["accountId"].(string))
+		return ec.resolvers.QueryRoot().GetMember(rctx, fc.Args["groupChatId"].(string), fc.Args["userAccountId"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1400,7 +1400,7 @@ func (ec *executionContext) _QueryRoot_getMember(ctx context.Context, field grap
 	}
 	res := resTmp.(*query.Member)
 	fc.Result = res
-	return ec.marshalNMember2ᚖcqrsᚑesᚑexampleᚑgoᚋqueryᚋgraphᚋmodelᚐMember(ctx, field.Selections, res)
+	return ec.marshalNMember2ᚖcqrsᚑesᚑexampleᚑgoᚋpkgᚋqueryᚋgraphᚋmodelᚐMember(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_QueryRoot_getMember(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1415,8 +1415,8 @@ func (ec *executionContext) fieldContext_QueryRoot_getMember(ctx context.Context
 				return ec.fieldContext_Member_id(ctx, field)
 			case "groupChatId":
 				return ec.fieldContext_Member_groupChatId(ctx, field)
-			case "accountId":
-				return ec.fieldContext_Member_accountId(ctx, field)
+			case "userAccountId":
+				return ec.fieldContext_Member_userAccountId(ctx, field)
 			case "role":
 				return ec.fieldContext_Member_role(ctx, field)
 			case "createdAt":
@@ -1453,7 +1453,7 @@ func (ec *executionContext) _QueryRoot_getMembers(ctx context.Context, field gra
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.QueryRoot().GetMembers(rctx, fc.Args["groupChatId"].(string), fc.Args["accountId"].(string))
+		return ec.resolvers.QueryRoot().GetMembers(rctx, fc.Args["groupChatId"].(string), fc.Args["userAccountId"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1467,7 +1467,7 @@ func (ec *executionContext) _QueryRoot_getMembers(ctx context.Context, field gra
 	}
 	res := resTmp.([]*query.Member)
 	fc.Result = res
-	return ec.marshalNMember2ᚕᚖcqrsᚑesᚑexampleᚑgoᚋqueryᚋgraphᚋmodelᚐMemberᚄ(ctx, field.Selections, res)
+	return ec.marshalNMember2ᚕᚖcqrsᚑesᚑexampleᚑgoᚋpkgᚋqueryᚋgraphᚋmodelᚐMemberᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_QueryRoot_getMembers(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1482,8 +1482,8 @@ func (ec *executionContext) fieldContext_QueryRoot_getMembers(ctx context.Contex
 				return ec.fieldContext_Member_id(ctx, field)
 			case "groupChatId":
 				return ec.fieldContext_Member_groupChatId(ctx, field)
-			case "accountId":
-				return ec.fieldContext_Member_accountId(ctx, field)
+			case "userAccountId":
+				return ec.fieldContext_Member_userAccountId(ctx, field)
 			case "role":
 				return ec.fieldContext_Member_role(ctx, field)
 			case "createdAt":
@@ -1520,7 +1520,7 @@ func (ec *executionContext) _QueryRoot_getMessage(ctx context.Context, field gra
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.QueryRoot().GetMessage(rctx, fc.Args["messageId"].(string), fc.Args["accountId"].(string))
+		return ec.resolvers.QueryRoot().GetMessage(rctx, fc.Args["messageId"].(string), fc.Args["userAccountId"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1534,7 +1534,7 @@ func (ec *executionContext) _QueryRoot_getMessage(ctx context.Context, field gra
 	}
 	res := resTmp.(*query.Message)
 	fc.Result = res
-	return ec.marshalNMessage2ᚖcqrsᚑesᚑexampleᚑgoᚋqueryᚋgraphᚋmodelᚐMessage(ctx, field.Selections, res)
+	return ec.marshalNMessage2ᚖcqrsᚑesᚑexampleᚑgoᚋpkgᚋqueryᚋgraphᚋmodelᚐMessage(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_QueryRoot_getMessage(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1549,8 +1549,8 @@ func (ec *executionContext) fieldContext_QueryRoot_getMessage(ctx context.Contex
 				return ec.fieldContext_Message_id(ctx, field)
 			case "groupChatId":
 				return ec.fieldContext_Message_groupChatId(ctx, field)
-			case "accountId":
-				return ec.fieldContext_Message_accountId(ctx, field)
+			case "userAccountId":
+				return ec.fieldContext_Message_userAccountId(ctx, field)
 			case "text":
 				return ec.fieldContext_Message_text(ctx, field)
 			case "createdAt":
@@ -1587,7 +1587,7 @@ func (ec *executionContext) _QueryRoot_getMessages(ctx context.Context, field gr
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.QueryRoot().GetMessages(rctx, fc.Args["groupChatId"].(string), fc.Args["accountId"].(string))
+		return ec.resolvers.QueryRoot().GetMessages(rctx, fc.Args["groupChatId"].(string), fc.Args["userAccountId"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1601,7 +1601,7 @@ func (ec *executionContext) _QueryRoot_getMessages(ctx context.Context, field gr
 	}
 	res := resTmp.([]*query.Message)
 	fc.Result = res
-	return ec.marshalNMessage2ᚕᚖcqrsᚑesᚑexampleᚑgoᚋqueryᚋgraphᚋmodelᚐMessageᚄ(ctx, field.Selections, res)
+	return ec.marshalNMessage2ᚕᚖcqrsᚑesᚑexampleᚑgoᚋpkgᚋqueryᚋgraphᚋmodelᚐMessageᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_QueryRoot_getMessages(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1616,8 +1616,8 @@ func (ec *executionContext) fieldContext_QueryRoot_getMessages(ctx context.Conte
 				return ec.fieldContext_Message_id(ctx, field)
 			case "groupChatId":
 				return ec.fieldContext_Message_groupChatId(ctx, field)
-			case "accountId":
-				return ec.fieldContext_Message_accountId(ctx, field)
+			case "userAccountId":
+				return ec.fieldContext_Message_userAccountId(ctx, field)
 			case "text":
 				return ec.fieldContext_Message_text(ctx, field)
 			case "createdAt":
@@ -3694,8 +3694,8 @@ func (ec *executionContext) _Member(ctx context.Context, sel ast.SelectionSet, o
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "accountId":
-			out.Values[i] = ec._Member_accountId(ctx, field, obj)
+		case "userAccountId":
+			out.Values[i] = ec._Member_userAccountId(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -3753,8 +3753,8 @@ func (ec *executionContext) _Message(ctx context.Context, sel ast.SelectionSet, 
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "accountId":
-			out.Values[i] = ec._Message_accountId(ctx, field, obj)
+		case "userAccountId":
+			out.Values[i] = ec._Message_userAccountId(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -4334,11 +4334,11 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) marshalNGroupChat2cqrsᚑesᚑexampleᚑgoᚋqueryᚋgraphᚋmodelᚐGroupChat(ctx context.Context, sel ast.SelectionSet, v query.GroupChat) graphql.Marshaler {
+func (ec *executionContext) marshalNGroupChat2cqrsᚑesᚑexampleᚑgoᚋpkgᚋqueryᚋgraphᚋmodelᚐGroupChat(ctx context.Context, sel ast.SelectionSet, v query.GroupChat) graphql.Marshaler {
 	return ec._GroupChat(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNGroupChat2ᚕᚖcqrsᚑesᚑexampleᚑgoᚋqueryᚋgraphᚋmodelᚐGroupChatᚄ(ctx context.Context, sel ast.SelectionSet, v []*query.GroupChat) graphql.Marshaler {
+func (ec *executionContext) marshalNGroupChat2ᚕᚖcqrsᚑesᚑexampleᚑgoᚋpkgᚋqueryᚋgraphᚋmodelᚐGroupChatᚄ(ctx context.Context, sel ast.SelectionSet, v []*query.GroupChat) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -4362,7 +4362,7 @@ func (ec *executionContext) marshalNGroupChat2ᚕᚖcqrsᚑesᚑexampleᚑgoᚋq
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNGroupChat2ᚖcqrsᚑesᚑexampleᚑgoᚋqueryᚋgraphᚋmodelᚐGroupChat(ctx, sel, v[i])
+			ret[i] = ec.marshalNGroupChat2ᚖcqrsᚑesᚑexampleᚑgoᚋpkgᚋqueryᚋgraphᚋmodelᚐGroupChat(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -4382,7 +4382,7 @@ func (ec *executionContext) marshalNGroupChat2ᚕᚖcqrsᚑesᚑexampleᚑgoᚋq
 	return ret
 }
 
-func (ec *executionContext) marshalNGroupChat2ᚖcqrsᚑesᚑexampleᚑgoᚋqueryᚋgraphᚋmodelᚐGroupChat(ctx context.Context, sel ast.SelectionSet, v *query.GroupChat) graphql.Marshaler {
+func (ec *executionContext) marshalNGroupChat2ᚖcqrsᚑesᚑexampleᚑgoᚋpkgᚋqueryᚋgraphᚋmodelᚐGroupChat(ctx context.Context, sel ast.SelectionSet, v *query.GroupChat) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -4392,11 +4392,11 @@ func (ec *executionContext) marshalNGroupChat2ᚖcqrsᚑesᚑexampleᚑgoᚋquer
 	return ec._GroupChat(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNMember2cqrsᚑesᚑexampleᚑgoᚋqueryᚋgraphᚋmodelᚐMember(ctx context.Context, sel ast.SelectionSet, v query.Member) graphql.Marshaler {
+func (ec *executionContext) marshalNMember2cqrsᚑesᚑexampleᚑgoᚋpkgᚋqueryᚋgraphᚋmodelᚐMember(ctx context.Context, sel ast.SelectionSet, v query.Member) graphql.Marshaler {
 	return ec._Member(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNMember2ᚕᚖcqrsᚑesᚑexampleᚑgoᚋqueryᚋgraphᚋmodelᚐMemberᚄ(ctx context.Context, sel ast.SelectionSet, v []*query.Member) graphql.Marshaler {
+func (ec *executionContext) marshalNMember2ᚕᚖcqrsᚑesᚑexampleᚑgoᚋpkgᚋqueryᚋgraphᚋmodelᚐMemberᚄ(ctx context.Context, sel ast.SelectionSet, v []*query.Member) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -4420,7 +4420,7 @@ func (ec *executionContext) marshalNMember2ᚕᚖcqrsᚑesᚑexampleᚑgoᚋquer
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNMember2ᚖcqrsᚑesᚑexampleᚑgoᚋqueryᚋgraphᚋmodelᚐMember(ctx, sel, v[i])
+			ret[i] = ec.marshalNMember2ᚖcqrsᚑesᚑexampleᚑgoᚋpkgᚋqueryᚋgraphᚋmodelᚐMember(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -4440,7 +4440,7 @@ func (ec *executionContext) marshalNMember2ᚕᚖcqrsᚑesᚑexampleᚑgoᚋquer
 	return ret
 }
 
-func (ec *executionContext) marshalNMember2ᚖcqrsᚑesᚑexampleᚑgoᚋqueryᚋgraphᚋmodelᚐMember(ctx context.Context, sel ast.SelectionSet, v *query.Member) graphql.Marshaler {
+func (ec *executionContext) marshalNMember2ᚖcqrsᚑesᚑexampleᚑgoᚋpkgᚋqueryᚋgraphᚋmodelᚐMember(ctx context.Context, sel ast.SelectionSet, v *query.Member) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -4450,11 +4450,11 @@ func (ec *executionContext) marshalNMember2ᚖcqrsᚑesᚑexampleᚑgoᚋquery�
 	return ec._Member(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNMessage2cqrsᚑesᚑexampleᚑgoᚋqueryᚋgraphᚋmodelᚐMessage(ctx context.Context, sel ast.SelectionSet, v query.Message) graphql.Marshaler {
+func (ec *executionContext) marshalNMessage2cqrsᚑesᚑexampleᚑgoᚋpkgᚋqueryᚋgraphᚋmodelᚐMessage(ctx context.Context, sel ast.SelectionSet, v query.Message) graphql.Marshaler {
 	return ec._Message(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNMessage2ᚕᚖcqrsᚑesᚑexampleᚑgoᚋqueryᚋgraphᚋmodelᚐMessageᚄ(ctx context.Context, sel ast.SelectionSet, v []*query.Message) graphql.Marshaler {
+func (ec *executionContext) marshalNMessage2ᚕᚖcqrsᚑesᚑexampleᚑgoᚋpkgᚋqueryᚋgraphᚋmodelᚐMessageᚄ(ctx context.Context, sel ast.SelectionSet, v []*query.Message) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -4478,7 +4478,7 @@ func (ec *executionContext) marshalNMessage2ᚕᚖcqrsᚑesᚑexampleᚑgoᚋque
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNMessage2ᚖcqrsᚑesᚑexampleᚑgoᚋqueryᚋgraphᚋmodelᚐMessage(ctx, sel, v[i])
+			ret[i] = ec.marshalNMessage2ᚖcqrsᚑesᚑexampleᚑgoᚋpkgᚋqueryᚋgraphᚋmodelᚐMessage(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -4498,7 +4498,7 @@ func (ec *executionContext) marshalNMessage2ᚕᚖcqrsᚑesᚑexampleᚑgoᚋque
 	return ret
 }
 
-func (ec *executionContext) marshalNMessage2ᚖcqrsᚑesᚑexampleᚑgoᚋqueryᚋgraphᚋmodelᚐMessage(ctx context.Context, sel ast.SelectionSet, v *query.Message) graphql.Marshaler {
+func (ec *executionContext) marshalNMessage2ᚖcqrsᚑesᚑexampleᚑgoᚋpkgᚋqueryᚋgraphᚋmodelᚐMessage(ctx context.Context, sel ast.SelectionSet, v *query.Message) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")

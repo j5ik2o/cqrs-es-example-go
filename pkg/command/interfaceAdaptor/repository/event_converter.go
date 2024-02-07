@@ -8,16 +8,12 @@ import (
 )
 
 func EventConverter(m map[string]interface{}) (esa.Event, error) {
+	fmt.Printf("EventConverter: %v\n", m)
 	eventId := m["id"].(string)
 	groupChatId, err := models.ConvertGroupChatIdFromJSON(m["aggregate_id"].(map[string]interface{})).Get()
 	if err != nil {
 		return nil, err
 	}
-	groupChatName, err := models.ConvertGroupChatNameFromJSON(m["name"].(map[string]interface{})).Get()
-	if err != nil {
-		return nil, err
-	}
-	members := models.ConvertMembersFromJSON(m["members"].(map[string]interface{}))
 	executorId, err := models.ConvertUserAccountIdFromJSON(m["executor_id"].(map[string]interface{})).Get()
 	if err != nil {
 		return nil, err
@@ -26,6 +22,11 @@ func EventConverter(m map[string]interface{}) (esa.Event, error) {
 	occurredAt := uint64(m["occurred_at"].(float64))
 	switch m["type_name"].(string) {
 	case "GroupChatCreated":
+		groupChatName, err := models.ConvertGroupChatNameFromJSON(m["name"].(map[string]interface{})).Get()
+		if err != nil {
+			return nil, err
+		}
+		members := models.ConvertMembersFromJSON(m["members"].(map[string]interface{}))
 		event := events.NewGroupChatCreatedFrom(
 			eventId,
 			groupChatId,
@@ -61,7 +62,8 @@ func EventConverter(m map[string]interface{}) (esa.Event, error) {
 		return &event, nil
 	case "GroupChatMemberAdded":
 		memberObj := m["member"].(map[string]interface{})
-		memberId, err := models.ConvertMemberIdFromJSON(memberObj["member_id"].(map[string]interface{})).Get()
+		fmt.Printf("memberObj: %v\n", memberObj)
+		memberId, err := models.ConvertMemberIdFromJSON(memberObj["id"].(map[string]interface{})).Get()
 		if err != nil {
 			return nil, err
 		}
@@ -69,7 +71,7 @@ func EventConverter(m map[string]interface{}) (esa.Event, error) {
 		if err != nil {
 			return nil, err
 		}
-		role := models.Role(memberObj["role"].(int))
+		role := models.Role(memberObj["role"].(float64))
 		member := models.NewMember(memberId, userAccountId, role)
 		event := events.NewGroupChatMemberAddedFrom(
 			eventId,

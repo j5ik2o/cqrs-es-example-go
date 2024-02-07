@@ -30,6 +30,7 @@ func NewGroupChatMemberRemovedFrom(id string, aggregateId models.GroupChatId, us
 
 func (g *GroupChatMemberRemoved) ToJSON() map[string]interface{} {
 	return map[string]interface{}{
+		"type_name":      g.GetTypeName(),
 		"id":             g.id,
 		"aggregate_id":   g.aggregateId.ToJSON(),
 		"userAccount_id": g.userAccountId.ToJSON(),

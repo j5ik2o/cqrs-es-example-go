@@ -56,3 +56,16 @@ func (dao *GroupChatDaoImpl) AddMember(id *models.MemberId, aggregateId *models.
 	}
 	return nil
 }
+
+func (dao *GroupChatDaoImpl) InsertMessage(id *models.MessageId, groupChatId *models.GroupChatId, accountId *models.UserAccountId, text string, at time.Time) error {
+	stmt, err := dao.db.Prepare(`INSERT INTO messages (id, group_chat_id, account_id, text, created_at) VALUES (?, ?, ?, ?, ?)`)
+	if err != nil {
+		return err
+	}
+	dt := at.Format("2006-01-02 15:04:05")
+	_, err = stmt.Exec(id.String(), groupChatId.AsString(), accountId.AsString(), text, dt)
+	if err != nil {
+		return err
+	}
+	return nil
+}
