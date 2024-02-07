@@ -24,7 +24,7 @@ type Member struct {
 	// グループチャットID
 	GroupChatID string `json:"groupChatId"`
 	// アカウントID
-	AccountID string `json:"accountId"`
+	UserAccountID string `json:"userAccountId"`
 	// ロール
 	Role string `json:"role"`
 	// 作成日時
@@ -38,9 +38,16 @@ type Message struct {
 	// グループチャットID
 	GroupChatID string `json:"groupChatId"`
 	// アカウントID
-	AccountID string `json:"accountId"`
+	UserAccountID string `json:"userAccountId"`
 	// メッセージ本文
 	Text string `json:"text"`
 	// 作成日時
 	CreatedAt string `json:"createdAt"`
+}
+
+type QueryRoot struct {
+}
+
+// https://github.com/async-graphql/examples/blob/c8219078a4b7aa6d84d22e9b79f033088897be4b/poem/subscription-redis/src/main.rs
+type SubscriptionRoot struct {
 }

@@ -30,6 +30,7 @@ func NewGroupChatRenamedFrom(id string, aggregateId models.GroupChatId, name mod
 
 func (g *GroupChatRenamed) ToJSON() map[string]interface{} {
 	return map[string]interface{}{
+		"type_name":    g.GetTypeName(),
 		"id":           g.id,
 		"aggregate_id": g.aggregateId.ToJSON(),
 		"name":         g.name.ToJSON(),

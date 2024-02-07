@@ -45,7 +45,7 @@ type Member {
 	"""
 	アカウントID
 	"""
-	accountId: String!
+	userAccountId: String!
 	"""
 	ロール
 	"""
@@ -71,7 +71,7 @@ type Message {
 	"""
 	アカウントID
 	"""
-	accountId: String!
+	userAccountId: String!
 	"""
 	メッセージ本文
 	"""
@@ -96,67 +96,67 @@ type QueryRoot {
 	指定されたグループチャットIDのグループチャットを取得する。
 
 	# 引数
-	- `group_chat_id` - グループチャットID
-	- `account_id` - 閲覧アカウントID
+	- `groupChatId` - グループチャットID
+	- `userAccountId` - 閲覧アカウントID
 
 	# 戻り値
 	- `GroupChat` - グループチャット
 	"""
-	getGroupChat(groupChatId: String!, accountId: String!): GroupChat!
+	getGroupChat(groupChatId: String!, userAccountId: String!): GroupChat!
 	"""
 	指定されたアカウントIDが参加するグループチャット一覧を取得する。
 
 	# 引数
-	- `account_id` - 閲覧アカウントID
+	- `userAccountId` - 閲覧アカウントID
 
 	# 戻り値
 	- `Vec<GroupChat>` - グループチャット一覧
 	"""
-	getGroupChats(accountId: String!): [GroupChat!]!
+	getGroupChats(userAccountId: String!): [GroupChat!]!
 	"""
 	指定されたアカウントIDのメンバーを取得する
 
 	# 引数
-	- `group_chat_id` - グループチャットID
-	- `account_id` - 閲覧アカウントID
+	- `groupChatId` - グループチャットID
+	- `userAccountId` - 閲覧アカウントID
 
 	# 戻り値
 	- `Member` - [Member]
 	"""
-	getMember(groupChatId: String!, accountId: String!): Member!
+	getMember(groupChatId: String!, userAccountId: String!): Member!
 	"""
 	指定されたグループチャットIDのメンバー一覧を取得する
 
 	# 引数
-	- `group_chat_id` - グループチャットID
-	- `account_id` - 閲覧アカウントID
+	- `groupChatId` - グループチャットID
+	- `userAccountId` - 閲覧アカウントID
 
 	# 戻り値
 	- `Vec<Member>` - メンバー一覧
 	"""
-	getMembers(groupChatId: String!, accountId: String!): [Member!]!
+	getMembers(groupChatId: String!, userAccountId: String!): [Member!]!
 	"""
 	指定されたメッセージIDのメッセージを取得する
 
 	# 引数
-	- `message_id` - メッセージID
-	- `account_id` - 閲覧アカウントID
+	- `messageId` - メッセージID
+	- `userAccountId` - 閲覧アカウントID
 
 	# 戻り値
 	- `Message` - メッセージ
 	"""
-	getMessage(messageId: String!, accountId: String!): Message!
+	getMessage(messageId: String!, userAccountId: String!): Message!
 	"""
 	指定されたグループチャットIDのメッセージ一覧を取得する
 
 	# 引数
-	- `group_chat_id` - グループチャットID
-	- `account_id` - 閲覧アカウントID
+	- `groupChatId` - グループチャットID
+	- `userAccountId` - 閲覧アカウントID
 
 	# 戻り値
 	- `Vec<Message>` - メッセージ一覧
 	"""
-	getMessages(groupChatId: String!, accountId: String!): [Message!]!
+	getMessages(groupChatId: String!, userAccountId: String!): [Message!]!
 }
 
 

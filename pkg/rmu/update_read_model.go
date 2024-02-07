@@ -22,6 +22,7 @@ type ReadModelUpdater struct {
 type GroupChatDao interface {
 	Create(aggregateId *models.GroupChatId, name *models.GroupChatName, administratorId *models.UserAccountId, createdAt time.Time) error
 	AddMember(id *models.MemberId, aggregateId *models.GroupChatId, accountId *models.UserAccountId, role models.Role, at time.Time) error
+	InsertMessage(id *models.MessageId, id2 *models.GroupChatId, id3 *models.UserAccountId, text string, at time.Time) error
 }
 
 // NewReadModelUpdater は ReadModelUpdater を生成します。
@@ -39,6 +40,7 @@ func (r *ReadModelUpdater) UpdateReadModel(ctx context.Context, event dynamodbev
 		if err != nil {
 			return err
 		}
+		fmt.Printf("typeValueStr = %s\n", typeValueStr)
 		if strings.HasPrefix(typeValueStr, "GroupChat") {
 			event, err := convertGroupChatEvent(payloadBytes).Get()
 			if err != nil {
@@ -54,8 +56,18 @@ func (r *ReadModelUpdater) UpdateReadModel(ctx context.Context, event dynamodbev
 			case *events.GroupChatDeleted:
 			case *events.GroupChatRenamed:
 			case *events.GroupChatMemberAdded:
+				ev := event.(*events.GroupChatMemberAdded)
+				err2 := addMember(ev, r)
+				if err2 != nil {
+					return err2
+				}
 			case *events.GroupChatMemberRemoved:
 			case *events.GroupChatMessagePosted:
+				ev := event.(*events.GroupChatMessagePosted)
+				err2 := postMessage(ev, r)
+				if err2 != nil {
+					return err2
+				}
 			case *events.GroupChatMessageDeleted:
 			default:
 			}
@@ -69,6 +81,7 @@ func (r *ReadModelUpdater) UpdateReadModel(ctx context.Context, event dynamodbev
 }
 
 func createGroupChat(ev *events.GroupChatCreated, r *ReadModelUpdater) error {
+	fmt.Printf("createGroupChat: start: ev = %v\n", ev)
 	groupChatId := ev.GetAggregateId().(*models.GroupChatId)
 	name := ev.GetName()
 	executorId := ev.GetExecutorId()
@@ -77,6 +90,7 @@ func createGroupChat(ev *events.GroupChatCreated, r *ReadModelUpdater) error {
 	if err != nil {
 		return err
 	}
+
 	administrator := ev.GetMembers().GetAdministrator()
 	memberId := administrator.GetId()
 	accountId := administrator.GetUserAccountId()
@@ -84,6 +98,35 @@ func createGroupChat(ev *events.GroupChatCreated, r *ReadModelUpdater) error {
 	if err != nil {
 		return err
 	}
+	fmt.Printf("createGroupChat: finished\n")
+	return nil
+}
+
+func addMember(ev *events.GroupChatMemberAdded, r *ReadModelUpdater) error {
+	groupChatId := ev.GetAggregateId().(*models.GroupChatId)
+	memberId := ev.GetMember().GetId()
+	accountId := ev.GetMember().GetUserAccountId()
+	occurredAt := convertToTime(ev.GetOccurredAt())
+	err := r.dao.AddMember(memberId, groupChatId, accountId, models.AdminRole, occurredAt)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("createGroupChat: finished\n")
+	return nil
+}
+
+func postMessage(ev *events.GroupChatMessagePosted, r *ReadModelUpdater) error {
+	fmt.Printf("postMessage: start: ev = %v\n", ev)
+	messageId := ev.GetMessage().GetId()
+	groupChatId := ev.GetAggregateId().(*models.GroupChatId)
+	accountId := ev.GetMessage().GetSenderId()
+	text := ev.GetMessage().GetText()
+	createdAt := convertToTime(ev.GetOccurredAt())
+	err := r.dao.InsertMessage(messageId, groupChatId, accountId, text, createdAt)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("postMessage: finished\n")
 	return nil
 }
 
