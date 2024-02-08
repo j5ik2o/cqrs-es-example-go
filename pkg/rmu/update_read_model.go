@@ -20,9 +20,10 @@ type ReadModelUpdater struct {
 }
 
 type GroupChatDao interface {
-	Create(aggregateId *models.GroupChatId, name *models.GroupChatName, administratorId *models.UserAccountId, createdAt time.Time) error
-	AddMember(id *models.MemberId, aggregateId *models.GroupChatId, accountId *models.UserAccountId, role models.Role, at time.Time) error
+	InsertGroupChat(aggregateId *models.GroupChatId, name *models.GroupChatName, administratorId *models.UserAccountId, createdAt time.Time) error
+	InsertMember(id *models.MemberId, aggregateId *models.GroupChatId, accountId *models.UserAccountId, role models.Role, at time.Time) error
 	InsertMessage(id *models.MessageId, id2 *models.GroupChatId, id3 *models.UserAccountId, text string, at time.Time) error
+	DeleteGroupChat(id *models.GroupChatId, at time.Time) error
 }
 
 // NewReadModelUpdater は ReadModelUpdater を生成します。
@@ -54,7 +55,17 @@ func (r *ReadModelUpdater) UpdateReadModel(ctx context.Context, event dynamodbev
 					return err2
 				}
 			case *events.GroupChatDeleted:
+				ev := event.(*events.GroupChatDeleted)
+				err2 := deleteGroupChat(ev, r)
+				if err2 != nil {
+					return err2
+				}
 			case *events.GroupChatRenamed:
+				ev := event.(*events.GroupChatRenamed)
+				err2 := renameGroupChat(ev, r)
+				if err2 != nil {
+					return err2
+				}
 			case *events.GroupChatMemberAdded:
 				ev := event.(*events.GroupChatMemberAdded)
 				err2 := addMember(ev, r)
@@ -62,6 +73,11 @@ func (r *ReadModelUpdater) UpdateReadModel(ctx context.Context, event dynamodbev
 					return err2
 				}
 			case *events.GroupChatMemberRemoved:
+				ev := event.(*events.GroupChatMemberRemoved)
+				err2 := removeMember(ev, r)
+				if err2 != nil {
+					return err2
+				}
 			case *events.GroupChatMessagePosted:
 				ev := event.(*events.GroupChatMessagePosted)
 				err2 := postMessage(ev, r)
@@ -69,6 +85,11 @@ func (r *ReadModelUpdater) UpdateReadModel(ctx context.Context, event dynamodbev
 					return err2
 				}
 			case *events.GroupChatMessageDeleted:
+				ev := event.(*events.GroupChatMessageDeleted)
+				err2 := deleteMessage(ev, r)
+				if err2 != nil {
+					return err2
+				}
 			default:
 			}
 		}
@@ -86,7 +107,7 @@ func createGroupChat(ev *events.GroupChatCreated, r *ReadModelUpdater) error {
 	name := ev.GetName()
 	executorId := ev.GetExecutorId()
 	occurredAt := convertToTime(ev.GetOccurredAt())
-	err := r.dao.Create(groupChatId, name, executorId, occurredAt)
+	err := r.dao.InsertGroupChat(groupChatId, name, executorId, occurredAt)
 	if err != nil {
 		return err
 	}
@@ -94,11 +115,25 @@ func createGroupChat(ev *events.GroupChatCreated, r *ReadModelUpdater) error {
 	administrator := ev.GetMembers().GetAdministrator()
 	memberId := administrator.GetId()
 	accountId := administrator.GetUserAccountId()
-	err = r.dao.AddMember(memberId, groupChatId, accountId, models.AdminRole, occurredAt)
+	err = r.dao.InsertMember(memberId, groupChatId, accountId, models.AdminRole, occurredAt)
 	if err != nil {
 		return err
 	}
 	fmt.Printf("createGroupChat: finished\n")
+	return nil
+}
+
+func deleteGroupChat(ev *events.GroupChatDeleted, r *ReadModelUpdater) error {
+	groupChatId := ev.GetAggregateId().(*models.GroupChatId)
+	occurredAt := convertToTime(ev.GetOccurredAt())
+	err := r.dao.DeleteGroupChat(groupChatId, occurredAt)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func renameGroupChat(ev *events.GroupChatRenamed, r *ReadModelUpdater) error {
 	return nil
 }
 
@@ -108,11 +143,15 @@ func addMember(ev *events.GroupChatMemberAdded, r *ReadModelUpdater) error {
 	accountId := ev.GetMember().GetUserAccountId()
 	role := ev.GetMember().GetRole()
 	occurredAt := convertToTime(ev.GetOccurredAt())
-	err := r.dao.AddMember(memberId, groupChatId, accountId, role, occurredAt)
+	err := r.dao.InsertMember(memberId, groupChatId, accountId, role, occurredAt)
 	if err != nil {
 		return err
 	}
 	fmt.Printf("createGroupChat: finished\n")
+	return nil
+}
+
+func removeMember(ev *events.GroupChatMemberRemoved, r *ReadModelUpdater) error {
 	return nil
 }
 
@@ -128,6 +167,10 @@ func postMessage(ev *events.GroupChatMessagePosted, r *ReadModelUpdater) error {
 		return err
 	}
 	fmt.Printf("postMessage: finished\n")
+	return nil
+}
+
+func deleteMessage(ev *events.GroupChatMessageDeleted, r *ReadModelUpdater) error {
 	return nil
 }
 
