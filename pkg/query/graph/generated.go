@@ -53,6 +53,7 @@ type ComplexityRoot struct {
 		ID        func(childComplexity int) int
 		Name      func(childComplexity int) int
 		OwnerID   func(childComplexity int) int
+		UpdatedAt func(childComplexity int) int
 	}
 
 	Member struct {
@@ -60,6 +61,7 @@ type ComplexityRoot struct {
 		GroupChatID   func(childComplexity int) int
 		ID            func(childComplexity int) int
 		Role          func(childComplexity int) int
+		UpdatedAt     func(childComplexity int) int
 		UserAccountID func(childComplexity int) int
 	}
 
@@ -68,6 +70,7 @@ type ComplexityRoot struct {
 		GroupChatID   func(childComplexity int) int
 		ID            func(childComplexity int) int
 		Text          func(childComplexity int) int
+		UpdatedAt     func(childComplexity int) int
 		UserAccountID func(childComplexity int) int
 	}
 
@@ -144,6 +147,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.GroupChat.OwnerID(childComplexity), true
 
+	case "GroupChat.updatedAt":
+		if e.complexity.GroupChat.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.GroupChat.UpdatedAt(childComplexity), true
+
 	case "Member.createdAt":
 		if e.complexity.Member.CreatedAt == nil {
 			break
@@ -171,6 +181,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Member.Role(childComplexity), true
+
+	case "Member.updatedAt":
+		if e.complexity.Member.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.Member.UpdatedAt(childComplexity), true
 
 	case "Member.userAccountId":
 		if e.complexity.Member.UserAccountID == nil {
@@ -206,6 +223,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Message.Text(childComplexity), true
+
+	case "Message.updatedAt":
+		if e.complexity.Message.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.Message.UpdatedAt(childComplexity), true
 
 	case "Message.userAccountId":
 		if e.complexity.Message.UserAccountID == nil {
@@ -802,6 +826,50 @@ func (ec *executionContext) fieldContext_GroupChat_createdAt(ctx context.Context
 	return fc, nil
 }
 
+func (ec *executionContext) _GroupChat_updatedAt(ctx context.Context, field graphql.CollectedField, obj *query.GroupChat) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GroupChat_updatedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNNaiveDateTime2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_GroupChat_updatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "GroupChat",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type NaiveDateTime does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Member_id(ctx context.Context, field graphql.CollectedField, obj *query.Member) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Member_id(ctx, field)
 	if err != nil {
@@ -1010,6 +1078,50 @@ func (ec *executionContext) _Member_createdAt(ctx context.Context, field graphql
 }
 
 func (ec *executionContext) fieldContext_Member_createdAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Member",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type NaiveDateTime does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Member_updatedAt(ctx context.Context, field graphql.CollectedField, obj *query.Member) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Member_updatedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNNaiveDateTime2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Member_updatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Member",
 		Field:      field,
@@ -1242,6 +1354,50 @@ func (ec *executionContext) fieldContext_Message_createdAt(ctx context.Context, 
 	return fc, nil
 }
 
+func (ec *executionContext) _Message_updatedAt(ctx context.Context, field graphql.CollectedField, obj *query.Message) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Message_updatedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNNaiveDateTime2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Message_updatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Message",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type NaiveDateTime does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _QueryRoot_getGroupChat(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_QueryRoot_getGroupChat(ctx, field)
 	if err != nil {
@@ -1289,6 +1445,8 @@ func (ec *executionContext) fieldContext_QueryRoot_getGroupChat(ctx context.Cont
 				return ec.fieldContext_GroupChat_ownerId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_GroupChat_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_GroupChat_updatedAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type GroupChat", field.Name)
 		},
@@ -1354,6 +1512,8 @@ func (ec *executionContext) fieldContext_QueryRoot_getGroupChats(ctx context.Con
 				return ec.fieldContext_GroupChat_ownerId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_GroupChat_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_GroupChat_updatedAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type GroupChat", field.Name)
 		},
@@ -1421,6 +1581,8 @@ func (ec *executionContext) fieldContext_QueryRoot_getMember(ctx context.Context
 				return ec.fieldContext_Member_role(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Member_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Member_updatedAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Member", field.Name)
 		},
@@ -1488,6 +1650,8 @@ func (ec *executionContext) fieldContext_QueryRoot_getMembers(ctx context.Contex
 				return ec.fieldContext_Member_role(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Member_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Member_updatedAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Member", field.Name)
 		},
@@ -1555,6 +1719,8 @@ func (ec *executionContext) fieldContext_QueryRoot_getMessage(ctx context.Contex
 				return ec.fieldContext_Message_text(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Message_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Message_updatedAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Message", field.Name)
 		},
@@ -1622,6 +1788,8 @@ func (ec *executionContext) fieldContext_QueryRoot_getMessages(ctx context.Conte
 				return ec.fieldContext_Message_text(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Message_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Message_updatedAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Message", field.Name)
 		},
@@ -3650,6 +3818,11 @@ func (ec *executionContext) _GroupChat(ctx context.Context, sel ast.SelectionSet
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "updatedAt":
+			out.Values[i] = ec._GroupChat_updatedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -3709,6 +3882,11 @@ func (ec *executionContext) _Member(ctx context.Context, sel ast.SelectionSet, o
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "updatedAt":
+			out.Values[i] = ec._Member_updatedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -3765,6 +3943,11 @@ func (ec *executionContext) _Message(ctx context.Context, sel ast.SelectionSet, 
 			}
 		case "createdAt":
 			out.Values[i] = ec._Message_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updatedAt":
+			out.Values[i] = ec._Message_updatedAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

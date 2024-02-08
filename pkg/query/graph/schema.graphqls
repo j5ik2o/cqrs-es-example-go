@@ -26,6 +26,10 @@ type GroupChat {
 	作成日時
 	"""
 	createdAt: NaiveDateTime!
+	"""
+	更新日時
+  """
+  updatedAt: NaiveDateTime!
 }
 
 
@@ -54,6 +58,10 @@ type Member {
 	作成日時
 	"""
 	createdAt: NaiveDateTime!
+	"""
+	更新日時
+  """
+  updatedAt: NaiveDateTime!
 }
 
 """
@@ -80,6 +88,10 @@ type Message {
 	作成日時
 	"""
 	createdAt: NaiveDateTime!
+	"""
+	更新日時
+  """
+  updatedAt: NaiveDateTime!
 }
 
 """

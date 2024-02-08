@@ -11,14 +11,12 @@ type GroupChatDaoImpl struct {
 	db *sqlx.DB
 }
 
-// NewGroupChatDaoImpl は GroupChatDaoImpl を生成します。
 func NewGroupChatDaoImpl(db *sqlx.DB) *GroupChatDaoImpl {
 	return &GroupChatDaoImpl{db}
 }
 
-// Create は DB上にグループチャットリードモデルを作成します。
-func (dao *GroupChatDaoImpl) Create(aggregateId *models.GroupChatId, name *models.GroupChatName, administratorId *models.UserAccountId, createdAt time.Time) error {
-	stmt, err := dao.db.Prepare(`INSERT INTO group_chats (id, name, owner_id, created_at) VALUES(?,?,?,?)`)
+func (dao *GroupChatDaoImpl) InsertGroupChat(aggregateId *models.GroupChatId, name *models.GroupChatName, administratorId *models.UserAccountId, createdAt time.Time) error {
+	stmt, err := dao.db.Prepare(`INSERT INTO group_chats (id, disabled, name, owner_id, created_at, updated_at) VALUES(?, ?, ?, ?, ?, ?)`)
 	defer func(stmt *sql.Stmt) {
 		err := stmt.Close()
 		if err != nil {
@@ -29,21 +27,82 @@ func (dao *GroupChatDaoImpl) Create(aggregateId *models.GroupChatId, name *model
 		return err
 	}
 	dt := createdAt.Format("2006-01-02 15:04:05")
-	_, err = stmt.Exec(aggregateId.AsString(), name.String(), administratorId.AsString(), dt)
+	_, err = stmt.Exec(aggregateId.AsString(), false, name.String(), administratorId.AsString(), dt, dt)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-// AddMember は DB上にメンバーリードモデルを追加します。
-func (dao *GroupChatDaoImpl) AddMember(id *models.MemberId, aggregateId *models.GroupChatId, accountId *models.UserAccountId, role models.Role, at time.Time) error {
-	stmt, err := dao.db.Prepare(`INSERT INTO members (id, group_chat_id, account_id, role, created_at) VALUES (?, ?, ?, ?, ?)`)
+func (dao *GroupChatDaoImpl) DeleteGroupChat(aggregateId *models.GroupChatId, at time.Time) error {
+	stmt, err := dao.db.Prepare(`UPDATE group_chats SET disabled = ?, updatedAt = ? WHERE id = ?`)
+	defer func(stmt *sql.Stmt) {
+		err := stmt.Close()
+		if err != nil {
+			panic(err.Error())
+		}
+	}(stmt)
 	if err != nil {
 		return err
 	}
 	dt := at.Format("2006-01-02 15:04:05")
-	_, err = stmt.Exec(id.String(), aggregateId.AsString(), accountId.AsString(), role.String(), dt)
+	_, err = stmt.Exec(true, dt, aggregateId.AsString())
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (dao *GroupChatDaoImpl) UpdateName(aggregateId *models.GroupChatId, name *models.GroupChatName, at time.Time) error {
+	stmt, err := dao.db.Prepare(`UPDATE group_chats SET name = ?, updatedAt = ? WHERE id = ?`)
+	defer func(stmt *sql.Stmt) {
+		err := stmt.Close()
+		if err != nil {
+			panic(err.Error())
+		}
+	}(stmt)
+	if err != nil {
+		return err
+	}
+	dt := at.Format("2006-01-02 15:04:05")
+	_, err = stmt.Exec(name.String(), dt, aggregateId.AsString())
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (dao *GroupChatDaoImpl) InsertMember(id *models.MemberId, aggregateId *models.GroupChatId, accountId *models.UserAccountId, role models.Role, at time.Time) error {
+	stmt, err := dao.db.Prepare(`INSERT INTO members (id, group_chat_id, account_id, role, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)`)
+	defer func(stmt *sql.Stmt) {
+		err := stmt.Close()
+		if err != nil {
+			panic(err.Error())
+		}
+	}(stmt)
+	if err != nil {
+		return err
+	}
+	dt := at.Format("2006-01-02 15:04:05")
+	_, err = stmt.Exec(id.String(), aggregateId.AsString(), accountId.AsString(), role.String(), dt, dt)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (dao *GroupChatDaoImpl) DeleteMember(groupChatId *models.GroupChatId, userAccountId *models.UserAccountId) error {
+	stmt, err := dao.db.Prepare(`DELETE FROM members WHERE group_chat_id = ? AND account_id = ?`)
+	defer func(stmt *sql.Stmt) {
+		err := stmt.Close()
+		if err != nil {
+			panic(err.Error())
+		}
+	}(stmt)
+	if err != nil {
+		return err
+	}
+	_, err = stmt.Exec(groupChatId.AsString(), userAccountId.AsString())
 	if err != nil {
 		return err
 	}
@@ -51,12 +110,37 @@ func (dao *GroupChatDaoImpl) AddMember(id *models.MemberId, aggregateId *models.
 }
 
 func (dao *GroupChatDaoImpl) InsertMessage(id *models.MessageId, groupChatId *models.GroupChatId, accountId *models.UserAccountId, text string, at time.Time) error {
-	stmt, err := dao.db.Prepare(`INSERT INTO messages (id, group_chat_id, account_id, text, created_at) VALUES (?, ?, ?, ?, ?)`)
+	stmt, err := dao.db.Prepare(`INSERT INTO messages (id, disabled, group_chat_id, account_id, text, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)`)
+	defer func(stmt *sql.Stmt) {
+		err := stmt.Close()
+		if err != nil {
+			panic(err.Error())
+		}
+	}(stmt)
 	if err != nil {
 		return err
 	}
 	dt := at.Format("2006-01-02 15:04:05")
-	_, err = stmt.Exec(id.String(), groupChatId.AsString(), accountId.AsString(), text, dt)
+	_, err = stmt.Exec(id.String(), false, groupChatId.AsString(), accountId.AsString(), text, dt, dt)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (dao *GroupChatDaoImpl) DeleteMessage(id *models.MessageId, at time.Time) error {
+	stmt, err := dao.db.Prepare(`UPDATE messages SET disabled = ?, updatedAt = ? WHERE id = ?`)
+	defer func(stmt *sql.Stmt) {
+		err := stmt.Close()
+		if err != nil {
+			panic(err.Error())
+		}
+	}(stmt)
+	if err != nil {
+		return err
+	}
+	dt := at.Format("2006-01-02 15:04:05")
+	_, err = stmt.Exec(true, dt, id.String())
 	if err != nil {
 		return err
 	}

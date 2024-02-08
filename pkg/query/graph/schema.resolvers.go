@@ -13,7 +13,7 @@ import (
 
 // GetGroupChat is the resolver for the getGroupChat field.
 func (r *queryRootResolver) GetGroupChat(ctx context.Context, groupChatID string, userAccountID string) (*query.GroupChat, error) {
-	stmt, err := r.db.Prepare(`SELECT gc.id, gc.name, gc.owner_id, gc.created_at FROM group_chats AS gc JOIN members AS m ON gc.id = m.group_chat_id WHERE m.group_chat_id = ? AND m.account_id = ?`)
+	stmt, err := r.db.Prepare(`SELECT gc.id, gc.name, gc.owner_id, gc.created_at, gc.updated_at FROM group_chats AS gc JOIN members AS m ON gc.id = m.group_chat_id WHERE gc.disabled = 'false' AND m.group_chat_id = ? AND m.account_id = ?`)
 	defer stmt.Close()
 	if err != nil {
 		return nil, err
@@ -24,7 +24,8 @@ func (r *queryRootResolver) GetGroupChat(ctx context.Context, groupChatID string
 		var name string
 		var ownerID string
 		var createdAt time.Time
-		err = row.Scan(&id, &name, &ownerID, &createdAt)
+		var updatedAt time.Time
+		err = row.Scan(&id, &name, &ownerID, &createdAt, &updatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -33,6 +34,7 @@ func (r *queryRootResolver) GetGroupChat(ctx context.Context, groupChatID string
 			Name:      name,
 			OwnerID:   ownerID,
 			CreatedAt: createdAt.String(),
+			UpdatedAt: updatedAt.String(),
 		}, nil
 	}
 	return nil, nil
@@ -40,7 +42,7 @@ func (r *queryRootResolver) GetGroupChat(ctx context.Context, groupChatID string
 
 // GetGroupChats is the resolver for the getGroupChats field.
 func (r *queryRootResolver) GetGroupChats(ctx context.Context, userAccountID string) ([]*query.GroupChat, error) {
-	stmt, err := r.db.Prepare(`SELECT gc.id, gc.name, gc.owner_id, gc.created_at FROM group_chats AS gc JOIN members AS m ON gc.id = m.group_chat_id WHERE m.account_id = ?`)
+	stmt, err := r.db.Prepare(`SELECT gc.id, gc.name, gc.owner_id, gc.created_at, gc.updated_at FROM group_chats AS gc JOIN members AS m ON gc.id = m.group_chat_id WHERE gc.disabled = 'false' AND m.account_id = ?`)
 	defer stmt.Close()
 	if err != nil {
 		return nil, err
@@ -57,7 +59,8 @@ func (r *queryRootResolver) GetGroupChats(ctx context.Context, userAccountID str
 		var name string
 		var ownerID string
 		var createdAt time.Time
-		err = rows.Scan(&id, &name, &ownerID, &createdAt)
+		var updatedAt time.Time
+		err = rows.Scan(&id, &name, &ownerID, &createdAt, &updatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -66,6 +69,7 @@ func (r *queryRootResolver) GetGroupChats(ctx context.Context, userAccountID str
 			Name:      name,
 			OwnerID:   ownerID,
 			CreatedAt: createdAt.String(),
+			UpdatedAt: updatedAt.String(),
 		})
 
 	}
@@ -74,7 +78,7 @@ func (r *queryRootResolver) GetGroupChats(ctx context.Context, userAccountID str
 
 // GetMember is the resolver for the getMember field.
 func (r *queryRootResolver) GetMember(ctx context.Context, groupChatID string, userAccountID string) (*query.Member, error) {
-	stmt, err := r.db.Prepare(`SELECT id, group_chat_id, account_id, role, created_at FROM members WHERE group_chat_id = ? AND account_id = ?`)
+	stmt, err := r.db.Prepare(`SELECT m.id, m.group_chat_id, m.account_id, m.role, m.created_at, m.updated_at FROM group_chats AS gc JOIN members AS m ON gc.id = m.group_chat_id WHERE gc.disabled = 'false' AND m.group_chat_id = ? AND m.account_id = ?`)
 	defer stmt.Close()
 	if err != nil {
 		return nil, err
@@ -86,7 +90,8 @@ func (r *queryRootResolver) GetMember(ctx context.Context, groupChatID string, u
 		var userAccountId string
 		var role string
 		var createdAt time.Time
-		err = row.Scan(&id, &groupChatId, &userAccountId, &role, &createdAt)
+		var updatedAt time.Time
+		err = row.Scan(&id, &groupChatId, &userAccountId, &role, &createdAt, &updatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -96,6 +101,7 @@ func (r *queryRootResolver) GetMember(ctx context.Context, groupChatID string, u
 			UserAccountID: userAccountId,
 			Role:          role,
 			CreatedAt:     createdAt.String(),
+			UpdatedAt:     updatedAt.String(),
 		}, nil
 	}
 	return nil, nil
@@ -103,7 +109,7 @@ func (r *queryRootResolver) GetMember(ctx context.Context, groupChatID string, u
 
 // GetMembers is the resolver for the getMembers field.
 func (r *queryRootResolver) GetMembers(ctx context.Context, groupChatID string, userAccountID string) ([]*query.Member, error) {
-	stmt, err := r.db.Prepare(`SELECT id, group_chat_id, account_id, role, created_at FROM members WHERE group_chat_id = ? AND EXISTS (SELECT 1 FROM members AS m2 WHERE m2.group_chat_id = members.group_chat_id AND m2.account_id = ?)`)
+	stmt, err := r.db.Prepare(`SELECT m.id, m.group_chat_id, m.account_id, m.role, m.created_at, m.updated_at FROM group_chats AS gc JOIN members AS m ON gc.id = m.group_chat_id WHERE gc.disabled = 'false' AND m.group_chat_id = ? AND EXISTS (SELECT 1 FROM members AS m2 WHERE m2.group_chat_id = m.group_chat_id AND m2.account_id = ?)`)
 	defer stmt.Close()
 	if err != nil {
 		return nil, err
@@ -121,7 +127,8 @@ func (r *queryRootResolver) GetMembers(ctx context.Context, groupChatID string, 
 		var userAccountId string
 		var role string
 		var createdAt time.Time
-		err = rows.Scan(&id, &groupChatId, &userAccountId, &role, &createdAt)
+		var updatedAt time.Time
+		err = rows.Scan(&id, &groupChatId, &userAccountId, &role, &createdAt, &updatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -131,6 +138,7 @@ func (r *queryRootResolver) GetMembers(ctx context.Context, groupChatID string, 
 			UserAccountID: userAccountId,
 			Role:          role,
 			CreatedAt:     createdAt.String(),
+			UpdatedAt:     updatedAt.String(),
 		})
 
 	}
@@ -139,7 +147,7 @@ func (r *queryRootResolver) GetMembers(ctx context.Context, groupChatID string, 
 
 // GetMessage is the resolver for the getMessage field.
 func (r *queryRootResolver) GetMessage(ctx context.Context, messageID string, userAccountID string) (*query.Message, error) {
-	stmt, err := r.db.Prepare(`SELECT m.id, m.group_chat_id, m.account_id, m.text, m.created_at FROM ( SELECT * FROM messages WHERE id = ? ) AS m WHERE EXISTS( SELECT 1 FROM members AS mem WHERE mem.group_chat_id = m.group_chat_id AND mem.account_id = ? )`)
+	stmt, err := r.db.Prepare(`SELECT m.id, m.group_chat_id, m.account_id, m.text, m.created_at, m.updated_at FROM group_chats AS gc JOIN messages AS m ON gc.id = m.group_chat_id WHERE gc.disabled = 'false' AND m.disabled = 'false' AND m.id = ? AND EXISTS ( SELECT 1 FROM members AS mem WHERE mem.group_chat_id = m.group_chat_id AND mem.account_id = ? )`)
 	defer stmt.Close()
 	if err != nil {
 		return nil, err
@@ -151,7 +159,8 @@ func (r *queryRootResolver) GetMessage(ctx context.Context, messageID string, us
 		var userAccountId string
 		var text string
 		var createdAt time.Time
-		err = row.Scan(&id, &groupChatId, &userAccountId, &text, &createdAt)
+		var updatedAt time.Time
+		err = row.Scan(&id, &groupChatId, &userAccountId, &text, &createdAt, &updatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -161,6 +170,7 @@ func (r *queryRootResolver) GetMessage(ctx context.Context, messageID string, us
 			UserAccountID: userAccountId,
 			Text:          text,
 			CreatedAt:     createdAt.String(),
+			UpdatedAt:     updatedAt.String(),
 		}, nil
 	}
 	return nil, nil
@@ -168,7 +178,7 @@ func (r *queryRootResolver) GetMessage(ctx context.Context, messageID string, us
 
 // GetMessages is the resolver for the getMessages field.
 func (r *queryRootResolver) GetMessages(ctx context.Context, groupChatID string, userAccountID string) ([]*query.Message, error) {
-	stmt, err := r.db.Prepare(`SELECT m.id, m.group_chat_id, m.account_id, m.text, m.created_at FROM messages AS m WHERE m.group_chat_id = ? AND EXISTS (SELECT 1 FROM members AS mem WHERE mem.group_chat_id = m.group_chat_id AND mem.account_id = ?)`)
+	stmt, err := r.db.Prepare(`SELECT m.id, m.group_chat_id, m.account_id, m.text, m.created_at, m.updated_at FROM group_chats AS gc JOIN messages AS m ON gc.id = m.group_chat_id WHERE gc.disabled = 'false' AND m.disabled = 'false' AND m.group_chat_id = ? AND EXISTS (SELECT 1 FROM members AS mem WHERE mem.group_chat_id = m.group_chat_id AND mem.account_id = ?)`)
 	defer stmt.Close()
 	if err != nil {
 		return nil, err
@@ -186,7 +196,8 @@ func (r *queryRootResolver) GetMessages(ctx context.Context, groupChatID string,
 		var userAccountId string
 		var text string
 		var createdAt time.Time
-		err = rows.Scan(&id, &groupChatId, &userAccountId, &text, &createdAt)
+		var updatedAt time.Time
+		err = rows.Scan(&id, &groupChatId, &userAccountId, &text, &createdAt, &updatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -196,6 +207,7 @@ func (r *queryRootResolver) GetMessages(ctx context.Context, groupChatID string,
 			UserAccountID: userAccountId,
 			Text:          text,
 			CreatedAt:     createdAt.String(),
+			UpdatedAt:     updatedAt.String(),
 		})
 
 	}

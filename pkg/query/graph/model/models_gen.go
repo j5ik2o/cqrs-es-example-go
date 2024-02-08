@@ -15,6 +15,8 @@ type GroupChat struct {
 	OwnerID string `json:"ownerId"`
 	// 作成日時
 	CreatedAt string `json:"createdAt"`
+	// 更新日時
+	UpdatedAt string `json:"updatedAt"`
 }
 
 // メンバーリードモデル
@@ -29,6 +31,8 @@ type Member struct {
 	Role string `json:"role"`
 	// 作成日時
 	CreatedAt string `json:"createdAt"`
+	// 更新日時
+	UpdatedAt string `json:"updatedAt"`
 }
 
 // メッセージリードモデル
@@ -43,6 +47,8 @@ type Message struct {
 	Text string `json:"text"`
 	// 作成日時
 	CreatedAt string `json:"createdAt"`
+	// 更新日時
+	UpdatedAt string `json:"updatedAt"`
 }
 
 type QueryRoot struct {
