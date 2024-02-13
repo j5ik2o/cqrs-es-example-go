@@ -95,7 +95,7 @@ var localRmuCmd = &cobra.Command{
 			panic(err.Error())
 		}
 		dao := rmu.NewGroupChatDaoImpl(db)
-		readModelUpdater := rmu.NewReadModelUpdater(dao)
+		readModelUpdater := rmu.NewReadModelUpdater(&dao)
 
 		for {
 			err := streamDriver(dynamodbClient, dynamodbStreamsClient, journalTableName, streamMaxItemCount, &readModelUpdater)
