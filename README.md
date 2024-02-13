@@ -49,19 +49,28 @@ ARCH=arm64
  Container read-api-server-1  Started
 ```
 
-#### Creating a Group Chat
+#### Testing
 
 ```shell
-$ make create-group-chat
-WRITE_API_SERVER_BASE_URL=http://localhost:18080 ./tools/scripts/curl-post-create-group-chat.sh
-{"group_chat_id":"GroupChat-01HGDR3R6KFHRHTF0K54GMW5XF"}%
-```
-
-#### Getting a Group Chat
-
-```shell
-$ GROUP_CHAT_ID=GroupChat-01HGDR3R6KFHRHTF0K54GMW5XF make get-group-chat
-{"data":{"getGroupChat":{"id":"GroupChat-01HGDR3R6KFHRHTF0K54GMW5XF"}}}%
+$ make verify-group-chat
+ADMIN_ID="UserAccount-01H42K4ABWQ5V2XQEP3A48VE0Z" \
+        WRITE_API_SERVER_BASE_URL=http://localhost:18080 \
+        READ_API_SERVER_BASE_URL=http://localhost:18082 \
+        ./tools/scripts/verify-group-chat.sh
+{"group_chat_id":"GroupChat-01HPG4EV94HMPT08GZS0ZWW0VJ"}
+GroupChat:
+{
+  "data": {
+    "getGroupChat": {
+      "id": "GroupChat-01HPG4EV94HMPT08GZS0ZWW0VJ",
+      "name": "group-chat-example-1",
+      "ownerId": "UserAccount-01H42K4ABWQ5V2XQEP3A48VE0Z",
+      "createdAt": "2024-02-13 02:24:12 +0000 UTC",
+      "updatedAt": "2024-02-13 02:24:12 +0000 UTC"
+    }
+  }
+}
+...
 ```
 
 ## Links
