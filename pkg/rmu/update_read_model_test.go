@@ -42,7 +42,7 @@ func TestUpdateReadModel(t *testing.T) {
 	var parsed dynamodbevents.DynamoDBEvent
 	err = json.Unmarshal(eventData, &parsed)
 	require.NoError(t, err)
-	readModelUpdater := NewReadModelUpdater(dao)
+	readModelUpdater := NewReadModelUpdater(&dao)
 	err = readModelUpdater.UpdateReadModel(context.Background(), parsed)
 	require.NoError(t, err)
 

@@ -11,8 +11,8 @@ type GroupChatDaoImpl struct {
 	db *sqlx.DB
 }
 
-func NewGroupChatDaoImpl(db *sqlx.DB) *GroupChatDaoImpl {
-	return &GroupChatDaoImpl{db}
+func NewGroupChatDaoImpl(db *sqlx.DB) GroupChatDaoImpl {
+	return GroupChatDaoImpl{db}
 }
 
 func (dao *GroupChatDaoImpl) InsertGroupChat(aggregateId *models.GroupChatId, name *models.GroupChatName, administratorId *models.UserAccountId, createdAt time.Time) error {

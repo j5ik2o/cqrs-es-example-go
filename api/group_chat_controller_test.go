@@ -307,8 +307,8 @@ type RequestSender struct {
 	engine *gin.Engine
 }
 
-func NewRequestSender(engine *gin.Engine) *RequestSender {
-	return &RequestSender{
+func NewRequestSender(engine *gin.Engine) RequestSender {
+	return RequestSender{
 		engine: engine,
 	}
 }

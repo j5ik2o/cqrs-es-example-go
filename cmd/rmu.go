@@ -31,7 +31,7 @@ var rmuCmd = &cobra.Command{
 			panic(err.Error())
 		}
 		dao := rmu.NewGroupChatDaoImpl(db)
-		readModelUpdater := rmu.NewReadModelUpdater(dao)
+		readModelUpdater := rmu.NewReadModelUpdater(&dao)
 		lambda.Start(readModelUpdater.UpdateReadModel)
 	},
 }
