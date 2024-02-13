@@ -32,8 +32,8 @@ type GroupChatDao interface {
 }
 
 // NewReadModelUpdater is a constructor for ReadModelUpdater.
-func NewReadModelUpdater(dao GroupChatDao) *ReadModelUpdater {
-	return &ReadModelUpdater{dao}
+func NewReadModelUpdater(dao GroupChatDao) ReadModelUpdater {
+	return ReadModelUpdater{dao}
 }
 
 // UpdateReadModel processes events from DynamoDB stream and updates the read model.

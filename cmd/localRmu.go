@@ -98,7 +98,7 @@ var localRmuCmd = &cobra.Command{
 		readModelUpdater := rmu.NewReadModelUpdater(dao)
 
 		for {
-			err := streamDriver(dynamodbClient, dynamodbStreamsClient, journalTableName, streamMaxItemCount, readModelUpdater)
+			err := streamDriver(dynamodbClient, dynamodbStreamsClient, journalTableName, streamMaxItemCount, &readModelUpdater)
 			if err != nil {
 				fmt.Printf("An error has occurred, but stream processing is restarted. "+
 					"If this error persists, the read model condition may be incorrect.: error = %v\n", err)

@@ -4,6 +4,7 @@ import (
 	"context"
 	"cqrs-es-example-go/api"
 	"cqrs-es-example-go/pkg/command/interfaceAdaptor/repository"
+	"cqrs-es-example-go/pkg/command/useCase"
 	"fmt"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -86,7 +87,8 @@ var writeApiCmd = &cobra.Command{
 		}
 
 		groupChatRepository := repository.NewGroupChatRepository(eventStore)
-		groupChatController := api.NewGroupChatController(&groupChatRepository)
+		groupChatCommandProcessor := useCase.NewGroupChatCommandProcessor(&groupChatRepository)
+		groupChatController := api.NewGroupChatController(groupChatCommandProcessor)
 
 		engine := gin.Default()
 
