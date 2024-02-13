@@ -8,110 +8,19 @@ import (
 	"net/http"
 )
 
-type CreateGroupChatRequestBody struct {
-	Name       string `json:"name"`
-	ExecutorId string `json:"executor_id"`
-}
-
-type CreateGroupChatResponseSuccessBody struct {
-	GroupChatId string `json:"group_chat_id"`
-}
-
-// ---
-
-type DeleteGroupChatRequestBody struct {
-	GroupChatId string `json:"group_chat_id"`
-	ExecutorId  string `json:"executor_id"`
-}
-
-type DeleteGroupChatResponseSuccessBody struct {
-	GroupChatId string `json:"group_chat_id"`
-}
-
-// ---
-
-type RenameGroupChatRequestBody struct {
-	GroupChatId string `json:"group_chat_id"`
-	Name        string `json:"name"`
-	ExecutorId  string `json:"executor_id"`
-}
-
-type RenameGroupChatResponseSuccessBody struct {
-	GroupChatId string `json:"group_chat_id"`
-}
-
-// ---
-
-type AddMemberRequestBody struct {
-	GroupChatId   string `json:"group_chat_id"`
-	UserAccountId string `json:"user_account_id"`
-	Role          string `json:"role"`
-	ExecutorId    string `json:"executor_id"`
-}
-
-type AddMemberResponseSuccessBody struct {
-	GroupChatId string `json:"group_chat_id"`
-}
-
-// ---
-
-type RemoveMemberRequestBody struct {
-	GroupChatId   string `json:"group_chat_id"`
-	UserAccountId string `json:"user_account_id"`
-	ExecutorId    string `json:"executor_id"`
-}
-
-type RemoveMemberResponseSuccessBody struct {
-	GroupChatId string `json:"group_chat_id"`
-}
-
-// ---
-
-type PostMessageRequestBody struct {
-	GroupChatId   string `json:"group_chat_id"`
-	Message       string `json:"message"`
-	UserAccountId string `json:"user_account_id"`
-	ExecutorId    string `json:"executor_id"`
-}
-
-type PostMessageResponseSuccessBody struct {
-	GroupChatId string `json:"group_chat_id"`
-	MessageId   string `json:"message_id"`
-}
-
-// ---
-
-type DeleteMessageRequestBody struct {
-	GroupChatId   string `json:"group_chat_id"`
-	MessageId     string `json:"message_id"`
-	UserAccountId string `json:"user_account_id"`
-	ExecutorId    string `json:"executor_id"`
-}
-
-type DeleteMessageResponseSuccessBody struct {
-	GroupChatId string `json:"group_chat_id"`
-}
-
-// ---
-
-type GroupChatResponseErrorBody struct {
-	Message string `json:"message"`
-}
-
-// ---
-
+// GroupChatController is a controller for group chat commands.
 type GroupChatController struct {
 	groupChatCommandProcessor useCase.GroupChatCommandProcessor
 }
 
-// NewGroupChatController は GroupChatController を生成します。
+// NewGroupChatController creates a new GroupChatController.
 func NewGroupChatController(groupChatCommandProcessor useCase.GroupChatCommandProcessor) GroupChatController {
 	return GroupChatController{
 		groupChatCommandProcessor,
 	}
 }
 
-// CreateGroupChat はグループチャットを作成します。
+// CreateGroupChat is a handler for creating a group chat.
 func (g *GroupChatController) CreateGroupChat(c *gin.Context) {
 	var jsonRequestBody CreateGroupChatRequestBody
 
@@ -133,7 +42,6 @@ func (g *GroupChatController) CreateGroupChat(c *gin.Context) {
 	}
 
 	event, err := g.groupChatCommandProcessor.CreateGroupChat(groupChatName, executorId)
-
 	if err != nil {
 		response := GroupChatResponseErrorBody{Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, response)
@@ -144,6 +52,7 @@ func (g *GroupChatController) CreateGroupChat(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
+// DeleteGroupChat is a handler for deleting a group chat.
 func (g *GroupChatController) DeleteGroupChat(c *gin.Context) {
 	var jsonRequestBody DeleteGroupChatRequestBody
 
@@ -165,7 +74,6 @@ func (g *GroupChatController) DeleteGroupChat(c *gin.Context) {
 	}
 
 	event, err := g.groupChatCommandProcessor.DeleteGroupChat(&groupChatId, executorId)
-
 	if err != nil {
 		response := GroupChatResponseErrorBody{Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, response)
@@ -176,7 +84,7 @@ func (g *GroupChatController) DeleteGroupChat(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-// RenameGroupChat はグループチャットをリネームします。
+// RenameGroupChat is a handler for renaming a group chat.
 func (g *GroupChatController) RenameGroupChat(c *gin.Context) {
 	var jsonRequestBody RenameGroupChatRequestBody
 
@@ -204,7 +112,6 @@ func (g *GroupChatController) RenameGroupChat(c *gin.Context) {
 	}
 
 	event, err := g.groupChatCommandProcessor.RenameGroupChat(&groupChatId, groupChatName, executorId)
-
 	if err != nil {
 		response := GroupChatResponseErrorBody{Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, response)
@@ -215,7 +122,7 @@ func (g *GroupChatController) RenameGroupChat(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-// AddMember はグループチャットにメンバーを追加します。
+// AddMember is a handler for adding a member to a group chat.
 func (g *GroupChatController) AddMember(c *gin.Context) {
 	var jsonRequestBody AddMemberRequestBody
 
@@ -242,7 +149,11 @@ func (g *GroupChatController) AddMember(c *gin.Context) {
 		return
 	}
 
-	role := models.StringToRole(jsonRequestBody.Role)
+	role, err := models.StringToRole(jsonRequestBody.Role)
+	if err != nil {
+		handleClientError(c, http.StatusBadRequest, err)
+		return
+	}
 
 	event, err := g.groupChatCommandProcessor.AddMember(&groupChatId, accountId, role, executorId)
 
@@ -256,7 +167,7 @@ func (g *GroupChatController) AddMember(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-// RemoveMember はグループチャットからメンバーを削除します。
+// RemoveMember is a handler for removing a member from a group chat.
 func (g *GroupChatController) RemoveMember(c *gin.Context) {
 	var jsonRequestBody RemoveMemberRequestBody
 
@@ -284,7 +195,6 @@ func (g *GroupChatController) RemoveMember(c *gin.Context) {
 	}
 
 	event, err := g.groupChatCommandProcessor.RemoveMember(&groupChatId, accountId, executorId)
-
 	if err != nil {
 		response := GroupChatResponseErrorBody{Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, response)
@@ -295,7 +205,7 @@ func (g *GroupChatController) RemoveMember(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-// PostMessage はグループチャットにメッセージを投稿します。
+// PostMessage is a handler for posting a message to a group chat.
 func (g *GroupChatController) PostMessage(c *gin.Context) {
 	var jsonRequestBody PostMessageRequestBody
 
@@ -331,7 +241,6 @@ func (g *GroupChatController) PostMessage(c *gin.Context) {
 	}
 
 	event, err := g.groupChatCommandProcessor.PostMessage(&groupChatId, message, executorId)
-
 	if err != nil {
 		response := GroupChatResponseErrorBody{Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, response)
@@ -342,6 +251,7 @@ func (g *GroupChatController) PostMessage(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
+// DeleteMessage is a handler for deleting a message from a group chat.
 func (g *GroupChatController) DeleteMessage(c *gin.Context) {
 	var jsonRequestBody DeleteMessageRequestBody
 
@@ -369,7 +279,6 @@ func (g *GroupChatController) DeleteMessage(c *gin.Context) {
 	}
 
 	event, err := g.groupChatCommandProcessor.DeleteMessage(&groupChatId, messageId, executorId)
-
 	if err != nil {
 		response := GroupChatResponseErrorBody{Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, response)
@@ -380,7 +289,7 @@ func (g *GroupChatController) DeleteMessage(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-// handleClientError はクライアントエラーを処理します。
+// handleClientError is a helper function for handling client errors.
 func handleClientError(c *gin.Context, statusCode int, err error) {
 	response := GroupChatResponseErrorBody{Message: err.Error()}
 	c.JSON(statusCode, response)

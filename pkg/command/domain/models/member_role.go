@@ -1,6 +1,9 @@
 package models
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 type Role int
 
@@ -20,13 +23,13 @@ func (r Role) String() string {
 	}
 }
 
-func StringToRole(s string) Role {
+func StringToRole(s string) (Role, error) {
 	switch strings.ToLower(s) {
 	case "member":
-		return MemberRole
+		return MemberRole, nil
 	case "admin":
-		return AdminRole
+		return AdminRole, nil
 	default:
-		panic("unknown role string: " + s)
+		return 0, fmt.Errorf("unknown role: %s", s)
 	}
 }
