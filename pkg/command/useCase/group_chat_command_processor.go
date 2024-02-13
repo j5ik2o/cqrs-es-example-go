@@ -12,8 +12,8 @@ type GroupChatCommandProcessor struct {
 }
 
 // NewGroupChatCommandProcessor is the constructor for GroupChatCommandProcessor.
-func NewGroupChatCommandProcessor(repository repository.GroupChatRepository) *GroupChatCommandProcessor {
-	return &GroupChatCommandProcessor{
+func NewGroupChatCommandProcessor(repository repository.GroupChatRepository) GroupChatCommandProcessor {
+	return GroupChatCommandProcessor{
 		repository,
 	}
 }
