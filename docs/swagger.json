@@ -209,6 +209,43 @@
                 }
             }
         },
+        "/v1/group-chat/remove-member": {
+            "post": {
+                "description": "Remove a member from a group chat",
+                "summary": "Remove a member from a group chat",
+                "parameters": [
+                    {
+                        "description": "RemoveMemberRequestBody",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.RemoveMemberRequestBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.RemoveMemberResponseSuccessBody"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.GroupChatResponseErrorBody"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.GroupChatResponseErrorBody"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/group-chat/rename": {
             "post": {
                 "description": "Rename a group chat",
@@ -371,6 +408,28 @@
                     "type": "string"
                 },
                 "message_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.RemoveMemberRequestBody": {
+            "type": "object",
+            "properties": {
+                "executor_id": {
+                    "type": "string"
+                },
+                "group_chat_id": {
+                    "type": "string"
+                },
+                "user_account_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.RemoveMemberResponseSuccessBody": {
+            "type": "object",
+            "properties": {
+                "group_chat_id": {
                     "type": "string"
                 }
             }

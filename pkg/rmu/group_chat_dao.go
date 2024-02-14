@@ -72,8 +72,8 @@ func (dao *GroupChatDaoImpl) UpdateName(aggregateId *models.GroupChatId, name *m
 	return nil
 }
 
-func (dao *GroupChatDaoImpl) InsertMember(id *models.MemberId, aggregateId *models.GroupChatId, accountId *models.UserAccountId, role models.Role, at time.Time) error {
-	stmt, err := dao.db.Prepare(`INSERT INTO members (id, group_chat_id, account_id, role, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)`)
+func (dao *GroupChatDaoImpl) InsertMember(id *models.MemberId, aggregateId *models.GroupChatId, userAccountId *models.UserAccountId, role models.Role, at time.Time) error {
+	stmt, err := dao.db.Prepare(`INSERT INTO members (id, group_chat_id, user_account_id, role, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)`)
 	if err != nil {
 		return err
 	}
@@ -84,7 +84,7 @@ func (dao *GroupChatDaoImpl) InsertMember(id *models.MemberId, aggregateId *mode
 		}
 	}(stmt)
 	dt := at.Format("2006-01-02 15:04:05")
-	_, err = stmt.Exec(id.String(), aggregateId.AsString(), accountId.AsString(), role.String(), dt, dt)
+	_, err = stmt.Exec(id.String(), aggregateId.AsString(), userAccountId.AsString(), role.String(), dt, dt)
 	if err != nil {
 		return err
 	}
@@ -92,7 +92,7 @@ func (dao *GroupChatDaoImpl) InsertMember(id *models.MemberId, aggregateId *mode
 }
 
 func (dao *GroupChatDaoImpl) DeleteMember(groupChatId *models.GroupChatId, userAccountId *models.UserAccountId) error {
-	stmt, err := dao.db.Prepare(`DELETE FROM members WHERE group_chat_id = ? AND account_id = ?`)
+	stmt, err := dao.db.Prepare(`DELETE FROM members WHERE group_chat_id = ? AND user_account_id = ?`)
 	if err != nil {
 		return err
 	}
@@ -109,8 +109,8 @@ func (dao *GroupChatDaoImpl) DeleteMember(groupChatId *models.GroupChatId, userA
 	return nil
 }
 
-func (dao *GroupChatDaoImpl) InsertMessage(id *models.MessageId, groupChatId *models.GroupChatId, accountId *models.UserAccountId, text string, at time.Time) error {
-	stmt, err := dao.db.Prepare(`INSERT INTO messages (id, disabled, group_chat_id, account_id, text, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)`)
+func (dao *GroupChatDaoImpl) InsertMessage(id *models.MessageId, groupChatId *models.GroupChatId, userAccountId *models.UserAccountId, text string, at time.Time) error {
+	stmt, err := dao.db.Prepare(`INSERT INTO messages (id, disabled, group_chat_id, user_account_id, text, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)`)
 	if err != nil {
 		return err
 	}
@@ -121,7 +121,7 @@ func (dao *GroupChatDaoImpl) InsertMessage(id *models.MessageId, groupChatId *mo
 		}
 	}(stmt)
 	dt := at.Format("2006-01-02 15:04:05")
-	_, err = stmt.Exec(id.String(), false, groupChatId.AsString(), accountId.AsString(), text, dt, dt)
+	_, err = stmt.Exec(id.String(), false, groupChatId.AsString(), userAccountId.AsString(), text, dt, dt)
 	if err != nil {
 		return err
 	}
