@@ -13,7 +13,10 @@ import (
 	"github.com/gin-gonic/gin"
 	esa "github.com/j5ik2o/event-store-adapter-go"
 	"github.com/olivere/env"
+	sloggin "github.com/samber/slog-gin"
 	"github.com/spf13/cobra"
+	"log/slog"
+	"os"
 )
 
 // writeApiCmd represents the writeApi command
@@ -22,6 +25,9 @@ var writeApiCmd = &cobra.Command{
 	Short: "Write API",
 	Long:  "Write API",
 	Run: func(cmd *cobra.Command, args []string) {
+		logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+		slog.SetDefault(logger)
+
 		awsRegion := env.String("", "AWS_REGION")
 		apiHost := env.String("0.0.0.0", "API_HOST")
 		apiPort := env.Int(8080, "API_PORT")
@@ -34,23 +40,35 @@ var writeApiCmd = &cobra.Command{
 		awsDynamoDBAccessKeyId := env.String("", "AWS_DYNAMODB_ACCESS_KEY_ID")
 		awsDynamoDBSecretKey := env.String("", "AWS_DYNAMODB_SECRET_ACCESS_KEY")
 
-		fmt.Printf("awsRegion = %v\n", awsRegion)
-		fmt.Printf("apiHost = %v\n", apiHost)
-		fmt.Printf("apiPort = %v\n", apiPort)
-		fmt.Printf("journalTableName = %v\n", journalTableName)
-		fmt.Printf("snapshotTableName = %v\n", snapshotTableName)
-		fmt.Printf("journalAidIndexName = %v\n", journalAidIndexName)
-		fmt.Printf("snapshotAidIndexName = %v\n", snapshotAidIndexName)
-		fmt.Printf("shardCount = %v\n", shardCount)
-		fmt.Printf("awsDynamoDBEndpointUrl = %v\n", awsDynamoDBEndpointUrl)
-		fmt.Printf("awsDynamoDBAccessKeyId = %v\n", awsDynamoDBAccessKeyId)
-		fmt.Printf("awsDynamoDBSecretKey = %v\n", awsDynamoDBSecretKey)
+		slog.Info(fmt.Sprintf("awsRegion = %v", awsRegion))
+		slog.Info(fmt.Sprintf("apiHost = %v", apiHost))
+		slog.Info(fmt.Sprintf("apiPort = %v", apiPort))
+		slog.Info(fmt.Sprintf("journalTableName = %v", journalTableName))
+		slog.Info(fmt.Sprintf("snapshotTableName = %v", snapshotTableName))
+		slog.Info(fmt.Sprintf("journalAidIndexName = %v", journalAidIndexName))
+		slog.Info(fmt.Sprintf("snapshotAidIndexName = %v", snapshotAidIndexName))
+		slog.Info(fmt.Sprintf("shardCount = %v", shardCount))
+		slog.Info(fmt.Sprintf("awsDynamoDBEndpointUrl = %v", awsDynamoDBEndpointUrl))
+		slog.Info(fmt.Sprintf("awsDynamoDBAccessKeyId = %v", awsDynamoDBAccessKeyId))
+		slog.Info(fmt.Sprintf("awsDynamoDBSecretKey = %v", awsDynamoDBSecretKey))
 
 		var awsCfg aws.Config
 		var err error
 		if awsDynamoDBEndpointUrl == "" && awsDynamoDBAccessKeyId == "" && awsDynamoDBSecretKey == "" && awsRegion == "" {
 			awsCfg, err = config.LoadDefaultConfig(context.Background())
 		} else {
+			if awsRegion == "" {
+				panic("AWS_REGION is required")
+			}
+			if awsDynamoDBEndpointUrl == "" {
+				panic("AWS_DYNAMODB_ENDPOINT_URL is required")
+			}
+			if awsDynamoDBAccessKeyId == "" {
+				panic("AWS_DYNAMODB_ACCESS_KEY_ID is required")
+			}
+			if awsDynamoDBSecretKey == "" {
+				panic("AWS_DYNAMODB_SECRET_ACCESS_KEY is required")
+			}
 			customResolver := aws.EndpointResolverWithOptionsFunc(
 				func(service, region string, opts ...interface{}) (aws.Endpoint, error) {
 					return aws.Endpoint{
@@ -90,7 +108,9 @@ var writeApiCmd = &cobra.Command{
 		groupChatCommandProcessor := useCase.NewGroupChatCommandProcessor(&groupChatRepository)
 		groupChatController := api.NewGroupChatController(groupChatCommandProcessor)
 
-		engine := gin.Default()
+		engine := gin.New()
+		engine.Use(sloggin.New(logger))
+		engine.Use(gin.Recovery())
 
 		engine.GET("/", api.Index)
 		groupChat := engine.Group("/group-chats")
@@ -102,7 +122,7 @@ var writeApiCmd = &cobra.Command{
 			groupChat.POST("/post-message", groupChatController.PostMessage)
 		}
 		address := fmt.Sprintf("%s:%d", apiHost, apiPort)
-		fmt.Printf("server started at http://%s\n", address)
+		slog.Info(fmt.Sprintf("server started at http://%s", address))
 		err = engine.Run(address)
 		if err != nil {
 			panic(err)
