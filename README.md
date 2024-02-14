@@ -21,12 +21,12 @@ This project uses [j5ik2o/event-store-adapter-go](https://github.com/j5ik2o/even
 
 ### Component Composition
 
-- Write API (WIP)
+- Write API Server
   - Write-only Web API
 - Read Model Updater
   - Lambda to build read models based on journals
-- Read API
-  - GraphQL server (Query, Subscription)
+- Read API Server
+  - implemented by GraphQL (Query, Subscription)
 
 ### System Architecture Diagram
 
