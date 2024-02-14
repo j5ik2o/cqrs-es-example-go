@@ -1,12 +1,12 @@
 package api
 
 type CreateGroupChatRequestBody struct {
-	Name       string `json:"name"`
-	ExecutorId string `json:"executor_id"`
+	Name       string `json:"name" example:"group-chat-name-1"`
+	ExecutorId string `json:"executor_id" example:"UserAccount-01H42K4ABWQ5V2XQEP3A48VE0Z"`
 }
 
 type CreateGroupChatResponseSuccessBody struct {
-	GroupChatId string `json:"group_chat_id"`
+	GroupChatId string `json:"group_chat_id" example:"GroupChat-01H42K4ABWQ5V2XQEP3A48VE0Z"`
 }
 
 // ---
