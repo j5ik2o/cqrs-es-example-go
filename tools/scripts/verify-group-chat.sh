@@ -7,28 +7,31 @@ USER_ACCOUNT_ID=01H7C6DWMK1BKS1JYH1XZE529M
 
 # グループチャット作成
 echo -e "\nCreate GroupChat:"
-GROUP_CHAT_ID=$(curl -s -X 'POST' \
+CREATE_GROUP_CHAT_RESULT=$(curl -s -X 'POST' \
   "${WRITE_API_SERVER_BASE_URL}/group-chats/create" \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
-  -d "{ \"name\": \"group-chat-example-1\", \"executor_id\": \"${ADMIN_ID}\" }" | jq -r .group_chat_id)
+  -d "{ \"name\": \"group-chat-example-1\", \"executor_id\": \"${ADMIN_ID}\" }")
+echo "Result: $CREATE_GROUP_CHAT_RESULT"
+GROUP_CHAT_ID=$(echo $CREATE_GROUP_CHAT_RESULT | jq -r .group_chat_id)
 
 # メンバー追加
 echo -e "\nAdd Member:"
-curl -s -X 'POST' \
+ADD_MEMBER_RESULT=$(curl -s -X 'POST' \
   "${WRITE_API_SERVER_BASE_URL}/group-chats/add-member" \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
-  -d "{ \"group_chat_id\": \"${GROUP_CHAT_ID}\", \"role\": \"member\", \"user_account_id\": \"${USER_ACCOUNT_ID}\", \"executor_id\": \"${ADMIN_ID}\" }"
+  -d "{ \"group_chat_id\": \"${GROUP_CHAT_ID}\", \"role\": \"member\", \"user_account_id\": \"${USER_ACCOUNT_ID}\", \"executor_id\": \"${ADMIN_ID}\" }")
+echo "Result: $ADD_MEMBER_RESULT"
 
 # メッセージ投稿
 echo -e "\nPost Message:"
-MESSAGE_ID=$(curl -s -X 'POST' \
+POST_MESSAGE_RESULT=$(curl -s -X 'POST' \
   "${WRITE_API_SERVER_BASE_URL}/group-chats/post-message" \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
-  -d "{ \"group_chat_id\": \"${GROUP_CHAT_ID}\", \"message\": \"Text1\", \"user_account_id\": \"${USER_ACCOUNT_ID}\", \"executor_id\": \"${USER_ACCOUNT_ID}\"  }" \
-  | jq -r .message_id)
+  -d "{ \"group_chat_id\": \"${GROUP_CHAT_ID}\", \"message\": \"Text1\", \"user_account_id\": \"${USER_ACCOUNT_ID}\", \"executor_id\": \"${USER_ACCOUNT_ID}\"  }")
+echo "Result: $POST_MESSAGE_RESULT"
 
 sleep 1
 

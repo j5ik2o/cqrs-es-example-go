@@ -74,10 +74,9 @@ type PostMessageResponseSuccessBody struct {
 // ---
 
 type DeleteMessageRequestBody struct {
-	GroupChatId   string `json:"group_chat_id"`
-	MessageId     string `json:"message_id"`
-	UserAccountId string `json:"user_account_id"`
-	ExecutorId    string `json:"executor_id"`
+	GroupChatId string `json:"group_chat_id"`
+	MessageId   string `json:"message_id"`
+	ExecutorId  string `json:"executor_id"`
 }
 
 type DeleteMessageResponseSuccessBody struct {
