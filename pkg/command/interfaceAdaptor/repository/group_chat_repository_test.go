@@ -10,6 +10,7 @@ import (
 	"github.com/j5ik2o/event-store-adapter-go/common"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"log/slog"
 	"testing"
 )
 
@@ -61,7 +62,7 @@ func Test_GroupChatRepository_OnDynamoDB_FindById(t *testing.T) {
 	groupChat, event := domain.NewGroupChat(name, adminId)
 	jsonObj, err := json.Marshal(event.ToJSON())
 	require.NoError(t, err)
-	fmt.Printf("event = %s\n", string(jsonObj))
+	slog.Info(fmt.Sprintf("event = %s", string(jsonObj)))
 	err = repository.StoreEventWithSnapshot(event, &groupChat)
 	require.NoError(t, err)
 
@@ -82,7 +83,7 @@ func Test_GroupChatRepository_OnMemory_FindById(t *testing.T) {
 	groupChat, event := domain.NewGroupChat(name, adminId)
 	jsonObj, err := json.Marshal(event.ToJSON())
 	require.NoError(t, err)
-	fmt.Printf("event = %s\n", string(jsonObj))
+	slog.Info(fmt.Sprintf("event = %s", string(jsonObj)))
 	err = repository.StoreEventWithSnapshot(event, &groupChat)
 	require.NoError(t, err)
 

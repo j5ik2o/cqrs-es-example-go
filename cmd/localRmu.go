@@ -14,6 +14,8 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/olivere/env"
 	"github.com/samber/mo"
+	"log/slog"
+	"os"
 	"reflect"
 	"time"
 
@@ -26,6 +28,9 @@ var localRmuCmd = &cobra.Command{
 	Short: "Read Model Updater for Local",
 	Long:  "Read Model Updater for Local",
 	Run: func(cmd *cobra.Command, args []string) {
+		logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+		slog.SetDefault(logger)
+
 		awsRegion := env.String("", "AWS_REGION")
 		apiHost := env.String("0.0.0.0", "API_HOST")
 		apiPort := env.Int(8080, "API_PORT")
@@ -40,25 +45,37 @@ var localRmuCmd = &cobra.Command{
 		streamJournalTableName := env.String("journal", "STREAM_JOURNAL_TABLE_NAME")
 		streamMaxItemCount := env.Int64(100, "STREAM_MAX_ITEM_COUNT")
 
-		fmt.Printf("awsRegion = %v\n", awsRegion)
-		fmt.Printf("apiHost = %v\n", apiHost)
-		fmt.Printf("apiPort = %v\n", apiPort)
-		fmt.Printf("journalTableName = %v\n", journalTableName)
-		fmt.Printf("snapshotTableName = %v\n", snapshotTableName)
-		fmt.Printf("journalAidIndexName = %v\n", journalAidIndexName)
-		fmt.Printf("snapshotAidIndexName = %v\n", snapshotAidIndexName)
-		fmt.Printf("shardCount = %v\n", shardCount)
-		fmt.Printf("awsDynamoDBEndpointUrl = %v\n", awsDynamoDBEndpointUrl)
-		fmt.Printf("awsDynamoDBAccessKeyId = %v\n", awsDynamoDBAccessKeyId)
-		fmt.Printf("awsDynamoDBSecretKey = %v\n", awsDynamoDBSecretKey)
-		fmt.Printf("streamJournalTableName = %v\n", streamJournalTableName)
-		fmt.Printf("streamMaxItemCount = %v\n", streamMaxItemCount)
+		slog.Info(fmt.Sprintf("awsRegion = %v", awsRegion))
+		slog.Info(fmt.Sprintf("apiHost = %v", apiHost))
+		slog.Info(fmt.Sprintf("apiPort = %v", apiPort))
+		slog.Info(fmt.Sprintf("journalTableName = %v", journalTableName))
+		slog.Info(fmt.Sprintf("snapshotTableName = %v", snapshotTableName))
+		slog.Info(fmt.Sprintf("journalAidIndexName = %v", journalAidIndexName))
+		slog.Info(fmt.Sprintf("snapshotAidIndexName = %v", snapshotAidIndexName))
+		slog.Info(fmt.Sprintf("shardCount = %v", shardCount))
+		slog.Info(fmt.Sprintf("awsDynamoDBEndpointUrl = %v", awsDynamoDBEndpointUrl))
+		slog.Info(fmt.Sprintf("awsDynamoDBAccessKeyId = %v", awsDynamoDBAccessKeyId))
+		slog.Info(fmt.Sprintf("awsDynamoDBSecretKey = %v", awsDynamoDBSecretKey))
+		slog.Info(fmt.Sprintf("streamJournalTableName = %v", streamJournalTableName))
+		slog.Info(fmt.Sprintf("streamMaxItemCount = %v", streamMaxItemCount))
 
 		var awsCfg aws.Config
 		var err error
 		if awsDynamoDBEndpointUrl == "" && awsDynamoDBAccessKeyId == "" && awsDynamoDBSecretKey == "" && awsRegion == "" {
 			awsCfg, err = config.LoadDefaultConfig(context.Background())
 		} else {
+			if awsRegion == "" {
+				panic("AWS_REGION is required")
+			}
+			if awsDynamoDBEndpointUrl == "" {
+				panic("AWS_DYNAMODB_ENDPOINT_URL is required")
+			}
+			if awsDynamoDBAccessKeyId == "" {
+				panic("AWS_DYNAMODB_ACCESS_KEY_ID is required")
+			}
+			if awsDynamoDBSecretKey == "" {
+				panic("AWS_DYNAMODB_SECRET_ACCESS_KEY is required")
+			}
 			customResolver := aws.EndpointResolverWithOptionsFunc(
 				func(service, region string, opts ...interface{}) (aws.Endpoint, error) {
 					return aws.Endpoint{
@@ -81,6 +98,9 @@ var localRmuCmd = &cobra.Command{
 		dynamodbStreamsClient := dynamodbstreams.NewFromConfig(awsCfg)
 
 		dbUrl := env.String("", "DATABASE_URL")
+		if dbUrl == "" {
+			panic("DATABASE_URL is required")
+		}
 		dataSourceName := fmt.Sprintf("%s?parseTime=true", dbUrl)
 		db, err := sqlx.Connect("mysql", dataSourceName)
 		defer func(db *sqlx.DB) {
@@ -100,8 +120,8 @@ var localRmuCmd = &cobra.Command{
 		for {
 			err := streamDriver(dynamodbClient, dynamodbStreamsClient, journalTableName, streamMaxItemCount, &readModelUpdater)
 			if err != nil {
-				fmt.Printf("An error has occurred, but stream processing is restarted. "+
-					"If this error persists, the read model condition may be incorrect.: error = %v\n", err)
+				slog.Warn(fmt.Sprintf("An error has occurred, but stream processing is restarted. "+
+					"If this error persists, the read model condition may be incorrect.: error = %v", err))
 				time.Sleep(1 * time.Second)
 				continue
 			}
@@ -118,8 +138,8 @@ func streamDriver(dynamoDbClient *dynamodb.Client, dynamoDbStreamsClient *dynamo
 	lastEvaluatedShardId := ""
 
 	for {
-		fmt.Printf("streamArn = %s\n", *streamArn)
-		fmt.Printf("maxItemCount = %d\n", maxItemCount)
+		slog.Info(fmt.Sprintf("streamArn = %s", *streamArn))
+		slog.Info(fmt.Sprintf("maxItemCount = %d", maxItemCount))
 
 		describeStream, err := getDescribeStream(streamArn, lastEvaluatedShardId, dynamoDbStreamsClient)
 		if err != nil {

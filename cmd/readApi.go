@@ -8,11 +8,12 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/olivere/env"
 	"github.com/spf13/cobra"
-	"log"
+	"log/slog"
 	"net/http"
+	"os"
 )
 
-const defaultPort = "8080"
+const defaultPort = 8080
 
 // readApiCmd represents the readApi command
 var readApiCmd = &cobra.Command{
@@ -20,9 +21,20 @@ var readApiCmd = &cobra.Command{
 	Short: "Read API",
 	Long:  "Read API",
 	Run: func(cmd *cobra.Command, args []string) {
-		apiPort := env.Int(8080, "API_PORT")
+		logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+		slog.SetDefault(logger)
+
+		apiPort := env.Int(defaultPort, "API_PORT")
 		apiHost := env.String("0.0.0.0", "API_HOST")
 		dbUrl := env.String("", "DATABASE_URL")
+
+		if dbUrl == "" {
+			panic("DATABASE_URL is required")
+		}
+
+		slog.Info(fmt.Sprintf("apiPort = %v", apiPort))
+		slog.Info(fmt.Sprintf("apiHost = %v", apiHost))
+		slog.Info(fmt.Sprintf("dbUrl = %v", dbUrl))
 
 		db, err := sqlx.Connect("mysql", fmt.Sprintf("%s?parseTime=true", dbUrl))
 		defer func(db *sqlx.DB) {
@@ -43,8 +55,11 @@ var readApiCmd = &cobra.Command{
 		http.Handle("/query", srv)
 
 		endpoint := fmt.Sprintf("%s:%d", apiHost, apiPort)
-		log.Printf("connect to http://%s/ for GraphQL playground", endpoint)
-		log.Fatal(http.ListenAndServe(endpoint, nil))
+		slog.Info(fmt.Sprintf("connect to http://%s/ for GraphQL playground", endpoint))
+		err = http.ListenAndServe(endpoint, nil)
+		if err != nil {
+			slog.Error("failed to start server", "error", err.Error())
+		}
 	},
 }
 

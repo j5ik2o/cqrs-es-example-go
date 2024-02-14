@@ -11,6 +11,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	esa "github.com/j5ik2o/event-store-adapter-go"
 	"github.com/samber/mo"
+	"log/slog"
 	"strings"
 	"time"
 )
@@ -39,14 +40,14 @@ func NewReadModelUpdater(dao GroupChatDao) ReadModelUpdater {
 // UpdateReadModel processes events from DynamoDB stream and updates the read model.
 func (r *ReadModelUpdater) UpdateReadModel(ctx context.Context, event dynamodbevents.DynamoDBEvent) error {
 	for _, record := range event.Records {
-		fmt.Printf("Processing request data for event GetId %s, type %s.\n", record.EventID, record.EventName)
+		slog.Info("Processing request data for event GetId %s, type %s.", record.EventID, record.EventName)
 		attributeValues := record.Change.NewImage
 		payloadBytes := convertToBytes(attributeValues["payload"])
 		typeValueStr, err := getTypeString(payloadBytes).Get()
 		if err != nil {
 			return err
 		}
-		fmt.Printf("typeValueStr = %s\n", typeValueStr)
+		slog.Debug(fmt.Sprintf("typeValueStr = %s", typeValueStr))
 		if strings.HasPrefix(typeValueStr, "GroupChat") {
 			event, err := convertGroupChatEvent(payloadBytes).Get()
 			if err != nil {
@@ -100,14 +101,14 @@ func (r *ReadModelUpdater) UpdateReadModel(ctx context.Context, event dynamodbev
 		}
 		// Print new values for attributes of type String
 		for name, value := range record.Change.NewImage {
-			fmt.Printf("Attribute name: %s, value: %s\n", name, value.String())
+			slog.Debug(fmt.Sprintf("Attribute name: %s, value: %s", name, value.String()))
 		}
 	}
 	return nil
 }
 
 func createGroupChat(ev *events.GroupChatCreated, r *ReadModelUpdater) error {
-	fmt.Printf("createGroupChat: start: ev = %v\n", ev)
+	slog.Info(fmt.Sprintf("createGroupChat: start: ev = %v", ev))
 	groupChatId := ev.GetAggregateId().(*models.GroupChatId)
 	name := ev.GetName()
 	executorId := ev.GetExecutorId()
@@ -124,24 +125,24 @@ func createGroupChat(ev *events.GroupChatCreated, r *ReadModelUpdater) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("createGroupChat: finished\n")
+	slog.Info("createGroupChat: finished")
 	return nil
 }
 
 func deleteGroupChat(ev *events.GroupChatDeleted, r *ReadModelUpdater) error {
-	fmt.Printf("deleteGroupChat: start: ev = %v\n", ev)
+	slog.Info(fmt.Sprintf("deleteGroupChat: start: ev = %v", ev))
 	groupChatId := ev.GetAggregateId().(*models.GroupChatId)
 	occurredAt := convertToTime(ev.GetOccurredAt())
 	err := r.dao.DeleteGroupChat(groupChatId, occurredAt)
 	if err != nil {
 		return err
 	}
-	fmt.Printf("deleteGroupChat: finished\n")
+	slog.Info(fmt.Sprintf("deleteGroupChat: finished"))
 	return nil
 }
 
 func renameGroupChat(ev *events.GroupChatRenamed, r *ReadModelUpdater) error {
-	fmt.Printf("renameGroupChat: start: ev = %v\n", ev)
+	slog.Info(fmt.Sprintf("renameGroupChat: start: ev = %v", ev))
 	groupChatId := ev.GetAggregateId().(*models.GroupChatId)
 	name := ev.GetName()
 	occurredAt := convertToTime(ev.GetOccurredAt())
@@ -149,12 +150,12 @@ func renameGroupChat(ev *events.GroupChatRenamed, r *ReadModelUpdater) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("renameGroupChat: finished\n")
+	slog.Info(fmt.Sprintf("renameGroupChat: finished"))
 	return nil
 }
 
 func addMember(ev *events.GroupChatMemberAdded, r *ReadModelUpdater) error {
-	fmt.Printf("addMember: start: ev = %v\n", ev)
+	slog.Info(fmt.Sprintf("addMember: start: ev = %v", ev))
 	groupChatId := ev.GetAggregateId().(*models.GroupChatId)
 	memberId := ev.GetMember().GetId()
 	accountId := ev.GetMember().GetUserAccountId()
@@ -164,24 +165,24 @@ func addMember(ev *events.GroupChatMemberAdded, r *ReadModelUpdater) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("addMember: finished\n")
+	slog.Info(fmt.Sprintf("addMember: finished"))
 	return nil
 }
 
 func removeMember(ev *events.GroupChatMemberRemoved, r *ReadModelUpdater) error {
-	fmt.Printf("removeMember: start: ev = %v\n", ev)
+	slog.Info(fmt.Sprintf("removeMember: start: ev = %v", ev))
 	groupChatId := ev.GetAggregateId().(*models.GroupChatId)
 	accountId := ev.GetUserAccountId()
 	err := r.dao.DeleteMember(groupChatId, accountId)
 	if err != nil {
 		return err
 	}
-	fmt.Printf("removeMember: finished\n")
+	slog.Info(fmt.Sprintf("removeMember: finished"))
 	return nil
 }
 
 func postMessage(ev *events.GroupChatMessagePosted, r *ReadModelUpdater) error {
-	fmt.Printf("postMessage: start: ev = %v\n", ev)
+	slog.Info(fmt.Sprintf("postMessage: start: ev = %v", ev))
 	messageId := ev.GetMessage().GetId()
 	groupChatId := ev.GetAggregateId().(*models.GroupChatId)
 	accountId := ev.GetMessage().GetSenderId()
@@ -191,19 +192,19 @@ func postMessage(ev *events.GroupChatMessagePosted, r *ReadModelUpdater) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("postMessage: finished\n")
+	slog.Info(fmt.Sprintf("postMessage: finished"))
 	return nil
 }
 
 func deleteMessage(ev *events.GroupChatMessageDeleted, r *ReadModelUpdater) error {
-	fmt.Printf("deleteMessage: start: ev = %v\n", ev)
+	slog.Info(fmt.Sprintf("deleteMessage: start: ev = %v", ev))
 	messageId := ev.GetMessageId()
 	updatedAt := convertToTime(ev.GetOccurredAt())
 	err := r.dao.DeleteMessage(messageId, updatedAt)
 	if err != nil {
 		return err
 	}
-	fmt.Printf("deleteMessage: finished\n")
+	slog.Info(fmt.Sprintf("deleteMessage: finished"))
 	return nil
 }
 
@@ -227,7 +228,7 @@ func getTypeString(bytes []byte) mo.Result[string] {
 	var parsed map[string]interface{}
 	err := json.Unmarshal(bytes, &parsed)
 	if err != nil {
-		fmt.Printf("getTypeString: err = %v, %s\n", err, string(bytes))
+		slog.Info(fmt.Sprintf("getTypeString: err = %v, %s", err, string(bytes)))
 		return mo.Err[string](err)
 	}
 	typeValue, ok := parsed["type_name"].(string)

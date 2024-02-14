@@ -6,6 +6,8 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/jmoiron/sqlx"
 	"github.com/olivere/env"
+	"log/slog"
+	"os"
 
 	"github.com/spf13/cobra"
 )
@@ -16,7 +18,14 @@ var rmuCmd = &cobra.Command{
 	Short: "Read Model Updater",
 	Long:  "Read Model Updater",
 	Run: func(cmd *cobra.Command, args []string) {
+		logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+		slog.SetDefault(logger)
+
 		dbUrl := env.String("", "DATABASE_URL")
+		if dbUrl == "" {
+			panic("DATABASE_URL is required")
+		}
+
 		dataSourceName := fmt.Sprintf("%s?parseTime=true", dbUrl)
 		db, err := sqlx.Connect("mysql", dataSourceName)
 		defer func(db *sqlx.DB) {

@@ -20,6 +20,7 @@ require (
 	github.com/oklog/ulid/v2 v2.1.0
 	github.com/olivere/env v1.1.0
 	github.com/samber/mo v1.11.0
+	github.com/samber/slog-gin v1.10.2
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.8.4
 	github.com/testcontainers/testcontainers-go v0.27.0
@@ -107,6 +108,8 @@ require (
 	github.com/urfave/cli/v2 v2.27.1 // indirect
 	github.com/xrash/smetrics v0.0.0-20231213231151-1d8dd44e695e // indirect
 	github.com/yusufpapurcu/wmi v1.2.3 // indirect
+	go.opentelemetry.io/otel v1.19.0 // indirect
+	go.opentelemetry.io/otel/trace v1.19.0 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
 	golang.org/x/arch v0.7.0 // indirect
 	golang.org/x/crypto v0.19.0 // indirect

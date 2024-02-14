@@ -5,10 +5,11 @@ import (
 	"cqrs-es-example-go/pkg/command/domain/models"
 	"fmt"
 	esa "github.com/j5ik2o/event-store-adapter-go"
+	"log/slog"
 )
 
 func EventConverter(m map[string]interface{}) (esa.Event, error) {
-	fmt.Printf("EventConverter: %v\n", m)
+	slog.Info(fmt.Sprintf("EventConverter: %v", m))
 	eventId := m["id"].(string)
 	groupChatId, err := models.ConvertGroupChatIdFromJSON(m["aggregate_id"].(map[string]interface{})).Get()
 	if err != nil {
@@ -62,7 +63,7 @@ func EventConverter(m map[string]interface{}) (esa.Event, error) {
 		return &event, nil
 	case "GroupChatMemberAdded":
 		memberObj := m["member"].(map[string]interface{})
-		fmt.Printf("memberObj: %v\n", memberObj)
+		slog.Info(fmt.Sprintf("memberObj: %v", memberObj))
 		memberId, err := models.ConvertMemberIdFromJSON(memberObj["id"].(map[string]interface{})).Get()
 		if err != nil {
 			return nil, err
