@@ -5,6 +5,7 @@ import (
 	"cqrs-es-example-go/pkg/command/interfaceAdaptor/validator"
 	"cqrs-es-example-go/pkg/command/useCase"
 	"github.com/gin-gonic/gin"
+	"log/slog"
 	"net/http"
 )
 
@@ -92,6 +93,8 @@ func (g *GroupChatController) RenameGroupChat(c *gin.Context) {
 		handleClientError(c, http.StatusBadRequest, err)
 		return
 	}
+
+	slog.Info("RenameGroupChat", "jsonRequestBody", jsonRequestBody)
 
 	groupChatId, err := validator.ValidateGroupChatId(jsonRequestBody.GroupChatId).Get()
 	if err != nil {
@@ -182,7 +185,7 @@ func (g *GroupChatController) RemoveMember(c *gin.Context) {
 		return
 	}
 
-	accountId, err := validator.ValidateUserAccountId(jsonRequestBody.UserAccountId).Get()
+	userAccountId, err := validator.ValidateUserAccountId(jsonRequestBody.UserAccountId).Get()
 	if err != nil {
 		handleClientError(c, http.StatusBadRequest, err)
 		return
@@ -194,7 +197,7 @@ func (g *GroupChatController) RemoveMember(c *gin.Context) {
 		return
 	}
 
-	event, err := g.groupChatCommandProcessor.RemoveMember(&groupChatId, accountId, executorId)
+	event, err := g.groupChatCommandProcessor.RemoveMember(&groupChatId, userAccountId, executorId)
 	if err != nil {
 		response := GroupChatResponseErrorBody{Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, response)

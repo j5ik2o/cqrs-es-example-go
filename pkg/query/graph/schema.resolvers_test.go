@@ -21,6 +21,9 @@ func Test_GetGroupChat(t *testing.T) {
 	dataSourceName := test.GetDataSourceName(port)
 
 	db, err := sqlx.Connect("mysql", dataSourceName)
+	if err != nil {
+		panic(err.Error())
+	}
 	defer func(db *sqlx.DB) {
 		if db != nil {
 			err := db.Close()
@@ -29,9 +32,6 @@ func Test_GetGroupChat(t *testing.T) {
 			}
 		}
 	}(db)
-	if err != nil {
-		panic(err.Error())
-	}
 	require.NoError(t, err)
 
 	err = test.MigrateDB(t, err, db, "../../../")
@@ -61,6 +61,9 @@ func Test_GetGroupChats(t *testing.T) {
 	dataSourceName := test.GetDataSourceName(port)
 
 	db, err := sqlx.Connect("mysql", dataSourceName)
+	if err != nil {
+		panic(err.Error())
+	}
 	defer func(db *sqlx.DB) {
 		if db != nil {
 			err := db.Close()
@@ -69,9 +72,6 @@ func Test_GetGroupChats(t *testing.T) {
 			}
 		}
 	}(db)
-	if err != nil {
-		panic(err.Error())
-	}
 	require.NoError(t, err)
 
 	err = test.MigrateDB(t, err, db, "../../../")

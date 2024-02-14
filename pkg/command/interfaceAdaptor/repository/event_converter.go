@@ -48,14 +48,14 @@ func EventConverter(m map[string]interface{}) (esa.Event, error) {
 		)
 		return &event, nil
 	case "GroupChatRenamed":
-		name, err := models.NewGroupChatName(m["name"].(string)).Get()
+		groupChatName, err := models.ConvertGroupChatNameFromJSON(m["name"].(map[string]interface{})).Get()
 		if err != nil {
 			return nil, err
 		}
 		event := events.NewGroupChatRenamedFrom(
 			eventId,
 			groupChatId,
-			name,
+			groupChatName,
 			seqNr,
 			executorId,
 			occurredAt,

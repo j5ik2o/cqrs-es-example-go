@@ -116,10 +116,12 @@ var writeApiCmd = &cobra.Command{
 		groupChat := engine.Group("/group-chats")
 		{
 			groupChat.POST("/create", groupChatController.CreateGroupChat)
+			groupChat.POST("/delete", groupChatController.DeleteGroupChat)
 			groupChat.POST("/rename", groupChatController.RenameGroupChat)
 			groupChat.POST("/add-member", groupChatController.AddMember)
 			groupChat.POST("/remove-member", groupChatController.RemoveMember)
 			groupChat.POST("/post-message", groupChatController.PostMessage)
+			groupChat.POST("/delete-message", groupChatController.DeleteMessage)
 		}
 		address := fmt.Sprintf("%s:%d", apiHost, apiPort)
 		slog.Info(fmt.Sprintf("server started at http://%s", address))
