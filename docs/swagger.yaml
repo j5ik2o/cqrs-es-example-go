@@ -81,6 +81,20 @@ definitions:
       message_id:
         type: string
     type: object
+  api.RemoveMemberRequestBody:
+    properties:
+      executor_id:
+        type: string
+      group_chat_id:
+        type: string
+      user_account_id:
+        type: string
+    type: object
+  api.RemoveMemberResponseSuccessBody:
+    properties:
+      group_chat_id:
+        type: string
+    type: object
   api.RenameGroupChatRequestBody:
     properties:
       executor_id:
@@ -232,6 +246,30 @@ paths:
           schema:
             $ref: '#/definitions/api.GroupChatResponseErrorBody'
       summary: Post a message to a group chat
+  /v1/group-chat/remove-member:
+    post:
+      description: Remove a member from a group chat
+      parameters:
+      - description: RemoveMemberRequestBody
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.RemoveMemberRequestBody'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.RemoveMemberResponseSuccessBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.GroupChatResponseErrorBody'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.GroupChatResponseErrorBody'
+      summary: Remove a member from a group chat
   /v1/group-chat/rename:
     post:
       description: Rename a group chat

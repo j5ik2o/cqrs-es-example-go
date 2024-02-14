@@ -359,7 +359,7 @@ func getGroupChat(db *sqlx.DB, groupChatId models.GroupChatId) (map[string]any, 
 }
 
 func getMember(db *sqlx.DB, groupChatId models.GroupChatId, accountId models.UserAccountId) (map[string]any, error) {
-	stmt, err := db.Prepare(`SELECT m.id, m.role, m.created_at, m.updated_at FROM members AS m WHERE m.group_chat_id = ? AND m.account_id = ?`)
+	stmt, err := db.Prepare(`SELECT m.id, m.role, m.created_at, m.updated_at FROM members AS m WHERE m.group_chat_id = ? AND m.user_account_id = ?`)
 	if err != nil {
 		return nil, err
 	}
@@ -390,7 +390,7 @@ func getMember(db *sqlx.DB, groupChatId models.GroupChatId, accountId models.Use
 }
 
 func getMessage(db *sqlx.DB, messageId models.MessageId) (map[string]any, error) {
-	stmt, err := db.Prepare(`SELECT m.id, m.disabled, m.group_chat_id, m.account_id, m.text, m.created_at, m.updated_at FROM messages AS m WHERE m.id = ?`)
+	stmt, err := db.Prepare(`SELECT m.id, m.disabled, m.group_chat_id, m.user_account_id, m.text, m.created_at, m.updated_at FROM messages AS m WHERE m.id = ?`)
 	if err != nil {
 		return nil, err
 	}
@@ -405,22 +405,22 @@ func getMessage(db *sqlx.DB, messageId models.MessageId) (map[string]any, error)
 		var id string
 		var groupChatId string
 		var disabled bool
-		var accountId string
+		var userAccountId string
 		var text string
 		var createdAt time.Time
 		var updatedAt time.Time
-		err = row.Scan(&id, &disabled, &groupChatId, &accountId, &text, &createdAt, &updatedAt)
+		err = row.Scan(&id, &disabled, &groupChatId, &userAccountId, &text, &createdAt, &updatedAt)
 		if err != nil {
 			return nil, err
 		}
 		return map[string]any{
-			"ID":          id,
-			"Disabled":    disabled,
-			"GroupChatID": groupChatId,
-			"AccountID":   accountId,
-			"Text":        text,
-			"CreatedAt":   createdAt.String(),
-			"UpdatedAt":   updatedAt.String(),
+			"ID":            id,
+			"Disabled":      disabled,
+			"GroupChatID":   groupChatId,
+			"UserAccountID": userAccountId,
+			"Text":          text,
+			"CreatedAt":     createdAt.String(),
+			"UpdatedAt":     updatedAt.String(),
 		}, nil
 	}
 	return nil, nil
