@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"cqrs-es-example-go/api"
+	_ "cqrs-es-example-go/docs"
 	"cqrs-es-example-go/pkg/command/interfaceAdaptor/repository"
 	"cqrs-es-example-go/pkg/command/useCase"
 	"fmt"
@@ -15,9 +16,13 @@ import (
 	"github.com/olivere/env"
 	sloggin "github.com/samber/slog-gin"
 	"github.com/spf13/cobra"
+	swaggerfiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"log/slog"
 	"os"
 )
+
+// @BasePath /api/v1
 
 // writeApiCmd represents the writeApi command
 var writeApiCmd = &cobra.Command{
@@ -113,7 +118,8 @@ var writeApiCmd = &cobra.Command{
 		engine.Use(gin.Recovery())
 
 		engine.GET("/", api.Index)
-		groupChat := engine.Group("/group-chats")
+		v1 := engine.Group("/v1")
+		groupChat := v1.Group("/group-chats")
 		{
 			groupChat.POST("/create", groupChatController.CreateGroupChat)
 			groupChat.POST("/delete", groupChatController.DeleteGroupChat)
@@ -123,6 +129,7 @@ var writeApiCmd = &cobra.Command{
 			groupChat.POST("/post-message", groupChatController.PostMessage)
 			groupChat.POST("/delete-message", groupChatController.DeleteMessage)
 		}
+		engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 		address := fmt.Sprintf("%s:%d", apiHost, apiPort)
 		slog.Info(fmt.Sprintf("server started at http://%s", address))
 		err = engine.Run(address)

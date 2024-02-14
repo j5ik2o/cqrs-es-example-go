@@ -61,6 +61,10 @@ update:
 build:
 	$(GOBUILD)
 
+.PHONY: swag
+swag:
+	swag init
+
 q-gql-init:
 	@echo "Generating GraphQL code..."
 	@go run github.com/99designs/gqlgen init --config pkg/query/gqlgen.yml
@@ -84,7 +88,7 @@ docker-compose-build:
 	./tools/scripts/docker-compose-build.sh
 
 .PHONY: docker-compose-up
-docker-compose-up:
+docker-compose-up: swag
 	./tools/scripts/docker-compose-up.sh
 
 .PHONY: docker-compose-ps
