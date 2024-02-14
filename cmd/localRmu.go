@@ -103,6 +103,9 @@ var localRmuCmd = &cobra.Command{
 		}
 		dataSourceName := fmt.Sprintf("%s?parseTime=true", dbUrl)
 		db, err := sqlx.Connect("mysql", dataSourceName)
+		if err != nil {
+			panic(err.Error())
+		}
 		defer func(db *sqlx.DB) {
 			if db != nil {
 				err := db.Close()
@@ -111,9 +114,6 @@ var localRmuCmd = &cobra.Command{
 				}
 			}
 		}(db)
-		if err != nil {
-			panic(err.Error())
-		}
 		dao := rmu.NewGroupChatDaoImpl(db)
 		readModelUpdater := rmu.NewReadModelUpdater(&dao)
 

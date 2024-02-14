@@ -18,15 +18,15 @@ func (r *queryRootResolver) GetGroupChat(ctx context.Context, groupChatID string
 		`SELECT gc.id, gc.name, gc.owner_id, gc.created_at, gc.updated_at
 					 FROM group_chats AS gc JOIN members AS m ON gc.id = m.group_chat_id
 					 WHERE gc.disabled = 'false' AND m.group_chat_id = ? AND m.account_id = ?`)
+	if err != nil {
+		return nil, err
+	}
 	defer func(stmt *sql.Stmt) {
 		err := stmt.Close()
 		if err != nil {
 			panic(err.Error())
 		}
 	}(stmt)
-	if err != nil {
-		return nil, err
-	}
 	row := stmt.QueryRow(groupChatID, userAccountID)
 	if row != nil {
 		var id string
@@ -55,15 +55,15 @@ func (r *queryRootResolver) GetGroupChats(ctx context.Context, userAccountID str
 		`SELECT gc.id, gc.name, gc.owner_id, gc.created_at, gc.updated_at
 					 FROM group_chats AS gc JOIN members AS m ON gc.id = m.group_chat_id
            WHERE gc.disabled = 'false' AND m.account_id = ?`)
+	if err != nil {
+		return nil, err
+	}
 	defer func(stmt *sql.Stmt) {
 		err := stmt.Close()
 		if err != nil {
 			panic(err.Error())
 		}
 	}(stmt)
-	if err != nil {
-		return nil, err
-	}
 	rows, err := stmt.Query(userAccountID)
 	if err != nil {
 		return nil, err
@@ -99,15 +99,15 @@ func (r *queryRootResolver) GetMember(ctx context.Context, groupChatID string, u
 		`SELECT m.id, m.group_chat_id, m.account_id, m.role, m.created_at, m.updated_at
 					 FROM group_chats AS gc JOIN members AS m ON gc.id = m.group_chat_id
 					 WHERE gc.disabled = 'false' AND m.group_chat_id = ? AND m.account_id = ?`)
+	if err != nil {
+		return nil, err
+	}
 	defer func(stmt *sql.Stmt) {
 		err := stmt.Close()
 		if err != nil {
 			panic(err.Error())
 		}
 	}(stmt)
-	if err != nil {
-		return nil, err
-	}
 	row := stmt.QueryRow(groupChatID, userAccountID)
 	if row != nil {
 		var id string
@@ -139,15 +139,15 @@ func (r *queryRootResolver) GetMembers(ctx context.Context, groupChatID string, 
            FROM group_chats AS gc JOIN members AS m ON gc.id = m.group_chat_id
            WHERE gc.disabled = 'false' AND m.group_chat_id = ?
 						AND EXISTS (SELECT 1 FROM members AS m2 WHERE m2.group_chat_id = m.group_chat_id AND m2.account_id = ?)`)
+	if err != nil {
+		return nil, err
+	}
 	defer func(stmt *sql.Stmt) {
 		err := stmt.Close()
 		if err != nil {
 			panic(err.Error())
 		}
 	}(stmt)
-	if err != nil {
-		return nil, err
-	}
 	rows, err := stmt.Query(groupChatID, userAccountID)
 	if err != nil {
 		return nil, err
@@ -191,15 +191,15 @@ func (r *queryRootResolver) GetMessage(ctx context.Context, messageID string, us
 					 FROM group_chats AS gc JOIN messages AS m ON gc.id = m.group_chat_id
            WHERE gc.disabled = 'false' AND m.disabled = 'false' AND m.id = ?
             AND EXISTS ( SELECT 1 FROM members AS mem WHERE mem.group_chat_id = m.group_chat_id AND mem.account_id = ? )`)
+	if err != nil {
+		return nil, err
+	}
 	defer func(stmt *sql.Stmt) {
 		err := stmt.Close()
 		if err != nil {
 			panic(err.Error())
 		}
 	}(stmt)
-	if err != nil {
-		return nil, err
-	}
 	row := stmt.QueryRow(messageID, userAccountID)
 	if row != nil {
 		var id string
@@ -231,15 +231,15 @@ func (r *queryRootResolver) GetMessages(ctx context.Context, groupChatID string,
 					 FROM group_chats AS gc JOIN messages AS m ON gc.id = m.group_chat_id
            WHERE gc.disabled = 'false' AND m.disabled = 'false' AND m.group_chat_id = ?
             AND EXISTS (SELECT 1 FROM members AS mem WHERE mem.group_chat_id = m.group_chat_id AND mem.account_id = ?)`)
+	if err != nil {
+		return nil, err
+	}
 	defer func(stmt *sql.Stmt) {
 		err := stmt.Close()
 		if err != nil {
 			panic(err.Error())
 		}
 	}(stmt)
-	if err != nil {
-		return nil, err
-	}
 	rows, err := stmt.Query(groupChatID, userAccountID)
 	if err != nil {
 		return nil, err
