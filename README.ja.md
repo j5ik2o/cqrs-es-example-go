@@ -71,4 +71,4 @@ GroupChat:
 ## 参考リンク
 
 - [for Rust](https://github.com/j5ik2o/cqrs-es-example-rs)
-- [Common Documents](https://github.com/j5ik2o/cqrs-es-example-docs)
+- [共通ドキュメント](https://github.com/j5ik2o/cqrs-es-example-docs)
