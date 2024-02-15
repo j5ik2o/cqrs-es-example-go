@@ -21,11 +21,7 @@ This project uses [j5ik2o/event-store-adapter-go](https://github.com/j5ik2o/even
 
 ### Component Composition
 
-<<<<<<< Updated upstream
 - Write API Server
-=======
-- Write API
->>>>>>> Stashed changes
   - Write-only Web API
 - Read Model Updater
   - Lambda to build read models based on journals
@@ -80,4 +76,5 @@ GroupChat:
 ## Links
 
 - [Rust Version](https://github.com/j5ik2o/cqrs-es-example-rs)
+- [TypeScript Version](https://github.com/j5ik2o/cqrs-es-example-js)
 - [Common Documents](https://github.com/j5ik2o/cqrs-es-example-docs)
