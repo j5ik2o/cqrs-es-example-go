@@ -7,7 +7,7 @@ services:
     healthcheck:
       test: MYSQL_PWD=passwd mysql -h127.0.0.1 -P3306 -uroot -e "quit"
     ports:
-      - 3306:3306
+      - 23306:3306
     environment:
       MYSQL_ROOT_PASSWORD: passwd
       MYSQL_USER: ceer
@@ -38,16 +38,16 @@ services:
       - PMA_USER=root
       - PMA_PASSWORD=passwd
     ports:
-      - 4040:80
+      - 24040:80
     depends_on:
       - mysql
   localstack:
     image: localstack/localstack:2.3.2
     hostname: localstack-local
     ports:
-      - "4566:4566"
-      - "4571:4571"
-      - "${PORT_WEB_UI-8080}:${PORT_WEB_UI-8080}"
+      - "24566:4566"
+      - "24571:4571"
+      - "${PORT_WEB_UI-28083}:${PORT_WEB_UI-8080}"
     environment:
       DEBUG: 1
       LOCALSTACK_API_KEY: ${LOCALSTACK_API_KEY- }
@@ -92,7 +92,7 @@ services:
   dynamodb-admin:
     image: aaronshaf/dynamodb-admin
     ports:
-      - "8003:8001"
+      - "28003:8001"
     environment:
       DYNAMO_ENDPOINT: http://localstack:4566
       AWS_DEFAULT_REGION: ap-northeast-1

@@ -49,8 +49,8 @@ ARCH=arm64
 ```shell
 $ make verify-group-chat
 ADMIN_ID="UserAccount-01H42K4ABWQ5V2XQEP3A48VE0Z" \
-        WRITE_API_SERVER_BASE_URL=http://localhost:18080 \
-        READ_API_SERVER_BASE_URL=http://localhost:18082 \
+        WRITE_API_SERVER_BASE_URL=http://localhost:28080 \
+        READ_API_SERVER_BASE_URL=http://localhost:28082 \
         ./tools/scripts/verify-group-chat.sh
 {"group_chat_id":"GroupChat-01HPG4EV94HMPT08GZS0ZWW0VJ"}
 GroupChat:
@@ -70,5 +70,5 @@ GroupChat:
 
 ## 参考リンク
 
-- [for Rust](https://github.com/j5ik2o/cqrs-es-example-rs)
+- [Rust Version](https://github.com/j5ik2o/cqrs-es-example-rs)
 - [共通ドキュメント](https://github.com/j5ik2o/cqrs-es-example-docs)

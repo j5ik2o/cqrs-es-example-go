@@ -28,4 +28,4 @@ done
 # Remove processed options from $@
 shift $(($OPTIND - 1))
 
-docker compose -f ../docker-compose/docker-compose-databases.yml ${F_OPTION} build --no-cache
+docker compose -p cqrs-es-example-go -f ../docker-compose/docker-compose-databases.yml ${F_OPTION} build --no-cache
