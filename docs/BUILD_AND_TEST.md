@@ -3,6 +3,7 @@
 ビルドを行う前に、Dockerを必ず起動してください。
 
 ```shell
+$ make prepare # 初回のみ 
 $ make build
 ```
 

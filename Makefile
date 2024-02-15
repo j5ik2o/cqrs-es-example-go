@@ -9,11 +9,6 @@ GORUN=$(GOCMD) run
 WRITE_API_SERVER_BASE_URL=http://localhost:28080/v1
 READ_API_SERVER_BASE_URL=http://localhost:28082
 
-.PHONY: install-tools
-install-tools:
-	@which staticcheck > /dev/null || go install honnef.co/go/tools/cmd/staticcheck@latest
-	@which goimports > /dev/null || go install golang.org/x/tools/cmd/goimports@latest
-
 .PHONY: all
 all: test
 

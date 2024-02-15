@@ -13,7 +13,7 @@ services:
       AWS_REGION: ${AWS_REGION}
       API_HOST: "0.0.0.0"
       API_PORT: 8080
-      API_ALLOW_ORIGINS: "http://localhost:18080,http://localhost:18082,http://localhost:8888"
+      API_ALLOW_ORIGINS: "http://localhost:28080,http://localhost:28082,http://localhost:8888"
       PERSISTENCE_JOURNAL_TABLE_NAME: journal
       PERSISTENCE_JOURNAL_AID_INDEX_NAME: journal-aid-index
       PERSISTENCE_SNAPSHOT_TABLE_NAME: snapshot
@@ -66,7 +66,7 @@ services:
       AWS_REGION: ${AWS_REGION}
       API_HOST: "0.0.0.0"
       API_PORT: 8080
-      API_ALLOW_ORIGINS: "http://localhost:18080,http://localhost:18082,http://localhost:8888"
+      API_ALLOW_ORIGINS: "http://localhost:28080,http://localhost:18082,http://localhost:8888"
       DATABASE_URL: ceer:ceer@tcp(mysql-local:3306)/ceer
     depends_on:
       - mysql
