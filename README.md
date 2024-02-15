@@ -75,5 +75,6 @@ GroupChat:
 
 ## Links
 
-- [for Rust](https://github.com/j5ik2o/cqrs-es-example-rs)
+- [Rust Version](https://github.com/j5ik2o/cqrs-es-example-rs)
+- [TypeScript Version](https://github.com/j5ik2o/cqrs-es-example-js)
 - [Common Documents](https://github.com/j5ik2o/cqrs-es-example-docs)
