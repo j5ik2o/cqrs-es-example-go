@@ -370,9 +370,6 @@ const docTemplate = `{
                 },
                 "message_id": {
                     "type": "string"
-                },
-                "user_account_id": {
-                    "type": "string"
                 }
             }
         },

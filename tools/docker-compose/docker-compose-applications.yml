@@ -8,9 +8,9 @@ services:
     image: write-api-server:latest-${ARCH}
     container_name: write-api-server-1
     ports:
-      - 18080:8080
+      - 28080:8080
     environment:
-      AWS_REGION: ap-northeast-1
+      AWS_REGION: ${AWS_REGION}
       API_HOST: "0.0.0.0"
       API_PORT: 8080
       API_ALLOW_ORIGINS: "http://localhost:18080,http://localhost:18082,http://localhost:8888"
@@ -36,9 +36,9 @@ services:
     image: read-model-updater-local:latest-${ARCH}
     container_name: read-model-updater-1
     ports:
-      - 18081:8080
+      - 28081:8080
     environment:
-      AWS_REGION: ap-northeast-1
+      AWS_REGION: ${AWS_REGION}
       API_HOST: "0.0.0.0"
       API_PORT: 8080
       AWS_REGION_NAME: ${AWS_REGION}
@@ -61,9 +61,9 @@ services:
     image: read-api-server:latest-${ARCH}
     container_name: read-api-server-1
     ports:
-      - 18082:8080
+      - 28082:8080
     environment:
-      AWS_REGION: ap-northeast-1
+      AWS_REGION: ${AWS_REGION}
       API_HOST: "0.0.0.0"
       API_PORT: 8080
       API_ALLOW_ORIGINS: "http://localhost:18080,http://localhost:18082,http://localhost:8888"

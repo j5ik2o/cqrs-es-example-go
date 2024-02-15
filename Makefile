@@ -4,9 +4,10 @@ GOTEST=$(GOCMD) test
 GOGET=$(GOCMD) get
 GOMOD=$(GOCMD) mod
 GOBUILD=$(GOCMD) build
+GORUN=$(GOCMD) run
 
-WRITE_API_SERVER_BASE_URL=http://localhost:18080
-READ_API_SERVER_BASE_URL=http://localhost:18082
+WRITE_API_SERVER_BASE_URL=http://localhost:28080/v1
+READ_API_SERVER_BASE_URL=http://localhost:28082
 
 .PHONY: install-tools
 install-tools:
@@ -66,14 +67,28 @@ swag:
 	swag init
 
 q-gql-init:
-	@echo "Generating GraphQL code..."
-	@go run github.com/99designs/gqlgen init --config pkg/query/gqlgen.yml
+	@echo "Initializing GraphQL code..."
+	$(GORUN) github.com/99designs/gqlgen init --config pkg/query/gqlgen.yml
 	$(GOMOD) tidy
 
 q-gql-gen:
 	@echo "Generating GraphQL code..."
-	@go run github.com/99designs/gqlgen generate --config pkg/query/gqlgen.yml
+	$(GORUN) github.com/99designs/gqlgen generate --config pkg/query/gqlgen.yml
 	$(GOMOD) tidy
+
+.PHONY: run-write-api-server
+run-write-api-server:
+	AWS_REGION=ap-northeast-1 \
+	AWS_DYNAMODB_ENDPOINT_URL=http://localhost:28000 \
+	AWS_DYNAMODB_ACCESS_KEY_ID=x \
+	AWS_DYNAMODB_SECRET_ACCESS_KEY=x \
+		$(GORUN) main.go writeApi
+
+.PHONY: run-read-api-server
+run-read-api-server:
+	AWS_REGION=ap-northeast-1 \
+	DATABASE_URL='ceer:ceer@tcp(localhost:23306)/ceer' \
+		$(GORUN) main.go readApi
 
 .PHONY: docker-build
 docker-build:
@@ -91,6 +106,10 @@ docker-compose-build:
 docker-compose-up: swag
 	./tools/scripts/docker-compose-up.sh
 
+.PHONY: docker-compose-up-db
+docker-compose-up-db:
+	./tools/scripts/docker-compose-up.sh -d
+
 .PHONY: docker-compose-ps
 docker-compose-ps:
 	./tools/scripts/docker-compose-ps.sh
@@ -105,3 +124,8 @@ verify-group-chat:
 	WRITE_API_SERVER_BASE_URL=$(WRITE_API_SERVER_BASE_URL) \
 	READ_API_SERVER_BASE_URL=$(READ_API_SERVER_BASE_URL) \
 	./tools/scripts/verify-group-chat.sh
+
+.PHONY: view-swagger-ui
+view-swagger-ui:
+	@echo "Swagger UI: http://localhost:28080/swagger/index.html"
+	@open http://localhost:28080/swagger/index.html

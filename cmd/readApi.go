@@ -13,7 +13,7 @@ import (
 	"os"
 )
 
-const defaultPort = 8080
+const readApiDefaultPort = 28082
 
 // readApiCmd represents the readApi command
 var readApiCmd = &cobra.Command{
@@ -24,7 +24,7 @@ var readApiCmd = &cobra.Command{
 		logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 		slog.SetDefault(logger)
 
-		apiPort := env.Int(defaultPort, "API_PORT")
+		apiPort := env.Int(readApiDefaultPort, "API_PORT")
 		apiHost := env.String("0.0.0.0", "API_HOST")
 		dbUrl := env.String("", "DATABASE_URL")
 

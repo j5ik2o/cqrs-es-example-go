@@ -22,7 +22,7 @@ import (
 	"os"
 )
 
-// @BasePath /api/v1
+const writeApiDefaultPort = 28080
 
 // writeApiCmd represents the writeApi command
 var writeApiCmd = &cobra.Command{
@@ -35,7 +35,7 @@ var writeApiCmd = &cobra.Command{
 
 		awsRegion := env.String("", "AWS_REGION")
 		apiHost := env.String("0.0.0.0", "API_HOST")
-		apiPort := env.Int(8080, "API_PORT")
+		apiPort := env.Int(writeApiDefaultPort, "API_PORT")
 		journalTableName := env.String("journal", "PERSISTENCE_JOURNAL_TABLE_NAME")
 		snapshotTableName := env.String("snapshot", "PERSISTENCE_SNAPSHOT_TABLE_NAME")
 		journalAidIndexName := env.String("journal-aid-index", "PERSISTENCE_JOURNAL_AID_INDEX_NAME")

@@ -21,7 +21,11 @@ This project uses [j5ik2o/event-store-adapter-go](https://github.com/j5ik2o/even
 
 ### Component Composition
 
+<<<<<<< Updated upstream
 - Write API Server
+=======
+- Write API
+>>>>>>> Stashed changes
   - Write-only Web API
 - Read Model Updater
   - Lambda to build read models based on journals
@@ -54,8 +58,8 @@ ARCH=arm64
 ```shell
 $ make verify-group-chat
 ADMIN_ID="UserAccount-01H42K4ABWQ5V2XQEP3A48VE0Z" \
-        WRITE_API_SERVER_BASE_URL=http://localhost:18080 \
-        READ_API_SERVER_BASE_URL=http://localhost:18082 \
+        WRITE_API_SERVER_BASE_URL=http://localhost:28080 \
+        READ_API_SERVER_BASE_URL=http://localhost:28082 \
         ./tools/scripts/verify-group-chat.sh
 {"group_chat_id":"GroupChat-01HPG4EV94HMPT08GZS0ZWW0VJ"}
 GroupChat:
@@ -75,5 +79,5 @@ GroupChat:
 
 ## Links
 
-- [for Rust](https://github.com/j5ik2o/cqrs-es-example-rs)
+- [Rust Version](https://github.com/j5ik2o/cqrs-es-example-rs)
 - [Common Documents](https://github.com/j5ik2o/cqrs-es-example-docs)
