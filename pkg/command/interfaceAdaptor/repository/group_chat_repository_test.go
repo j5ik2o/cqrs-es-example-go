@@ -63,8 +63,9 @@ func Test_GroupChatRepository_OnDynamoDB_FindById(t *testing.T) {
 	jsonObj, err := json.Marshal(event.ToJSON())
 	require.NoError(t, err)
 	slog.Info(fmt.Sprintf("event = %s", string(jsonObj)))
-	err = repository.StoreEventWithSnapshot(event, &groupChat)
+	err, b := repository.StoreEventWithSnapshot(event, &groupChat).Get()
 	require.NoError(t, err)
+	require.False(t, b)
 
 	groupChat2 := repository.FindById(groupChat.GetGroupChatId()).MustGet()
 	require.NotNil(t, groupChat2)
@@ -84,8 +85,9 @@ func Test_GroupChatRepository_OnMemory_FindById(t *testing.T) {
 	jsonObj, err := json.Marshal(event.ToJSON())
 	require.NoError(t, err)
 	slog.Info(fmt.Sprintf("event = %s", string(jsonObj)))
-	err = repository.StoreEventWithSnapshot(event, &groupChat)
+	err, b := repository.StoreEventWithSnapshot(event, &groupChat).Get()
 	require.NoError(t, err)
+	require.False(t, b)
 
 	groupChat2 := repository.FindById(groupChat.GetGroupChatId()).MustGet()
 	require.NotNil(t, groupChat2)

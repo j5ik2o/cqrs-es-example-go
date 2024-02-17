@@ -49,7 +49,7 @@ func (g *GroupChatController) CreateGroupChat(c *gin.Context) {
 		return
 	}
 
-	event, err := g.groupChatCommandProcessor.CreateGroupChat(groupChatName, executorId)
+	event, err := g.groupChatCommandProcessor.CreateGroupChat(groupChatName, executorId).Get()
 	if err != nil {
 		response := GroupChatResponseErrorBody{Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, response)
@@ -88,7 +88,7 @@ func (g *GroupChatController) DeleteGroupChat(c *gin.Context) {
 		return
 	}
 
-	event, err := g.groupChatCommandProcessor.DeleteGroupChat(&groupChatId, executorId)
+	event, err := g.groupChatCommandProcessor.DeleteGroupChat(&groupChatId, executorId).Get()
 	if err != nil {
 		response := GroupChatResponseErrorBody{Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, response)
@@ -135,7 +135,7 @@ func (g *GroupChatController) RenameGroupChat(c *gin.Context) {
 		return
 	}
 
-	event, err := g.groupChatCommandProcessor.RenameGroupChat(&groupChatId, groupChatName, executorId)
+	event, err := g.groupChatCommandProcessor.RenameGroupChat(&groupChatId, groupChatName, executorId).Get()
 	if err != nil {
 		response := GroupChatResponseErrorBody{Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, response)
@@ -186,7 +186,7 @@ func (g *GroupChatController) AddMember(c *gin.Context) {
 		return
 	}
 
-	event, err := g.groupChatCommandProcessor.AddMember(&groupChatId, accountId, role, executorId)
+	event, err := g.groupChatCommandProcessor.AddMember(&groupChatId, accountId, role, executorId).Get()
 
 	if err != nil {
 		response := GroupChatResponseErrorBody{Message: err.Error()}
@@ -232,7 +232,7 @@ func (g *GroupChatController) RemoveMember(c *gin.Context) {
 		return
 	}
 
-	event, err := g.groupChatCommandProcessor.RemoveMember(&groupChatId, userAccountId, executorId)
+	event, err := g.groupChatCommandProcessor.RemoveMember(&groupChatId, userAccountId, executorId).Get()
 	if err != nil {
 		response := GroupChatResponseErrorBody{Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, response)
@@ -285,7 +285,7 @@ func (g *GroupChatController) PostMessage(c *gin.Context) {
 		return
 	}
 
-	event, err := g.groupChatCommandProcessor.PostMessage(&groupChatId, message, executorId)
+	event, err := g.groupChatCommandProcessor.PostMessage(&groupChatId, message, executorId).Get()
 	if err != nil {
 		response := GroupChatResponseErrorBody{Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, response)
@@ -330,7 +330,7 @@ func (g *GroupChatController) DeleteMessage(c *gin.Context) {
 		return
 	}
 
-	event, err := g.groupChatCommandProcessor.DeleteMessage(&groupChatId, messageId, executorId)
+	event, err := g.groupChatCommandProcessor.DeleteMessage(&groupChatId, messageId, executorId).Get()
 	if err != nil {
 		response := GroupChatResponseErrorBody{Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, response)

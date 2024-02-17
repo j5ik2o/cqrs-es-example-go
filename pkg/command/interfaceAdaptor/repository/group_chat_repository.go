@@ -10,8 +10,8 @@ import (
 )
 
 type GroupChatRepository interface {
-	StoreEvent(event events.GroupChatEvent, version uint64) error
-	StoreEventWithSnapshot(event events.GroupChatEvent, snapshot *domain.GroupChat) error
+	StoreEvent(event events.GroupChatEvent, version uint64) mo.Option[error]
+	StoreEventWithSnapshot(event events.GroupChatEvent, snapshot *domain.GroupChat) mo.Option[error]
 	FindById(id *models.GroupChatId) mo.Result[domain.GroupChat]
 }
 
@@ -23,12 +23,20 @@ func NewGroupChatRepository(eventStore esa.EventStore) GroupChatRepositoryImpl {
 	return GroupChatRepositoryImpl{eventStore}
 }
 
-func (g *GroupChatRepositoryImpl) StoreEvent(event events.GroupChatEvent, version uint64) error {
-	return g.eventStore.PersistEvent(event, version)
+func (g *GroupChatRepositoryImpl) StoreEvent(event events.GroupChatEvent, version uint64) mo.Option[error] {
+	if err := g.eventStore.PersistEvent(event, version); err != nil {
+		return mo.Some(err)
+	} else {
+		return mo.None[error]()
+	}
 }
 
-func (g *GroupChatRepositoryImpl) StoreEventWithSnapshot(event events.GroupChatEvent, snapshot *domain.GroupChat) error {
-	return g.eventStore.PersistEventAndSnapshot(event, snapshot)
+func (g *GroupChatRepositoryImpl) StoreEventWithSnapshot(event events.GroupChatEvent, snapshot *domain.GroupChat) mo.Option[error] {
+	if err := g.eventStore.PersistEventAndSnapshot(event, snapshot); err != nil {
+		return mo.Some(err)
+	} else {
+		return mo.None[error]()
+	}
 }
 
 func (g *GroupChatRepositoryImpl) FindById(id *models.GroupChatId) mo.Result[domain.GroupChat] {
