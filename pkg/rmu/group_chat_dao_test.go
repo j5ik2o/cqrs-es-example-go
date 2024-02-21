@@ -173,13 +173,14 @@ func TestReadModelDao_InsertMember(t *testing.T) {
 	require.NoError(t, err)
 
 	memberId := models.NewMemberId()
-	err = dao.InsertMember(&memberId, &groupChatId, &adminId, models.AdminRole, now)
+	member1 := models.NewMember(memberId, adminId, models.AdminRole)
+	err = dao.InsertMember(&groupChatId, &member1, now)
 	require.NoError(t, err)
 
-	member, err := getMember(db, groupChatId, adminId)
+	member2, err := getMember(db, groupChatId, adminId)
 	require.NoError(t, err)
-	require.NotNil(t, member)
-	require.Equal(t, memberId.String(), member["ID"])
+	require.NotNil(t, member2)
+	require.Equal(t, memberId.String(), member2["ID"])
 }
 
 func TestReadModelDao_RemoveMember(t *testing.T) {
@@ -213,18 +214,19 @@ func TestReadModelDao_RemoveMember(t *testing.T) {
 	require.NoError(t, err)
 
 	memberId := models.NewMemberId()
-	err = dao.InsertMember(&memberId, &groupChatId, &adminId, models.AdminRole, now)
+	member1 := models.NewMember(memberId, adminId, models.AdminRole)
+	err = dao.InsertMember(&groupChatId, &member1, now)
 	require.NoError(t, err)
 
-	member, err := getMember(db, groupChatId, adminId)
+	member2, err := getMember(db, groupChatId, adminId)
 	require.NoError(t, err)
-	require.NotNil(t, member)
-	require.Equal(t, memberId.String(), member["ID"])
+	require.NotNil(t, member2)
+	require.Equal(t, memberId.String(), member2["ID"])
 
 	err = dao.DeleteMember(&groupChatId, &adminId)
 	require.NoError(t, err)
 
-	member, err = getMember(db, groupChatId, adminId)
+	_, err = getMember(db, groupChatId, adminId)
 	require.Error(t, err)
 }
 
@@ -259,7 +261,8 @@ func TestReadModelDao_InsertMessage(t *testing.T) {
 	require.NoError(t, err)
 
 	memberId := models.NewMemberId()
-	err = dao.InsertMember(&memberId, &groupChatId, &adminId, models.AdminRole, now)
+	member := models.NewMember(memberId, adminId, models.AdminRole)
+	err = dao.InsertMember(&groupChatId, &member, now)
 	require.NoError(t, err)
 
 	messageId := models.NewMessageId()
@@ -305,7 +308,8 @@ func TestReadModelDao_DeleteMessage(t *testing.T) {
 	require.NoError(t, err)
 
 	memberId := models.NewMemberId()
-	err = dao.InsertMember(&memberId, &groupChatId, &adminId, models.AdminRole, now)
+	member := models.NewMember(memberId, adminId, models.AdminRole)
+	err = dao.InsertMember(&groupChatId, &member, now)
 	require.NoError(t, err)
 
 	messageId := models.NewMessageId()

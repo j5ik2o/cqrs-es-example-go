@@ -47,7 +47,8 @@ func Test_GetGroupChat(t *testing.T) {
 	err = dao.InsertGroupChat(&groupChatId, &groupChatName, &adminId, now)
 	require.NoError(t, err)
 	memberId := models.NewMemberId()
-	err = dao.InsertMember(&memberId, &groupChatId, &adminId, models.AdminRole, now)
+	member := models.NewMember(memberId, adminId, models.AdminRole)
+	err = dao.InsertMember(&groupChatId, &member, now)
 
 	result, err := resolver.QueryRoot().GetGroupChat(ctx, groupChatId.AsString(), adminId.AsString())
 	require.NoError(t, err)
@@ -87,7 +88,8 @@ func Test_GetGroupChats(t *testing.T) {
 	err = dao.InsertGroupChat(&groupChatId, &groupChatName, &adminId, now)
 	require.NoError(t, err)
 	memberId := models.NewMemberId()
-	err = dao.InsertMember(&memberId, &groupChatId, &adminId, models.AdminRole, now)
+	member := models.NewMember(memberId, adminId, models.AdminRole)
+	err = dao.InsertMember(&groupChatId, &member, now)
 
 	result, err := resolver.QueryRoot().GetGroupChats(ctx, adminId.AsString())
 	require.NoError(t, err)

@@ -22,14 +22,14 @@ type ReadModelUpdater struct {
 
 type GroupChatDao interface {
 	InsertGroupChat(aggregateId *models.GroupChatId, name *models.GroupChatName, administratorId *models.UserAccountId, createdAt time.Time) error
-	DeleteGroupChat(id *models.GroupChatId, at time.Time) error
-	UpdateName(aggregateId *models.GroupChatId, name *models.GroupChatName, at time.Time) error
+	DeleteGroupChat(aggregateId *models.GroupChatId, updatedAt time.Time) error
+	UpdateName(aggregateId *models.GroupChatId, name *models.GroupChatName, updatedAt time.Time) error
 
-	InsertMember(id *models.MemberId, aggregateId *models.GroupChatId, accountId *models.UserAccountId, role models.Role, at time.Time) error
-	DeleteMember(groupChatId *models.GroupChatId, userAccountId *models.UserAccountId) error
+	InsertMember(aggregateId *models.GroupChatId, member *models.Member, createdAt time.Time) error
+	DeleteMember(aggregateId *models.GroupChatId, userAccountId *models.UserAccountId) error
 
-	InsertMessage(id *models.MessageId, aggregateId *models.GroupChatId, userAccountId *models.UserAccountId, text string, at time.Time) error
-	DeleteMessage(id *models.MessageId, at time.Time) error
+	InsertMessage(messageId *models.MessageId, aggregateId *models.GroupChatId, userAccountId *models.UserAccountId, text string, createdAt time.Time) error
+	DeleteMessage(messageId *models.MessageId, updatedAt time.Time) error
 }
 
 // NewReadModelUpdater is a constructor for ReadModelUpdater.
@@ -120,8 +120,9 @@ func createGroupChat(ev *events.GroupChatCreated, r *ReadModelUpdater) error {
 
 	administrator := ev.GetMembers().GetAdministrator()
 	memberId := administrator.GetId()
-	accountId := administrator.GetUserAccountId()
-	err = r.dao.InsertMember(memberId, groupChatId, accountId, models.AdminRole, occurredAt)
+	userAccountId := administrator.GetUserAccountId()
+	member := models.NewMember(*memberId, *userAccountId, models.AdminRole)
+	err = r.dao.InsertMember(groupChatId, &member, occurredAt)
 	if err != nil {
 		return err
 	}
@@ -157,11 +158,8 @@ func renameGroupChat(ev *events.GroupChatRenamed, r *ReadModelUpdater) error {
 func addMember(ev *events.GroupChatMemberAdded, r *ReadModelUpdater) error {
 	slog.Info(fmt.Sprintf("addMember: start: ev = %v", ev))
 	groupChatId := ev.GetAggregateId().(*models.GroupChatId)
-	memberId := ev.GetMember().GetId()
-	accountId := ev.GetMember().GetUserAccountId()
-	role := ev.GetMember().GetRole()
 	occurredAt := convertToTime(ev.GetOccurredAt())
-	err := r.dao.InsertMember(memberId, groupChatId, accountId, role, occurredAt)
+	err := r.dao.InsertMember(groupChatId, ev.GetMember(), occurredAt)
 	if err != nil {
 		return err
 	}
@@ -172,8 +170,8 @@ func addMember(ev *events.GroupChatMemberAdded, r *ReadModelUpdater) error {
 func removeMember(ev *events.GroupChatMemberRemoved, r *ReadModelUpdater) error {
 	slog.Info(fmt.Sprintf("removeMember: start: ev = %v", ev))
 	groupChatId := ev.GetAggregateId().(*models.GroupChatId)
-	accountId := ev.GetUserAccountId()
-	err := r.dao.DeleteMember(groupChatId, accountId)
+	userAccountId := ev.GetUserAccountId()
+	err := r.dao.DeleteMember(groupChatId, userAccountId)
 	if err != nil {
 		return err
 	}
@@ -185,10 +183,10 @@ func postMessage(ev *events.GroupChatMessagePosted, r *ReadModelUpdater) error {
 	slog.Info(fmt.Sprintf("postMessage: start: ev = %v", ev))
 	messageId := ev.GetMessage().GetId()
 	groupChatId := ev.GetAggregateId().(*models.GroupChatId)
-	accountId := ev.GetMessage().GetSenderId()
+	userAccountId := ev.GetMessage().GetSenderId()
 	text := ev.GetMessage().GetText()
 	createdAt := convertToTime(ev.GetOccurredAt())
-	err := r.dao.InsertMessage(messageId, groupChatId, accountId, text, createdAt)
+	err := r.dao.InsertMessage(messageId, groupChatId, userAccountId, text, createdAt)
 	if err != nil {
 		return err
 	}
