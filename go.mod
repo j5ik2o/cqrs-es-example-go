@@ -31,7 +31,7 @@ require (
 	github.com/testcontainers/testcontainers-go/modules/mysql v0.28.0
 	github.com/vektah/gqlparser/v2 v2.5.11
 	golang.org/x/tools v0.18.0
-	honnef.co/go/tools v0.4.6
+	honnef.co/go/tools v0.4.7
 )
 
 require (
