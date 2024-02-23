@@ -42,14 +42,14 @@ var localRmuCmd = &cobra.Command{
 		streamJournalTableName := env.String("journal", "STREAM_JOURNAL_TABLE_NAME")
 		streamMaxItemCount := env.Int64(100, "STREAM_MAX_ITEM_COUNT")
 
-		slog.Info(fmt.Sprintf("awsRegion = %v", awsRegion))
-		slog.Info(fmt.Sprintf("apiHost = %v", apiHost))
+		slog.Info(fmt.Sprintf("AWS_REGION = %v", awsRegion))
+		slog.Info(fmt.Sprintf("API_HOST = %v", apiHost))
 		slog.Info(fmt.Sprintf("apiPort = %v", apiPort))
-		slog.Info(fmt.Sprintf("awsDynamoDBEndpointUrl = %v", awsDynamoDBEndpointUrl))
-		slog.Info(fmt.Sprintf("awsDynamoDBAccessKeyId = %v", awsDynamoDBAccessKeyId))
-		slog.Info(fmt.Sprintf("awsDynamoDBSecretKey = %v", awsDynamoDBSecretKey))
-		slog.Info(fmt.Sprintf("streamJournalTableName = %v", streamJournalTableName))
-		slog.Info(fmt.Sprintf("streamMaxItemCount = %v", streamMaxItemCount))
+		slog.Info(fmt.Sprintf("AWS_DYNAMODB_ENDPOINT_URL = %v", awsDynamoDBEndpointUrl))
+		slog.Info(fmt.Sprintf("AWS_DYNAMODB_ACCESS_KEY_ID = %v", awsDynamoDBAccessKeyId))
+		slog.Info(fmt.Sprintf("AWS_DYNAMODB_SECRET_ACCESS_KEY = %v", awsDynamoDBSecretKey))
+		slog.Info(fmt.Sprintf("STREAM_JOURNAL_TABLE_NAME = %v", streamJournalTableName))
+		slog.Info(fmt.Sprintf("STREAM_MAX_ITEM_COUNT = %v", streamMaxItemCount))
 
 		var awsCfg aws.Config
 		var err error

@@ -1,0 +1,81 @@
+# GraphQL schema example
+#
+# https://gqlgen.com/getting-started/
+
+enum Role {
+  MEMBER
+  ADMIN
+}
+
+type GroupChatResult {
+  groupChatId: String!
+}
+
+type MessageResult {
+  groupChatId: String!
+  messageId: String!
+}
+
+input CreateGroupChatInput {
+  name: String!
+  executorId: String!
+}
+
+input DeleteGroupChatInput {
+  groupChatId: String!
+  executorId:  String!
+}
+
+input RenameGroupChatInput {
+  groupChatId: String!
+  name: String!
+  executorId: String!
+}
+
+input AddMemberInput {
+  groupChatId: String!
+  userAccountId: String!
+  role: Role!
+  executorId: String!
+}
+
+input RemoveMemberInput {
+  groupChatId: String!
+  userAccountId: String!
+  executorId: String!
+}
+
+input PostMessageInput {
+  groupChatId: String!
+  content: String!
+  userAccountId: String!
+  executorId: String!
+}
+
+input DeleteMessageInput {
+  groupChatId: String!
+  messageId: String!
+  userAccountId: String!
+  executorId: String!
+}
+
+type MutationRoot {
+  createGroupChat(input: CreateGroupChatInput!): GroupChatResult!
+  deleteGroupChat(input: DeleteGroupChatInput!): GroupChatResult!
+  renameGroupChat(input: RenameGroupChatInput!): GroupChatResult!
+  addMember(input: AddMemberInput!): GroupChatResult!
+  removeMember(input: RemoveMemberInput!): GroupChatResult!
+  postMessage(input: PostMessageInput!): MessageResult!
+  deleteMessage(input: DeleteMessageInput!): GroupChatResult!
+}
+
+type QueryRoot {
+  healthCheck: String!
+}
+
+
+schema {
+  query: QueryRoot
+	mutation: MutationRoot
+}
+

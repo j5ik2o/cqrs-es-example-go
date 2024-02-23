@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"cqrs-es-example-go/pkg/query/graph"
+	"cqrs-es-example-go/pkg/query/interfaceAdaptor/graphql"
 	"fmt"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
@@ -32,9 +32,9 @@ var readApiCmd = &cobra.Command{
 			panic("DATABASE_URL is required")
 		}
 
-		slog.Info(fmt.Sprintf("apiPort = %v", apiPort))
-		slog.Info(fmt.Sprintf("apiHost = %v", apiHost))
-		slog.Info(fmt.Sprintf("dbUrl = %v", dbUrl))
+		slog.Info(fmt.Sprintf("API_PORT = %v", apiPort))
+		slog.Info(fmt.Sprintf("API_HOST = %v", apiHost))
+		slog.Info(fmt.Sprintf("DATABASE_URL = %v", dbUrl))
 
 		db, err := sqlx.Connect("mysql", fmt.Sprintf("%s?parseTime=true", dbUrl))
 		if err != nil {
@@ -49,7 +49,7 @@ var readApiCmd = &cobra.Command{
 			}
 		}(db)
 
-		srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: graph.NewResolver(db)}))
+		srv := handler.NewDefaultServer(querygraphql.NewExecutableSchema(querygraphql.Config{Resolvers: querygraphql.NewResolver(db)}))
 
 		http.Handle("/", playground.Handler("GraphQL playground", "/query"))
 		http.Handle("/query", srv)

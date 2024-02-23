@@ -1,4 +1,4 @@
-package graph
+package querygraphql
 
 import (
 	"context"
@@ -34,7 +34,7 @@ func Test_GetGroupChat(t *testing.T) {
 	}(db)
 	require.NoError(t, err)
 
-	err = test.MigrateDB(t, err, db, "../../../")
+	err = test.MigrateDB(t, err, db, "../../../../")
 
 	var resolver ResolverRoot = NewResolver(db)
 
@@ -75,7 +75,7 @@ func Test_GetGroupChats(t *testing.T) {
 	}(db)
 	require.NoError(t, err)
 
-	err = test.MigrateDB(t, err, db, "../../../")
+	err = test.MigrateDB(t, err, db, "../../../../")
 
 	var resolver ResolverRoot = NewResolver(db)
 

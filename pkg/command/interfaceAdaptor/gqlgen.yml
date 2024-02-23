@@ -1,11 +1,11 @@
 # Where are all the schema files located? globs are supported eg  src/**/*.graphqls
 schema:
-  - pkg/query/graph/*.graphqls
+  - pkg/command/interfaceAdaptor/graphql/*.graphqls
 
 # Where should the generated server code go?
 exec:
-  filename: pkg/query/graph/generated.go
-  package: graph
+  filename: pkg/command/interfaceAdaptor/graphql/generated.go
+  package: commandgraphql
 
 # Uncomment to enable federation
 # federation:
@@ -14,14 +14,14 @@ exec:
 
 # Where should any generated models go?
 model:
-  filename: pkg/query/graph/model/models_gen.go
-  package: query
+  filename: pkg/command/interfaceAdaptor/graphql/model/models_gen.go
+  package: commandgraphql
 
 # Where should the resolver implementations go?
 resolver:
   layout: follow-schema
-  dir: pkg/query/graph
-  package: graph
+  dir: pkg/command/interfaceAdaptor/graphql
+  package: commandgraphql
   filename_template: "{name}.resolvers.go"
   # Optional: turn on to not generate template comments above resolvers
   # omit_template_comment: false

@@ -61,14 +61,24 @@ build:
 swag:
 	swag init
 
+c-gql-init:
+	@echo "Initializing GraphQL code for command..."
+	$(GORUN) github.com/99designs/gqlgen init --config pkg/command/interfaceAdaptor/gqlgen.yml
+	$(GOMOD) tidy
+
+c-gql-gen:
+	@echo "Generating GraphQL code for command..."
+	$(GORUN) github.com/99designs/gqlgen generate --config pkg/command/interfaceAdaptor/gqlgen.yml
+	$(GOMOD) tidy
+
 q-gql-init:
 	@echo "Initializing GraphQL code..."
-	$(GORUN) github.com/99designs/gqlgen init --config pkg/query/gqlgen.yml
+	$(GORUN) github.com/99designs/gqlgen init --config pkg/query/interfaceAdaptor/gqlgen.yml
 	$(GOMOD) tidy
 
 q-gql-gen:
 	@echo "Generating GraphQL code..."
-	$(GORUN) github.com/99designs/gqlgen generate --config pkg/query/gqlgen.yml
+	$(GORUN) github.com/99designs/gqlgen generate --config pkg/query/interfaceAdaptor/gqlgen.yml
 	$(GOMOD) tidy
 
 .PHONY: run-write-api-server

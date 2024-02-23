@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export GROUP_CHAT_ID=$(./tools/scripts/curl-create-group-chat.sh | jq -r .group_chat_id)
+export GROUP_CHAT_ID=$(./tools/scripts/curl-create-group-chat.sh | jq -r .data.createGroupChat.groupChatId)
 echo "create-group-chat: GROUP_CHAT_ID=${GROUP_CHAT_ID}"
 
 # トライの最大回数
