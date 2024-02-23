@@ -16,7 +16,7 @@ This project uses [j5ik2o/event-store-adapter-go](https://github.com/j5ik2o/even
 
 ## Feature
 
-- [x] Write API Server(REST)
+- [x] Write API Server(GraphQL)
 - [x] Read API Server(GraphQL)
 - [x] Read Model Updater on Local
 - [x] Docker Compose Support
