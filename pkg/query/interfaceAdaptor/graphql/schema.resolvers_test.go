@@ -1,4 +1,4 @@
-package querygraph
+package querygraphql
 
 import (
 	"context"

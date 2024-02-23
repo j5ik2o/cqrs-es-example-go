@@ -2,8 +2,7 @@ package cmd
 
 import (
 	"context"
-	_ "cqrs-es-example-go/docs"
-	"cqrs-es-example-go/pkg/command/interfaceAdaptor/graph"
+	commandgraphql "cqrs-es-example-go/pkg/command/interfaceAdaptor/graphql"
 	"cqrs-es-example-go/pkg/command/interfaceAdaptor/repository"
 	"cqrs-es-example-go/pkg/command/useCase"
 	"fmt"
@@ -111,7 +110,7 @@ var writeApiCmd = &cobra.Command{
 		groupChatRepository := repository.NewGroupChatRepository(eventStore)
 		groupChatCommandProcessor := useCase.NewGroupChatCommandProcessor(&groupChatRepository)
 
-		srv := handler.NewDefaultServer(commandgraph.NewExecutableSchema(commandgraph.Config{Resolvers: commandgraph.NewResolver(groupChatCommandProcessor)}))
+		srv := handler.NewDefaultServer(commandgraphql.NewExecutableSchema(commandgraphql.Config{Resolvers: commandgraphql.NewResolver(groupChatCommandProcessor)}))
 
 		http.Handle("/", playground.Handler("GraphQL playground", "/query"))
 		http.Handle("/query", srv)

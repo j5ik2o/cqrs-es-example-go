@@ -1,4 +1,4 @@
-package commandgraph
+package commandgraphql
 
 // This file will be automatically regenerated based on the schema, any resolver implementations
 // will be copied through when generating and any unknown code will be moved to the end.
@@ -7,7 +7,8 @@ package commandgraph
 import (
 	"context"
 	"cqrs-es-example-go/pkg/command/domain/models"
-	writeapi "cqrs-es-example-go/pkg/command/interfaceAdaptor/graph/model"
+	commandgraphql "cqrs-es-example-go/pkg/command/interfaceAdaptor/graphql/model"
+	writeapi "cqrs-es-example-go/pkg/command/interfaceAdaptor/graphql/model"
 	"cqrs-es-example-go/pkg/command/interfaceAdaptor/validator"
 	"fmt"
 
@@ -15,7 +16,7 @@ import (
 )
 
 // CreateGroupChat is the resolver for the createGroupChat field.
-func (r *mutationRootResolver) CreateGroupChat(ctx context.Context, input writeapi.CreateGroupChatInput) (*writeapi.GroupChatResult, error) {
+func (r *mutationRootResolver) CreateGroupChat(ctx context.Context, input commandgraphql.CreateGroupChatInput) (*commandgraphql.GroupChatResult, error) {
 	var errors []error
 
 	groupChatName, err := validator.ValidateGroupChatName(input.Name).Get()
@@ -45,7 +46,7 @@ func (r *mutationRootResolver) CreateGroupChat(ctx context.Context, input writea
 }
 
 // DeleteGroupChat is the resolver for the deleteGroupChat field.
-func (r *mutationRootResolver) DeleteGroupChat(ctx context.Context, input writeapi.DeleteGroupChatInput) (*writeapi.GroupChatResult, error) {
+func (r *mutationRootResolver) DeleteGroupChat(ctx context.Context, input commandgraphql.DeleteGroupChatInput) (*commandgraphql.GroupChatResult, error) {
 	var errors []error
 
 	groupChatId, err := validator.ValidateGroupChatId(input.GroupChatID).Get()
@@ -75,7 +76,7 @@ func (r *mutationRootResolver) DeleteGroupChat(ctx context.Context, input writea
 }
 
 // RenameGroupChat is the resolver for the renameGroupChat field.
-func (r *mutationRootResolver) RenameGroupChat(ctx context.Context, input writeapi.RenameGroupChatInput) (*writeapi.GroupChatResult, error) {
+func (r *mutationRootResolver) RenameGroupChat(ctx context.Context, input commandgraphql.RenameGroupChatInput) (*commandgraphql.GroupChatResult, error) {
 	var errors []error
 
 	groupChatId, err := validator.ValidateGroupChatId(input.GroupChatID).Get()
@@ -110,7 +111,7 @@ func (r *mutationRootResolver) RenameGroupChat(ctx context.Context, input writea
 }
 
 // AddMember is the resolver for the addMember field.
-func (r *mutationRootResolver) AddMember(ctx context.Context, input writeapi.AddMemberInput) (*writeapi.GroupChatResult, error) {
+func (r *mutationRootResolver) AddMember(ctx context.Context, input commandgraphql.AddMemberInput) (*commandgraphql.GroupChatResult, error) {
 	var errors []error
 
 	groupChatId, err := validator.ValidateGroupChatId(input.GroupChatID).Get()
@@ -150,7 +151,7 @@ func (r *mutationRootResolver) AddMember(ctx context.Context, input writeapi.Add
 }
 
 // RemoveMember is the resolver for the removeMember field.
-func (r *mutationRootResolver) RemoveMember(ctx context.Context, input writeapi.RemoveMemberInput) (*writeapi.GroupChatResult, error) {
+func (r *mutationRootResolver) RemoveMember(ctx context.Context, input commandgraphql.RemoveMemberInput) (*commandgraphql.GroupChatResult, error) {
 	var errors []error
 
 	groupChatId, err := validator.ValidateGroupChatId(input.GroupChatID).Get()
@@ -185,7 +186,7 @@ func (r *mutationRootResolver) RemoveMember(ctx context.Context, input writeapi.
 }
 
 // PostMessage is the resolver for the postMessage field.
-func (r *mutationRootResolver) PostMessage(ctx context.Context, input writeapi.PostMessageInput) (*writeapi.MessageResult, error) {
+func (r *mutationRootResolver) PostMessage(ctx context.Context, input commandgraphql.PostMessageInput) (*commandgraphql.MessageResult, error) {
 	var errors []error
 
 	groupChatId, err := validator.ValidateGroupChatId(input.GroupChatID).Get()
@@ -227,7 +228,7 @@ func (r *mutationRootResolver) PostMessage(ctx context.Context, input writeapi.P
 }
 
 // DeleteMessage is the resolver for the deleteMessage field.
-func (r *mutationRootResolver) DeleteMessage(ctx context.Context, input writeapi.DeleteMessageInput) (*writeapi.GroupChatResult, error) {
+func (r *mutationRootResolver) DeleteMessage(ctx context.Context, input commandgraphql.DeleteMessageInput) (*commandgraphql.GroupChatResult, error) {
 	var errors []error
 
 	groupChatId, err := validator.ValidateGroupChatId(input.GroupChatID).Get()

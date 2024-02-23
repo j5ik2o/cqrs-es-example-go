@@ -1,4 +1,4 @@
-package querygraph
+package querygraphql
 
 // This file will be automatically regenerated based on the schema, any resolver implementations
 // will be copied through when generating and any unknown code will be moved to the end.
@@ -6,14 +6,14 @@ package querygraph
 
 import (
 	"context"
-	query "cqrs-es-example-go/pkg/query/interfaceAdaptor/graph/model"
+	querygraphql "cqrs-es-example-go/pkg/query/interfaceAdaptor/graphql/model"
 	"database/sql"
 	"fmt"
 	"time"
 )
 
 // GetGroupChat is the resolver for the getGroupChat field.
-func (r *queryRootResolver) GetGroupChat(ctx context.Context, groupChatID string, userAccountID string) (*query.GroupChat, error) {
+func (r *queryRootResolver) GetGroupChat(ctx context.Context, groupChatID string, userAccountID string) (*querygraphql.GroupChat, error) {
 	stmt, err := r.db.Prepare(
 		`SELECT gc.id, gc.name, gc.owner_id, gc.created_at, gc.updated_at
 					 FROM group_chats AS gc JOIN members AS m ON gc.id = m.group_chat_id
@@ -38,7 +38,7 @@ func (r *queryRootResolver) GetGroupChat(ctx context.Context, groupChatID string
 		if err != nil {
 			return nil, err
 		}
-		return &query.GroupChat{
+		return &querygraphql.GroupChat{
 			ID:        id,
 			Name:      name,
 			OwnerID:   ownerID,
@@ -50,7 +50,7 @@ func (r *queryRootResolver) GetGroupChat(ctx context.Context, groupChatID string
 }
 
 // GetGroupChats is the resolver for the getGroupChats field.
-func (r *queryRootResolver) GetGroupChats(ctx context.Context, userAccountID string) ([]*query.GroupChat, error) {
+func (r *queryRootResolver) GetGroupChats(ctx context.Context, userAccountID string) ([]*querygraphql.GroupChat, error) {
 	stmt, err := r.db.Prepare(
 		`SELECT gc.id, gc.name, gc.owner_id, gc.created_at, gc.updated_at
 					 FROM group_chats AS gc JOIN members AS m ON gc.id = m.group_chat_id
@@ -70,7 +70,7 @@ func (r *queryRootResolver) GetGroupChats(ctx context.Context, userAccountID str
 	}
 	defer rows.Close()
 
-	results := make([]*query.GroupChat, 0)
+	results := make([]*querygraphql.GroupChat, 0)
 	for rows.Next() {
 		var id string
 		var name string
@@ -81,7 +81,7 @@ func (r *queryRootResolver) GetGroupChats(ctx context.Context, userAccountID str
 		if err != nil {
 			return nil, err
 		}
-		results = append(results, &query.GroupChat{
+		results = append(results, &querygraphql.GroupChat{
 			ID:        id,
 			Name:      name,
 			OwnerID:   ownerID,
@@ -94,7 +94,7 @@ func (r *queryRootResolver) GetGroupChats(ctx context.Context, userAccountID str
 }
 
 // GetMember is the resolver for the getMember field.
-func (r *queryRootResolver) GetMember(ctx context.Context, groupChatID string, userAccountID string) (*query.Member, error) {
+func (r *queryRootResolver) GetMember(ctx context.Context, groupChatID string, userAccountID string) (*querygraphql.Member, error) {
 	stmt, err := r.db.Prepare(
 		`SELECT m.id, m.group_chat_id, m.user_account_id, m.role, m.created_at, m.updated_at
 					 FROM group_chats AS gc JOIN members AS m ON gc.id = m.group_chat_id
@@ -120,7 +120,7 @@ func (r *queryRootResolver) GetMember(ctx context.Context, groupChatID string, u
 		if err != nil {
 			return nil, err
 		}
-		return &query.Member{
+		return &querygraphql.Member{
 			ID:            id,
 			GroupChatID:   groupChatId,
 			UserAccountID: userAccountId,
@@ -133,7 +133,7 @@ func (r *queryRootResolver) GetMember(ctx context.Context, groupChatID string, u
 }
 
 // GetMembers is the resolver for the getMembers field.
-func (r *queryRootResolver) GetMembers(ctx context.Context, groupChatID string, userAccountID string) ([]*query.Member, error) {
+func (r *queryRootResolver) GetMembers(ctx context.Context, groupChatID string, userAccountID string) ([]*querygraphql.Member, error) {
 	stmt, err := r.db.Prepare(
 		`SELECT m.id, m.group_chat_id, m.user_account_id, m.role, m.created_at, m.updated_at
            FROM group_chats AS gc JOIN members AS m ON gc.id = m.group_chat_id
@@ -159,7 +159,7 @@ func (r *queryRootResolver) GetMembers(ctx context.Context, groupChatID string, 
 		}
 	}(rows)
 
-	results := make([]*query.Member, 0)
+	results := make([]*querygraphql.Member, 0)
 	for rows.Next() {
 		var id string
 		var groupChatId string
@@ -171,7 +171,7 @@ func (r *queryRootResolver) GetMembers(ctx context.Context, groupChatID string, 
 		if err != nil {
 			return nil, err
 		}
-		results = append(results, &query.Member{
+		results = append(results, &querygraphql.Member{
 			ID:            id,
 			GroupChatID:   groupChatId,
 			UserAccountID: userAccountId,
@@ -185,7 +185,7 @@ func (r *queryRootResolver) GetMembers(ctx context.Context, groupChatID string, 
 }
 
 // GetMessage is the resolver for the getMessage field.
-func (r *queryRootResolver) GetMessage(ctx context.Context, messageID string, userAccountID string) (*query.Message, error) {
+func (r *queryRootResolver) GetMessage(ctx context.Context, messageID string, userAccountID string) (*querygraphql.Message, error) {
 	stmt, err := r.db.Prepare(
 		`SELECT m.id, m.group_chat_id, m.user_account_id, m.text, m.created_at, m.updated_at
 					 FROM group_chats AS gc JOIN messages AS m ON gc.id = m.group_chat_id
@@ -212,7 +212,7 @@ func (r *queryRootResolver) GetMessage(ctx context.Context, messageID string, us
 		if err != nil {
 			return nil, err
 		}
-		return &query.Message{
+		return &querygraphql.Message{
 			ID:            id,
 			GroupChatID:   groupChatId,
 			UserAccountID: userAccountId,
@@ -225,7 +225,7 @@ func (r *queryRootResolver) GetMessage(ctx context.Context, messageID string, us
 }
 
 // GetMessages is the resolver for the getMessages field.
-func (r *queryRootResolver) GetMessages(ctx context.Context, groupChatID string, userAccountID string) ([]*query.Message, error) {
+func (r *queryRootResolver) GetMessages(ctx context.Context, groupChatID string, userAccountID string) ([]*querygraphql.Message, error) {
 	stmt, err := r.db.Prepare(
 		`SELECT m.id, m.group_chat_id, m.user_account_id, m.text, m.created_at, m.updated_at
 					 FROM group_chats AS gc JOIN messages AS m ON gc.id = m.group_chat_id
@@ -251,7 +251,7 @@ func (r *queryRootResolver) GetMessages(ctx context.Context, groupChatID string,
 		}
 	}(rows)
 
-	results := make([]*query.Message, 0)
+	results := make([]*querygraphql.Message, 0)
 	for rows.Next() {
 		var id string
 		var groupChatId string
@@ -263,7 +263,7 @@ func (r *queryRootResolver) GetMessages(ctx context.Context, groupChatID string,
 		if err != nil {
 			return nil, err
 		}
-		results = append(results, &query.Message{
+		results = append(results, &querygraphql.Message{
 			ID:            id,
 			GroupChatID:   groupChatId,
 			UserAccountID: userAccountId,

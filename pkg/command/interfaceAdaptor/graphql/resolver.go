@@ -1,4 +1,4 @@
-package commandgraph
+package commandgraphql
 
 import "cqrs-es-example-go/pkg/command/useCase"
 

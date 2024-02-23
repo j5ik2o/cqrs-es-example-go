@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"cqrs-es-example-go/pkg/query/interfaceAdaptor/graph"
+	"cqrs-es-example-go/pkg/query/interfaceAdaptor/graphql"
 	"fmt"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
@@ -49,7 +49,7 @@ var readApiCmd = &cobra.Command{
 			}
 		}(db)
 
-		srv := handler.NewDefaultServer(querygraph.NewExecutableSchema(querygraph.Config{Resolvers: querygraph.NewResolver(db)}))
+		srv := handler.NewDefaultServer(querygraphql.NewExecutableSchema(querygraphql.Config{Resolvers: querygraphql.NewResolver(db)}))
 
 		http.Handle("/", playground.Handler("GraphQL playground", "/query"))
 		http.Handle("/query", srv)

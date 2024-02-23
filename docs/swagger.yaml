@@ -1,9 +1,0 @@
-info:
-  contact: {}
-  description: This is Write API Server for GroupChat.
-  license:
-    name: Junichi Kato
-  title: GroupChat Write API
-  version: "1.0"
-paths: {}
-swagger: "2.0"
