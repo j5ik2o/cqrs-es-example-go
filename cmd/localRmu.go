@@ -36,11 +36,6 @@ var localRmuCmd = &cobra.Command{
 		awsRegion := env.String("", "AWS_REGION")
 		apiHost := env.String("0.0.0.0", "API_HOST")
 		apiPort := env.Int(rmuDefaultPort, "API_PORT")
-		journalTableName := env.String("journal", "PERSISTENCE_JOURNAL_TABLE_NAME")
-		snapshotTableName := env.String("snapshot", "PERSISTENCE_SNAPSHOT_TABLE_NAME")
-		journalAidIndexName := env.String("journal-aid-index", "PERSISTENCE_JOURNAL_AID_INDEX_NAME")
-		snapshotAidIndexName := env.String("snapshot-aid-index", "PERSISTENCE_SNAPSHOT_AID_INDEX_NAME")
-		shardCount := env.Int64(10, "PERSISTENCE_SHARD_COUNT")
 		awsDynamoDBEndpointUrl := env.String("", "AWS_DYNAMODB_ENDPOINT_URL")
 		awsDynamoDBAccessKeyId := env.String("", "AWS_DYNAMODB_ACCESS_KEY_ID")
 		awsDynamoDBSecretKey := env.String("", "AWS_DYNAMODB_SECRET_ACCESS_KEY")
@@ -50,11 +45,6 @@ var localRmuCmd = &cobra.Command{
 		slog.Info(fmt.Sprintf("awsRegion = %v", awsRegion))
 		slog.Info(fmt.Sprintf("apiHost = %v", apiHost))
 		slog.Info(fmt.Sprintf("apiPort = %v", apiPort))
-		slog.Info(fmt.Sprintf("journalTableName = %v", journalTableName))
-		slog.Info(fmt.Sprintf("snapshotTableName = %v", snapshotTableName))
-		slog.Info(fmt.Sprintf("journalAidIndexName = %v", journalAidIndexName))
-		slog.Info(fmt.Sprintf("snapshotAidIndexName = %v", snapshotAidIndexName))
-		slog.Info(fmt.Sprintf("shardCount = %v", shardCount))
 		slog.Info(fmt.Sprintf("awsDynamoDBEndpointUrl = %v", awsDynamoDBEndpointUrl))
 		slog.Info(fmt.Sprintf("awsDynamoDBAccessKeyId = %v", awsDynamoDBAccessKeyId))
 		slog.Info(fmt.Sprintf("awsDynamoDBSecretKey = %v", awsDynamoDBSecretKey))
@@ -120,7 +110,7 @@ var localRmuCmd = &cobra.Command{
 		readModelUpdater := rmu.NewReadModelUpdater(&dao)
 
 		for {
-			err := streamDriver(dynamodbClient, dynamodbStreamsClient, journalTableName, streamMaxItemCount, &readModelUpdater)
+			err := streamDriver(dynamodbClient, dynamodbStreamsClient, streamJournalTableName, streamMaxItemCount, &readModelUpdater)
 			if err != nil {
 				slog.Warn(fmt.Sprintf("An error has occurred, but stream processing is restarted. "+
 					"If this error persists, the read model condition may be incorrect.: error = %v", err))
@@ -131,8 +121,8 @@ var localRmuCmd = &cobra.Command{
 	},
 }
 
-func streamDriver(dynamoDbClient *dynamodb.Client, dynamoDbStreamsClient *dynamodbstreams.Client, journalTableName string, maxItemCount int64, readModelUpdater *rmu.ReadModelUpdater) error {
-	describeTable, err := describeTable(dynamoDbClient, journalTableName)
+func streamDriver(dynamoDbClient *dynamodb.Client, dynamoDbStreamsClient *dynamodbstreams.Client, streamJournalTableName string, maxItemCount int64, readModelUpdater *rmu.ReadModelUpdater) error {
+	describeTable, err := describeTable(dynamoDbClient, streamJournalTableName)
 	if err != nil {
 		return err
 	}
