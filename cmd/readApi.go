@@ -37,6 +37,9 @@ var readApiCmd = &cobra.Command{
 		slog.Info(fmt.Sprintf("dbUrl = %v", dbUrl))
 
 		db, err := sqlx.Connect("mysql", fmt.Sprintf("%s?parseTime=true", dbUrl))
+		if err != nil {
+			panic(err.Error())
+		}
 		defer func(db *sqlx.DB) {
 			if db != nil {
 				err := db.Close()
@@ -46,9 +49,6 @@ var readApiCmd = &cobra.Command{
 			}
 		}(db)
 
-		if err != nil {
-			panic(err.Error())
-		}
 		srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: graph.NewResolver(db)}))
 
 		http.Handle("/", playground.Handler("GraphQL playground", "/query"))
