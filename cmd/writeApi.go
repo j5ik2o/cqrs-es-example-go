@@ -2,23 +2,22 @@ package cmd
 
 import (
 	"context"
-	"cqrs-es-example-go/api"
 	_ "cqrs-es-example-go/docs"
+	"cqrs-es-example-go/pkg/command/interfaceAdaptor/graph"
 	"cqrs-es-example-go/pkg/command/interfaceAdaptor/repository"
 	"cqrs-es-example-go/pkg/command/useCase"
 	"fmt"
+	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
-	"github.com/gin-gonic/gin"
 	esa "github.com/j5ik2o/event-store-adapter-go"
 	"github.com/olivere/env"
-	sloggin "github.com/samber/slog-gin"
 	"github.com/spf13/cobra"
-	swaggerfiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
 	"log/slog"
+	"net/http"
 	"os"
 )
 
@@ -45,17 +44,17 @@ var writeApiCmd = &cobra.Command{
 		awsDynamoDBAccessKeyId := env.String("", "AWS_DYNAMODB_ACCESS_KEY_ID")
 		awsDynamoDBSecretKey := env.String("", "AWS_DYNAMODB_SECRET_ACCESS_KEY")
 
-		slog.Info(fmt.Sprintf("awsRegion = %v", awsRegion))
-		slog.Info(fmt.Sprintf("apiHost = %v", apiHost))
-		slog.Info(fmt.Sprintf("apiPort = %v", apiPort))
-		slog.Info(fmt.Sprintf("journalTableName = %v", journalTableName))
-		slog.Info(fmt.Sprintf("snapshotTableName = %v", snapshotTableName))
-		slog.Info(fmt.Sprintf("journalAidIndexName = %v", journalAidIndexName))
-		slog.Info(fmt.Sprintf("snapshotAidIndexName = %v", snapshotAidIndexName))
-		slog.Info(fmt.Sprintf("shardCount = %v", shardCount))
-		slog.Info(fmt.Sprintf("awsDynamoDBEndpointUrl = %v", awsDynamoDBEndpointUrl))
-		slog.Info(fmt.Sprintf("awsDynamoDBAccessKeyId = %v", awsDynamoDBAccessKeyId))
-		slog.Info(fmt.Sprintf("awsDynamoDBSecretKey = %v", awsDynamoDBSecretKey))
+		slog.Info(fmt.Sprintf("AWS_REGION = %v", awsRegion))
+		slog.Info(fmt.Sprintf("API_HOST = %v", apiHost))
+		slog.Info(fmt.Sprintf("API_PORT = %v", apiPort))
+		slog.Info(fmt.Sprintf("PERSISTENCE_JOURNAL_TABLE_NAME = %v", journalTableName))
+		slog.Info(fmt.Sprintf("PERSISTENCE_SNAPSHOT_TABLE_NAME = %v", snapshotTableName))
+		slog.Info(fmt.Sprintf("PERSISTENCE_JOURNAL_AID_INDEX_NAME = %v", journalAidIndexName))
+		slog.Info(fmt.Sprintf("PERSISTENCE_SNAPSHOT_AID_INDEX_NAME = %v", snapshotAidIndexName))
+		slog.Info(fmt.Sprintf("PERSISTENCE_SHARD_COUNT = %v", shardCount))
+		slog.Info(fmt.Sprintf("AWS_DYNAMODB_ENDPOINT_URL = %v", awsDynamoDBEndpointUrl))
+		slog.Info(fmt.Sprintf("AWS_DYNAMODB_ACCESS_KEY_ID = %v", awsDynamoDBAccessKeyId))
+		slog.Info(fmt.Sprintf("AWS_DYNAMODB_SECRET_ACCESS_KEY = %v", awsDynamoDBSecretKey))
 
 		var awsCfg aws.Config
 		var err error
@@ -111,30 +110,17 @@ var writeApiCmd = &cobra.Command{
 
 		groupChatRepository := repository.NewGroupChatRepository(eventStore)
 		groupChatCommandProcessor := useCase.NewGroupChatCommandProcessor(&groupChatRepository)
-		groupChatController := api.NewGroupChatController(groupChatCommandProcessor)
 
-		engine := gin.New()
-		engine.Use(sloggin.New(logger))
-		engine.Use(gin.Recovery())
+		srv := handler.NewDefaultServer(commandgraph.NewExecutableSchema(commandgraph.Config{Resolvers: commandgraph.NewResolver(groupChatCommandProcessor)}))
 
-		engine.GET("/", api.Index)
-		v1 := engine.Group("/v1")
-		groupChat := v1.Group("/group-chats")
-		{
-			groupChat.POST("/create", groupChatController.CreateGroupChat)
-			groupChat.POST("/delete", groupChatController.DeleteGroupChat)
-			groupChat.POST("/rename", groupChatController.RenameGroupChat)
-			groupChat.POST("/add-member", groupChatController.AddMember)
-			groupChat.POST("/remove-member", groupChatController.RemoveMember)
-			groupChat.POST("/post-message", groupChatController.PostMessage)
-			groupChat.POST("/delete-message", groupChatController.DeleteMessage)
-		}
-		engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
-		address := fmt.Sprintf("%s:%d", apiHost, apiPort)
-		slog.Info(fmt.Sprintf("server started at http://%s", address))
-		err = engine.Run(address)
+		http.Handle("/", playground.Handler("GraphQL playground", "/query"))
+		http.Handle("/query", srv)
+
+		endpoint := fmt.Sprintf("%s:%d", apiHost, apiPort)
+		slog.Info(fmt.Sprintf("connect to http://%s/ for GraphQL playground", endpoint))
+		err = http.ListenAndServe(endpoint, nil)
 		if err != nil {
-			panic(err)
+			slog.Error("failed to start server", "error", err.Error())
 		}
 	},
 }

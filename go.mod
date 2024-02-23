@@ -20,11 +20,8 @@ require (
 	github.com/oklog/ulid/v2 v2.1.0
 	github.com/olivere/env v1.1.0
 	github.com/samber/mo v1.11.0
-	github.com/samber/slog-gin v1.10.2
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.8.4
-	github.com/swaggo/files v1.0.1
-	github.com/swaggo/gin-swagger v1.6.0
 	github.com/swaggo/swag v1.16.3
 	github.com/testcontainers/testcontainers-go v0.28.0
 	github.com/testcontainers/testcontainers-go/modules/localstack v0.28.0

@@ -1,4 +1,4 @@
-package graph
+package querygraph
 
 import "github.com/jmoiron/sqlx"
 
