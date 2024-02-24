@@ -33,7 +33,7 @@ This project uses [j5ik2o/event-store-adapter-go](https://github.com/j5ik2o/even
 - Read Model Updater
   - Lambda to build read models based on journals
 - Read API Server
-  - implemented by GraphQL (Query, Subscription)
+  - API is implemented by GraphQL (Query)
 
 ### System Architecture Diagram
 
