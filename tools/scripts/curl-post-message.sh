@@ -9,7 +9,6 @@ curl -s -X POST -H "Content-Type: application/json" \
     "input": {
       "groupChatId": "${GROUP_CHAT_ID}",
       "content": "Text1",
-      "userAccountId": "${USER_ACCOUNT_ID}",
       "executorId": "${USER_ACCOUNT_ID}"
     }
   }

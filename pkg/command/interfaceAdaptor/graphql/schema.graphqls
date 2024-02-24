@@ -48,14 +48,12 @@ input RemoveMemberInput {
 input PostMessageInput {
   groupChatId: String!
   content: String!
-  userAccountId: String!
   executorId: String!
 }
 
 input DeleteMessageInput {
   groupChatId: String!
   messageId: String!
-  userAccountId: String!
   executorId: String!
 }
 

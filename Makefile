@@ -6,7 +6,7 @@ GOMOD=$(GOCMD) mod
 GOBUILD=$(GOCMD) build
 GORUN=$(GOCMD) run
 
-WRITE_API_SERVER_BASE_URL=http://localhost:28080/v1
+WRITE_API_SERVER_BASE_URL=http://localhost:28080
 READ_API_SERVER_BASE_URL=http://localhost:28082
 
 .PHONY: all
@@ -57,10 +57,6 @@ update:
 build:
 	$(GOBUILD)
 
-.PHONY: swag
-swag:
-	swag init
-
 c-gql-init:
 	@echo "Initializing GraphQL code for command..."
 	$(GORUN) github.com/99designs/gqlgen init --config pkg/command/interfaceAdaptor/gqlgen.yml
@@ -103,12 +99,8 @@ docker-build:
 docker-build-rmu:
 	docker build -t cqrs-es-example-go-rmu:latest -f Dockerfile.rmu .
 
-.PHONY: docker-compose-build
-docker-compose-build:
-	./tools/scripts/docker-compose-build.sh
-
 .PHONY: docker-compose-up
-docker-compose-up: swag
+docker-compose-up:
 	./tools/scripts/docker-compose-up.sh
 
 .PHONY: docker-compose-up-db
@@ -129,8 +121,3 @@ verify-group-chat:
 	WRITE_API_SERVER_BASE_URL=$(WRITE_API_SERVER_BASE_URL) \
 	READ_API_SERVER_BASE_URL=$(READ_API_SERVER_BASE_URL) \
 	./tools/scripts/verify-group-chat.sh
-
-.PHONY: view-swagger-ui
-view-swagger-ui:
-	@echo "Swagger UI: http://localhost:28080/swagger/index.html"
-	@open http://localhost:28080/swagger/index.html

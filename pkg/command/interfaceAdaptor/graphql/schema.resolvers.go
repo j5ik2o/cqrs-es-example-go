@@ -8,7 +8,6 @@ import (
 	"context"
 	"cqrs-es-example-go/pkg/command/domain/models"
 	commandgraphql "cqrs-es-example-go/pkg/command/interfaceAdaptor/graphql/model"
-	writeapi "cqrs-es-example-go/pkg/command/interfaceAdaptor/graphql/model"
 	"cqrs-es-example-go/pkg/command/interfaceAdaptor/validator"
 	"fmt"
 
@@ -42,7 +41,7 @@ func (r *mutationRootResolver) CreateGroupChat(ctx context.Context, input comman
 		return nil, nil
 	}
 
-	return &writeapi.GroupChatResult{GroupChatID: event.GetAggregateId().AsString()}, nil
+	return &commandgraphql.GroupChatResult{GroupChatID: event.GetAggregateId().AsString()}, nil
 }
 
 // DeleteGroupChat is the resolver for the deleteGroupChat field.
@@ -72,7 +71,7 @@ func (r *mutationRootResolver) DeleteGroupChat(ctx context.Context, input comman
 		return nil, nil
 	}
 
-	return &writeapi.GroupChatResult{GroupChatID: event.GetAggregateId().AsString()}, nil
+	return &commandgraphql.GroupChatResult{GroupChatID: event.GetAggregateId().AsString()}, nil
 }
 
 // RenameGroupChat is the resolver for the renameGroupChat field.
@@ -107,7 +106,7 @@ func (r *mutationRootResolver) RenameGroupChat(ctx context.Context, input comman
 		return nil, nil
 	}
 
-	return &writeapi.GroupChatResult{GroupChatID: event.GetAggregateId().AsString()}, nil
+	return &commandgraphql.GroupChatResult{GroupChatID: event.GetAggregateId().AsString()}, nil
 }
 
 // AddMember is the resolver for the addMember field.
@@ -147,7 +146,7 @@ func (r *mutationRootResolver) AddMember(ctx context.Context, input commandgraph
 		return nil, nil
 	}
 
-	return &writeapi.GroupChatResult{GroupChatID: event.GetAggregateId().AsString()}, nil
+	return &commandgraphql.GroupChatResult{GroupChatID: event.GetAggregateId().AsString()}, nil
 }
 
 // RemoveMember is the resolver for the removeMember field.
@@ -182,7 +181,7 @@ func (r *mutationRootResolver) RemoveMember(ctx context.Context, input commandgr
 		return nil, nil
 	}
 
-	return &writeapi.GroupChatResult{GroupChatID: event.GetAggregateId().AsString()}, nil
+	return &commandgraphql.GroupChatResult{GroupChatID: event.GetAggregateId().AsString()}, nil
 }
 
 // PostMessage is the resolver for the postMessage field.
@@ -196,17 +195,12 @@ func (r *mutationRootResolver) PostMessage(ctx context.Context, input commandgra
 
 	messageId := models.NewMessageId()
 
-	senderId, err := validator.ValidateUserAccountId(input.UserAccountID).Get()
-	if err != nil {
-		errors = append(errors, err)
-	}
-
-	message, err := validator.ValidateMessage(messageId, input.Content, senderId).Get()
-	if err != nil {
-		errors = append(errors, err)
-	}
-
 	executorId, err := validator.ValidateUserAccountId(input.ExecutorID).Get()
+	if err != nil {
+		errors = append(errors, err)
+	}
+
+	message, err := validator.ValidateMessage(messageId, input.Content, executorId).Get()
 	if err != nil {
 		errors = append(errors, err)
 	}
@@ -224,7 +218,7 @@ func (r *mutationRootResolver) PostMessage(ctx context.Context, input commandgra
 		return nil, nil
 	}
 
-	return &writeapi.MessageResult{GroupChatID: event.GetAggregateId().AsString(), MessageID: messageId.String()}, nil
+	return &commandgraphql.MessageResult{GroupChatID: event.GetAggregateId().AsString(), MessageID: messageId.String()}, nil
 }
 
 // DeleteMessage is the resolver for the deleteMessage field.
@@ -259,7 +253,7 @@ func (r *mutationRootResolver) DeleteMessage(ctx context.Context, input commandg
 		return nil, nil
 	}
 
-	return &writeapi.GroupChatResult{GroupChatID: event.GetAggregateId().AsString()}, nil
+	return &commandgraphql.GroupChatResult{GroupChatID: event.GetAggregateId().AsString()}, nil
 }
 
 // HealthCheck is the resolver for the healthCheck field.

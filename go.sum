@@ -134,8 +134,6 @@ github.com/hashicorp/golang-lru/v2 v2.0.7 h1:a+bsQ5rvGLjzHuww6tVxozPZFVghXaHOwFs
 github.com/hashicorp/golang-lru/v2 v2.0.7/go.mod h1:QeFd9opnmA6QUJc5vARoKUSoFhyfM2/ZepoAG6RGpeM=
 github.com/inconshreveable/mousetrap v1.1.0 h1:wN+x4NVGpMsO7ErUn/mUI3vEoE6Jt13X2s0bqwp9tc8=
 github.com/inconshreveable/mousetrap v1.1.0/go.mod h1:vpF70FUmC8bwa3OWnCshd2FqLfsEA9PFc4w1p2J65bw=
-github.com/j5ik2o/event-store-adapter-go v1.0.11 h1:b6z1Ux+nh9BXrNpb/r6j00gI7uIAIXlhnnsiB48ilj8=
-github.com/j5ik2o/event-store-adapter-go v1.0.11/go.mod h1:4m8KgWm4Rey8EnBTO2ewKwM8hwJv8JjU8d1OHO+wVj8=
 github.com/j5ik2o/event-store-adapter-go v1.0.12 h1:BkvGdgcO0sMehWhwILccsDl820NV5UVHQ39bIKYRiP4=
 github.com/j5ik2o/event-store-adapter-go v1.0.12/go.mod h1:4ORfFsDhV8/bTK6vyVrZNua5k/gLiNvYQm/gBRDM9B4=
 github.com/jmespath/go-jmespath v0.4.0 h1:BEgLn5cpjn8UN1mAw4NjwDrS35OdebyEtFe+9YPoQUg=

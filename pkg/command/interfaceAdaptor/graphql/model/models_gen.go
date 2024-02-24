@@ -26,10 +26,9 @@ type DeleteGroupChatInput struct {
 }
 
 type DeleteMessageInput struct {
-	GroupChatID   string `json:"groupChatId"`
-	MessageID     string `json:"messageId"`
-	UserAccountID string `json:"userAccountId"`
-	ExecutorID    string `json:"executorId"`
+	GroupChatID string `json:"groupChatId"`
+	MessageID   string `json:"messageId"`
+	ExecutorID  string `json:"executorId"`
 }
 
 type GroupChatResult struct {
@@ -45,10 +44,9 @@ type MutationRoot struct {
 }
 
 type PostMessageInput struct {
-	GroupChatID   string `json:"groupChatId"`
-	Content       string `json:"content"`
-	UserAccountID string `json:"userAccountId"`
-	ExecutorID    string `json:"executorId"`
+	GroupChatID string `json:"groupChatId"`
+	Content     string `json:"content"`
+	ExecutorID  string `json:"executorId"`
 }
 
 type QueryRoot struct {

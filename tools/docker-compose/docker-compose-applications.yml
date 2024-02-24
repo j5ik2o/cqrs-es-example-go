@@ -1,11 +1,8 @@
 version: '3.6'
 services:
   write-api-server-1:
-    build:
-      context: ../../
-      dockerfile: Dockerfile
     command: ["writeApi"]
-    image: write-api-server:latest-${ARCH}
+    image: cqrs-es-example-go:latest
     container_name: write-api-server-1
     ports:
       - 28080:8080
@@ -29,11 +26,8 @@ services:
       - dynamodb-admin
       - dynamodb-setup
   read-model-updater-1:
-    build:
-      context: ../../
-      dockerfile: Dockerfile
     command: [ "localRmu" ]
-    image: read-model-updater-local:latest-${ARCH}
+    image: cqrs-es-example-go:latest
     container_name: read-model-updater-1
     ports:
       - 28081:8080
@@ -54,11 +48,8 @@ services:
       - dynamodb-setup
     restart: on-failure
   read-api-server-1:
-    build:
-      context: ../../
-      dockerfile: Dockerfile
     command: [ "readApi" ]
-    image: read-api-server:latest-${ARCH}
+    image: cqrs-es-example-go:latest
     container_name: read-api-server-1
     ports:
       - 28082:8080

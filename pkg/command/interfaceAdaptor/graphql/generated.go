@@ -3120,7 +3120,7 @@ func (ec *executionContext) unmarshalInputDeleteMessageInput(ctx context.Context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"groupChatId", "messageId", "userAccountId", "executorId"}
+	fieldsInOrder := [...]string{"groupChatId", "messageId", "executorId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -3141,13 +3141,6 @@ func (ec *executionContext) unmarshalInputDeleteMessageInput(ctx context.Context
 				return it, err
 			}
 			it.MessageID = data
-		case "userAccountId":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userAccountId"))
-			data, err := ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.UserAccountID = data
 		case "executorId":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("executorId"))
 			data, err := ec.unmarshalNString2string(ctx, v)
@@ -3168,7 +3161,7 @@ func (ec *executionContext) unmarshalInputPostMessageInput(ctx context.Context, 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"groupChatId", "content", "userAccountId", "executorId"}
+	fieldsInOrder := [...]string{"groupChatId", "content", "executorId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -3189,13 +3182,6 @@ func (ec *executionContext) unmarshalInputPostMessageInput(ctx context.Context, 
 				return it, err
 			}
 			it.Content = data
-		case "userAccountId":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userAccountId"))
-			data, err := ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.UserAccountID = data
 		case "executorId":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("executorId"))
 			data, err := ec.unmarshalNString2string(ctx, v)
