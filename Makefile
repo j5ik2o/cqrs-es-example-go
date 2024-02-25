@@ -117,7 +117,4 @@ docker-compose-down:
 
 .PHONY: verify-group-chat
 verify-group-chat:
-	ADMIN_ID="UserAccount-01H42K4ABWQ5V2XQEP3A48VE0Z" \
-	WRITE_API_SERVER_BASE_URL=$(WRITE_API_SERVER_BASE_URL) \
-	READ_API_SERVER_BASE_URL=$(READ_API_SERVER_BASE_URL) \
 	./tools/scripts/verify-group-chat.sh
