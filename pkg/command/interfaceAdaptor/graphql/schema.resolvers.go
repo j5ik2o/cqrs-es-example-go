@@ -58,7 +58,7 @@ func (r *mutationRootResolver) CreateGroupChat(ctx context.Context, input comman
 		} else {
 			graphql.AddError(ctx, &gqlerror.Error{
 				Path:    graphql.GetPath(ctx),
-				Message: optimisticLockError.Message,
+				Message: err.Error(),
 				Extensions: map[string]interface{}{
 					"code": "500",
 				},
@@ -111,7 +111,7 @@ func (r *mutationRootResolver) DeleteGroupChat(ctx context.Context, input comman
 		} else {
 			graphql.AddError(ctx, &gqlerror.Error{
 				Path:    graphql.GetPath(ctx),
-				Message: optimisticLockError.Message,
+				Message: err.Error(),
 				Extensions: map[string]interface{}{
 					"code": "500",
 				},
@@ -169,7 +169,7 @@ func (r *mutationRootResolver) RenameGroupChat(ctx context.Context, input comman
 		} else {
 			graphql.AddError(ctx, &gqlerror.Error{
 				Path:    graphql.GetPath(ctx),
-				Message: optimisticLockError.Message,
+				Message: err.Error(),
 				Extensions: map[string]interface{}{
 					"code": "500",
 				},
@@ -232,7 +232,7 @@ func (r *mutationRootResolver) AddMember(ctx context.Context, input commandgraph
 		} else {
 			graphql.AddError(ctx, &gqlerror.Error{
 				Path:    graphql.GetPath(ctx),
-				Message: optimisticLockError.Message,
+				Message: err.Error(),
 				Extensions: map[string]interface{}{
 					"code": "500",
 				},
@@ -290,7 +290,7 @@ func (r *mutationRootResolver) RemoveMember(ctx context.Context, input commandgr
 		} else {
 			graphql.AddError(ctx, &gqlerror.Error{
 				Path:    graphql.GetPath(ctx),
-				Message: optimisticLockError.Message,
+				Message: err.Error(),
 				Extensions: map[string]interface{}{
 					"code": "500",
 				},
@@ -350,7 +350,7 @@ func (r *mutationRootResolver) PostMessage(ctx context.Context, input commandgra
 		} else {
 			graphql.AddError(ctx, &gqlerror.Error{
 				Path:    graphql.GetPath(ctx),
-				Message: optimisticLockError.Message,
+				Message: err.Error(),
 				Extensions: map[string]interface{}{
 					"code": "500",
 				},
@@ -402,7 +402,7 @@ func (r *mutationRootResolver) DeleteMessage(ctx context.Context, input commandg
 		} else {
 			graphql.AddError(ctx, &gqlerror.Error{
 				Path:    graphql.GetPath(ctx),
-				Message: optimisticLockError.Message,
+				Message: err.Error(),
 				Extensions: map[string]interface{}{
 					"code": "500",
 				},
