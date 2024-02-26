@@ -117,4 +117,12 @@ docker-compose-down:
 
 .PHONY: verify-group-chat
 verify-group-chat:
-	./tools/scripts/verify-group-chat.sh
+	./tools/ci/verify-group-chat.sh
+
+.PHONY: docker-build-e2e-test
+docker-build-e2e-test:
+	cd ./tools/e2e-test && make build
+
+.PHONY: docker-compose-e2e-test
+docker-compose-ci: docker-build-e2e-test docker-build
+	./tools/scripts/docker-compose-e2e-test.sh
