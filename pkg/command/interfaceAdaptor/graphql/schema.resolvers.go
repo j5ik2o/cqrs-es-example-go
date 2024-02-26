@@ -52,7 +52,7 @@ func (r *mutationRootResolver) CreateGroupChat(ctx context.Context, input comman
 				Path:    graphql.GetPath(ctx),
 				Message: optimisticLockError.Message,
 				Extensions: map[string]interface{}{
-					"code": "400",
+					"code": "409",
 				},
 			})
 		} else {
@@ -105,7 +105,7 @@ func (r *mutationRootResolver) DeleteGroupChat(ctx context.Context, input comman
 				Path:    graphql.GetPath(ctx),
 				Message: optimisticLockError.Message,
 				Extensions: map[string]interface{}{
-					"code": "400",
+					"code": "409",
 				},
 			})
 		} else {
@@ -163,7 +163,7 @@ func (r *mutationRootResolver) RenameGroupChat(ctx context.Context, input comman
 				Path:    graphql.GetPath(ctx),
 				Message: optimisticLockError.Message,
 				Extensions: map[string]interface{}{
-					"code": "400",
+					"code": "409",
 				},
 			})
 		} else {
@@ -226,7 +226,7 @@ func (r *mutationRootResolver) AddMember(ctx context.Context, input commandgraph
 				Path:    graphql.GetPath(ctx),
 				Message: optimisticLockError.Message,
 				Extensions: map[string]interface{}{
-					"code": "400",
+					"code": "409",
 				},
 			})
 		} else {
@@ -284,7 +284,7 @@ func (r *mutationRootResolver) RemoveMember(ctx context.Context, input commandgr
 				Path:    graphql.GetPath(ctx),
 				Message: optimisticLockError.Message,
 				Extensions: map[string]interface{}{
-					"code": "400",
+					"code": "409",
 				},
 			})
 		} else {
@@ -344,7 +344,7 @@ func (r *mutationRootResolver) PostMessage(ctx context.Context, input commandgra
 				Path:    graphql.GetPath(ctx),
 				Message: optimisticLockError.Message,
 				Extensions: map[string]interface{}{
-					"code": "400",
+					"code": "409",
 				},
 			})
 		} else {
@@ -396,7 +396,7 @@ func (r *mutationRootResolver) DeleteMessage(ctx context.Context, input commandg
 				Path:    graphql.GetPath(ctx),
 				Message: optimisticLockError.Message,
 				Extensions: map[string]interface{}{
-					"code": "400",
+					"code": "409",
 				},
 			})
 		} else {
