@@ -33,7 +33,13 @@ func (r *mutationRootResolver) CreateGroupChat(ctx context.Context, input comman
 
 	if len(errorList) > 0 {
 		for _, err := range errorList {
-			graphql.AddError(ctx, err)
+			graphql.AddError(ctx, &gqlerror.Error{
+				Path:    graphql.GetPath(ctx),
+				Message: err.Error(),
+				Extensions: map[string]interface{}{
+					"code": "400",
+				},
+			})
 		}
 		return nil, nil
 	}
@@ -46,11 +52,17 @@ func (r *mutationRootResolver) CreateGroupChat(ctx context.Context, input comman
 				Path:    graphql.GetPath(ctx),
 				Message: optimisticLockError.Message,
 				Extensions: map[string]interface{}{
-					"code": "OPTIMISTIC_LOCK_ERROR",
+					"code": "400",
 				},
 			})
 		} else {
-			graphql.AddError(ctx, err)
+			graphql.AddError(ctx, &gqlerror.Error{
+				Path:    graphql.GetPath(ctx),
+				Message: optimisticLockError.Message,
+				Extensions: map[string]interface{}{
+					"code": "500",
+				},
+			})
 		}
 		return nil, nil
 	}
@@ -74,7 +86,13 @@ func (r *mutationRootResolver) DeleteGroupChat(ctx context.Context, input comman
 
 	if len(errorList) > 0 {
 		for _, err := range errorList {
-			graphql.AddError(ctx, err)
+			graphql.AddError(ctx, &gqlerror.Error{
+				Path:    graphql.GetPath(ctx),
+				Message: err.Error(),
+				Extensions: map[string]interface{}{
+					"code": "400",
+				},
+			})
 		}
 		return nil, nil
 	}
@@ -87,11 +105,17 @@ func (r *mutationRootResolver) DeleteGroupChat(ctx context.Context, input comman
 				Path:    graphql.GetPath(ctx),
 				Message: optimisticLockError.Message,
 				Extensions: map[string]interface{}{
-					"code": "OPTIMISTIC_LOCK_ERROR",
+					"code": "400",
 				},
 			})
 		} else {
-			graphql.AddError(ctx, err)
+			graphql.AddError(ctx, &gqlerror.Error{
+				Path:    graphql.GetPath(ctx),
+				Message: optimisticLockError.Message,
+				Extensions: map[string]interface{}{
+					"code": "500",
+				},
+			})
 		}
 		return nil, nil
 	}
@@ -120,7 +144,13 @@ func (r *mutationRootResolver) RenameGroupChat(ctx context.Context, input comman
 
 	if len(errorList) > 0 {
 		for _, err := range errorList {
-			graphql.AddError(ctx, err)
+			graphql.AddError(ctx, &gqlerror.Error{
+				Path:    graphql.GetPath(ctx),
+				Message: err.Error(),
+				Extensions: map[string]interface{}{
+					"code": "400",
+				},
+			})
 		}
 		return nil, nil
 	}
@@ -133,11 +163,17 @@ func (r *mutationRootResolver) RenameGroupChat(ctx context.Context, input comman
 				Path:    graphql.GetPath(ctx),
 				Message: optimisticLockError.Message,
 				Extensions: map[string]interface{}{
-					"code": "OPTIMISTIC_LOCK_ERROR",
+					"code": "400",
 				},
 			})
 		} else {
-			graphql.AddError(ctx, err)
+			graphql.AddError(ctx, &gqlerror.Error{
+				Path:    graphql.GetPath(ctx),
+				Message: optimisticLockError.Message,
+				Extensions: map[string]interface{}{
+					"code": "500",
+				},
+			})
 		}
 		return nil, nil
 	}
@@ -170,24 +206,38 @@ func (r *mutationRootResolver) AddMember(ctx context.Context, input commandgraph
 	}
 
 	if len(errorList) > 0 {
-		var optimisticLockError *event_store_adapter_go.OptimisticLockError
-		if errors.As(err, &optimisticLockError) {
+		for _, err := range errorList {
 			graphql.AddError(ctx, &gqlerror.Error{
 				Path:    graphql.GetPath(ctx),
-				Message: optimisticLockError.Message,
+				Message: err.Error(),
 				Extensions: map[string]interface{}{
-					"code": "OPTIMISTIC_LOCK_ERROR",
+					"code": "400",
 				},
 			})
-		} else {
-			graphql.AddError(ctx, err)
 		}
 		return nil, nil
 	}
 
 	event, err := r.groupChatCommandProcessor.AddMember(&groupChatId, accountId, role, executorId).Get()
 	if err != nil {
-		graphql.AddError(ctx, err)
+		var optimisticLockError *event_store_adapter_go.OptimisticLockError
+		if errors.As(err, &optimisticLockError) {
+			graphql.AddError(ctx, &gqlerror.Error{
+				Path:    graphql.GetPath(ctx),
+				Message: optimisticLockError.Message,
+				Extensions: map[string]interface{}{
+					"code": "400",
+				},
+			})
+		} else {
+			graphql.AddError(ctx, &gqlerror.Error{
+				Path:    graphql.GetPath(ctx),
+				Message: optimisticLockError.Message,
+				Extensions: map[string]interface{}{
+					"code": "500",
+				},
+			})
+		}
 		return nil, nil
 	}
 
@@ -215,7 +265,13 @@ func (r *mutationRootResolver) RemoveMember(ctx context.Context, input commandgr
 
 	if len(errorList) > 0 {
 		for _, err := range errorList {
-			graphql.AddError(ctx, err)
+			graphql.AddError(ctx, &gqlerror.Error{
+				Path:    graphql.GetPath(ctx),
+				Message: err.Error(),
+				Extensions: map[string]interface{}{
+					"code": "400",
+				},
+			})
 		}
 		return nil, nil
 	}
@@ -228,11 +284,17 @@ func (r *mutationRootResolver) RemoveMember(ctx context.Context, input commandgr
 				Path:    graphql.GetPath(ctx),
 				Message: optimisticLockError.Message,
 				Extensions: map[string]interface{}{
-					"code": "OPTIMISTIC_LOCK_ERROR",
+					"code": "400",
 				},
 			})
 		} else {
-			graphql.AddError(ctx, err)
+			graphql.AddError(ctx, &gqlerror.Error{
+				Path:    graphql.GetPath(ctx),
+				Message: optimisticLockError.Message,
+				Extensions: map[string]interface{}{
+					"code": "500",
+				},
+			})
 		}
 		return nil, nil
 	}
@@ -263,7 +325,13 @@ func (r *mutationRootResolver) PostMessage(ctx context.Context, input commandgra
 
 	if len(errorList) > 0 {
 		for _, err := range errorList {
-			graphql.AddError(ctx, err)
+			graphql.AddError(ctx, &gqlerror.Error{
+				Path:    graphql.GetPath(ctx),
+				Message: err.Error(),
+				Extensions: map[string]interface{}{
+					"code": "400",
+				},
+			})
 		}
 		return nil, nil
 	}
@@ -276,11 +344,17 @@ func (r *mutationRootResolver) PostMessage(ctx context.Context, input commandgra
 				Path:    graphql.GetPath(ctx),
 				Message: optimisticLockError.Message,
 				Extensions: map[string]interface{}{
-					"code": "OPTIMISTIC_LOCK_ERROR",
+					"code": "400",
 				},
 			})
 		} else {
-			graphql.AddError(ctx, err)
+			graphql.AddError(ctx, &gqlerror.Error{
+				Path:    graphql.GetPath(ctx),
+				Message: optimisticLockError.Message,
+				Extensions: map[string]interface{}{
+					"code": "500",
+				},
+			})
 		}
 		return nil, nil
 	}
@@ -322,11 +396,17 @@ func (r *mutationRootResolver) DeleteMessage(ctx context.Context, input commandg
 				Path:    graphql.GetPath(ctx),
 				Message: optimisticLockError.Message,
 				Extensions: map[string]interface{}{
-					"code": "OPTIMISTIC_LOCK_ERROR",
+					"code": "400",
 				},
 			})
 		} else {
-			graphql.AddError(ctx, err)
+			graphql.AddError(ctx, &gqlerror.Error{
+				Path:    graphql.GetPath(ctx),
+				Message: optimisticLockError.Message,
+				Extensions: map[string]interface{}{
+					"code": "500",
+				},
+			})
 		}
 		return nil, nil
 	}
