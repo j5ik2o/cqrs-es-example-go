@@ -2,7 +2,7 @@
 
 ## 概要
 
-これはGoで実装されたCQRS/Event Sourcingの例です。
+これはGoで実装されたCQRS/Event Sourcing + GraphQLの例です。
 
 このプロジェクトは、イベントソーシングのために[j5ik2o/event-store-adapter-go](j5ik2o/event-store-adapter-go)を使用しています。
 
@@ -10,7 +10,7 @@
 
 ## フィーチャー
 
-- [x] Write API Server(REST)の実装
+- [x] Write API Server(GraphQL)の実装
 - [x] Read API Server(GraphQL)の実装
 - [x] Local版のRead Model Updaterの実装
 - [x] Docker Composeによる動作確認
@@ -70,5 +70,6 @@ GroupChat:
 
 ## 参考リンク
 
-- [Rust Version](https://github.com/j5ik2o/cqrs-es-example-rs)
+- [Rust版](https://github.com/j5ik2o/cqrs-es-example-rs)
+- [TypeScript版](https://github.com/j5ik2o/cqrs-es-example-js)
 - [共通ドキュメント](https://github.com/j5ik2o/cqrs-es-example-docs)
