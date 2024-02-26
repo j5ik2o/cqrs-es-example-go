@@ -16,7 +16,7 @@ if [ "$ARCH" = "aarch64" ]; then
   ARCH="arm64"
 fi
 
-F_OPTION="-f ../docker-compose/docker-compose-applications.yml"
+F_OPTION="-f ../docker-compose/docker-compose-applications.yml -f ../docker-compose/docker-compose-e2e-test.yml"
 
 while getopts d OPT; do
   # shellcheck disable=SC2220
