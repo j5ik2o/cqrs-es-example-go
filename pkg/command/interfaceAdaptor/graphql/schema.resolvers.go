@@ -9,27 +9,30 @@ import (
 	"cqrs-es-example-go/pkg/command/domain/models"
 	commandgraphql "cqrs-es-example-go/pkg/command/interfaceAdaptor/graphql/model"
 	"cqrs-es-example-go/pkg/command/interfaceAdaptor/validator"
+	"errors"
 	"fmt"
+	event_store_adapter_go "github.com/j5ik2o/event-store-adapter-go"
+	"github.com/vektah/gqlparser/v2/gqlerror"
 
 	"github.com/99designs/gqlgen/graphql"
 )
 
 // CreateGroupChat is the resolver for the createGroupChat field.
 func (r *mutationRootResolver) CreateGroupChat(ctx context.Context, input commandgraphql.CreateGroupChatInput) (*commandgraphql.GroupChatResult, error) {
-	var errors []error
+	var errorList []error
 
 	groupChatName, err := validator.ValidateGroupChatName(input.Name).Get()
 	if err != nil {
-		errors = append(errors, err)
+		errorList = append(errorList, err)
 	}
 
 	executorId, err := validator.ValidateUserAccountId(input.ExecutorID).Get()
 	if err != nil {
-		errors = append(errors, err)
+		errorList = append(errorList, err)
 	}
 
-	if len(errors) > 0 {
-		for _, err := range errors {
+	if len(errorList) > 0 {
+		for _, err := range errorList {
 			graphql.AddError(ctx, err)
 		}
 		return nil, nil
@@ -37,7 +40,18 @@ func (r *mutationRootResolver) CreateGroupChat(ctx context.Context, input comman
 
 	event, err := r.groupChatCommandProcessor.CreateGroupChat(groupChatName, executorId).Get()
 	if err != nil {
-		graphql.AddError(ctx, err)
+		var optimisticLockError *event_store_adapter_go.OptimisticLockError
+		if errors.As(err, &optimisticLockError) {
+			graphql.AddError(ctx, &gqlerror.Error{
+				Path:    graphql.GetPath(ctx),
+				Message: optimisticLockError.Message,
+				Extensions: map[string]interface{}{
+					"code": "OPTIMISTIC_LOCK_ERROR",
+				},
+			})
+		} else {
+			graphql.AddError(ctx, err)
+		}
 		return nil, nil
 	}
 
@@ -46,20 +60,20 @@ func (r *mutationRootResolver) CreateGroupChat(ctx context.Context, input comman
 
 // DeleteGroupChat is the resolver for the deleteGroupChat field.
 func (r *mutationRootResolver) DeleteGroupChat(ctx context.Context, input commandgraphql.DeleteGroupChatInput) (*commandgraphql.GroupChatResult, error) {
-	var errors []error
+	var errorList []error
 
 	groupChatId, err := validator.ValidateGroupChatId(input.GroupChatID).Get()
 	if err != nil {
-		errors = append(errors, err)
+		errorList = append(errorList, err)
 	}
 
 	executorId, err := validator.ValidateUserAccountId(input.ExecutorID).Get()
 	if err != nil {
-		errors = append(errors, err)
+		errorList = append(errorList, err)
 	}
 
-	if len(errors) > 0 {
-		for _, err := range errors {
+	if len(errorList) > 0 {
+		for _, err := range errorList {
 			graphql.AddError(ctx, err)
 		}
 		return nil, nil
@@ -67,7 +81,18 @@ func (r *mutationRootResolver) DeleteGroupChat(ctx context.Context, input comman
 
 	event, err := r.groupChatCommandProcessor.DeleteGroupChat(&groupChatId, executorId).Get()
 	if err != nil {
-		graphql.AddError(ctx, err)
+		var optimisticLockError *event_store_adapter_go.OptimisticLockError
+		if errors.As(err, &optimisticLockError) {
+			graphql.AddError(ctx, &gqlerror.Error{
+				Path:    graphql.GetPath(ctx),
+				Message: optimisticLockError.Message,
+				Extensions: map[string]interface{}{
+					"code": "OPTIMISTIC_LOCK_ERROR",
+				},
+			})
+		} else {
+			graphql.AddError(ctx, err)
+		}
 		return nil, nil
 	}
 
@@ -76,25 +101,25 @@ func (r *mutationRootResolver) DeleteGroupChat(ctx context.Context, input comman
 
 // RenameGroupChat is the resolver for the renameGroupChat field.
 func (r *mutationRootResolver) RenameGroupChat(ctx context.Context, input commandgraphql.RenameGroupChatInput) (*commandgraphql.GroupChatResult, error) {
-	var errors []error
+	var errorList []error
 
 	groupChatId, err := validator.ValidateGroupChatId(input.GroupChatID).Get()
 	if err != nil {
-		errors = append(errors, err)
+		errorList = append(errorList, err)
 	}
 
 	groupChatName, err := validator.ValidateGroupChatName(input.Name).Get()
 	if err != nil {
-		errors = append(errors, err)
+		errorList = append(errorList, err)
 	}
 
 	executorId, err := validator.ValidateUserAccountId(input.ExecutorID).Get()
 	if err != nil {
-		errors = append(errors, err)
+		errorList = append(errorList, err)
 	}
 
-	if len(errors) > 0 {
-		for _, err := range errors {
+	if len(errorList) > 0 {
+		for _, err := range errorList {
 			graphql.AddError(ctx, err)
 		}
 		return nil, nil
@@ -102,7 +127,18 @@ func (r *mutationRootResolver) RenameGroupChat(ctx context.Context, input comman
 
 	event, err := r.groupChatCommandProcessor.RenameGroupChat(&groupChatId, groupChatName, executorId).Get()
 	if err != nil {
-		graphql.AddError(ctx, err)
+		var optimisticLockError *event_store_adapter_go.OptimisticLockError
+		if errors.As(err, &optimisticLockError) {
+			graphql.AddError(ctx, &gqlerror.Error{
+				Path:    graphql.GetPath(ctx),
+				Message: optimisticLockError.Message,
+				Extensions: map[string]interface{}{
+					"code": "OPTIMISTIC_LOCK_ERROR",
+				},
+			})
+		} else {
+			graphql.AddError(ctx, err)
+		}
 		return nil, nil
 	}
 
@@ -111,30 +147,39 @@ func (r *mutationRootResolver) RenameGroupChat(ctx context.Context, input comman
 
 // AddMember is the resolver for the addMember field.
 func (r *mutationRootResolver) AddMember(ctx context.Context, input commandgraphql.AddMemberInput) (*commandgraphql.GroupChatResult, error) {
-	var errors []error
+	var errorList []error
 
 	groupChatId, err := validator.ValidateGroupChatId(input.GroupChatID).Get()
 	if err != nil {
-		errors = append(errors, err)
+		errorList = append(errorList, err)
 	}
 
 	accountId, err := validator.ValidateUserAccountId(input.UserAccountID).Get()
 	if err != nil {
-		errors = append(errors, err)
+		errorList = append(errorList, err)
 	}
 
 	executorId, err := validator.ValidateUserAccountId(input.ExecutorID).Get()
 	if err != nil {
-		errors = append(errors, err)
+		errorList = append(errorList, err)
 	}
 
 	role, err := models.StringToRole(input.Role.String())
 	if err != nil {
-		errors = append(errors, err)
+		errorList = append(errorList, err)
 	}
 
-	if len(errors) > 0 {
-		for _, err := range errors {
+	if len(errorList) > 0 {
+		var optimisticLockError *event_store_adapter_go.OptimisticLockError
+		if errors.As(err, &optimisticLockError) {
+			graphql.AddError(ctx, &gqlerror.Error{
+				Path:    graphql.GetPath(ctx),
+				Message: optimisticLockError.Message,
+				Extensions: map[string]interface{}{
+					"code": "OPTIMISTIC_LOCK_ERROR",
+				},
+			})
+		} else {
 			graphql.AddError(ctx, err)
 		}
 		return nil, nil
@@ -151,25 +196,25 @@ func (r *mutationRootResolver) AddMember(ctx context.Context, input commandgraph
 
 // RemoveMember is the resolver for the removeMember field.
 func (r *mutationRootResolver) RemoveMember(ctx context.Context, input commandgraphql.RemoveMemberInput) (*commandgraphql.GroupChatResult, error) {
-	var errors []error
+	var errorList []error
 
 	groupChatId, err := validator.ValidateGroupChatId(input.GroupChatID).Get()
 	if err != nil {
-		errors = append(errors, err)
+		errorList = append(errorList, err)
 	}
 
 	userAccountId, err := validator.ValidateUserAccountId(input.UserAccountID).Get()
 	if err != nil {
-		errors = append(errors, err)
+		errorList = append(errorList, err)
 	}
 
 	executorId, err := validator.ValidateUserAccountId(input.ExecutorID).Get()
 	if err != nil {
-		errors = append(errors, err)
+		errorList = append(errorList, err)
 	}
 
-	if len(errors) > 0 {
-		for _, err := range errors {
+	if len(errorList) > 0 {
+		for _, err := range errorList {
 			graphql.AddError(ctx, err)
 		}
 		return nil, nil
@@ -177,7 +222,18 @@ func (r *mutationRootResolver) RemoveMember(ctx context.Context, input commandgr
 
 	event, err := r.groupChatCommandProcessor.RemoveMember(&groupChatId, userAccountId, executorId).Get()
 	if err != nil {
-		graphql.AddError(ctx, err)
+		var optimisticLockError *event_store_adapter_go.OptimisticLockError
+		if errors.As(err, &optimisticLockError) {
+			graphql.AddError(ctx, &gqlerror.Error{
+				Path:    graphql.GetPath(ctx),
+				Message: optimisticLockError.Message,
+				Extensions: map[string]interface{}{
+					"code": "OPTIMISTIC_LOCK_ERROR",
+				},
+			})
+		} else {
+			graphql.AddError(ctx, err)
+		}
 		return nil, nil
 	}
 
@@ -186,27 +242,27 @@ func (r *mutationRootResolver) RemoveMember(ctx context.Context, input commandgr
 
 // PostMessage is the resolver for the postMessage field.
 func (r *mutationRootResolver) PostMessage(ctx context.Context, input commandgraphql.PostMessageInput) (*commandgraphql.MessageResult, error) {
-	var errors []error
+	var errorList []error
 
 	groupChatId, err := validator.ValidateGroupChatId(input.GroupChatID).Get()
 	if err != nil {
-		errors = append(errors, err)
+		errorList = append(errorList, err)
 	}
 
 	messageId := models.NewMessageId()
 
 	executorId, err := validator.ValidateUserAccountId(input.ExecutorID).Get()
 	if err != nil {
-		errors = append(errors, err)
+		errorList = append(errorList, err)
 	}
 
 	message, err := validator.ValidateMessage(messageId, input.Content, executorId).Get()
 	if err != nil {
-		errors = append(errors, err)
+		errorList = append(errorList, err)
 	}
 
-	if len(errors) > 0 {
-		for _, err := range errors {
+	if len(errorList) > 0 {
+		for _, err := range errorList {
 			graphql.AddError(ctx, err)
 		}
 		return nil, nil
@@ -214,7 +270,18 @@ func (r *mutationRootResolver) PostMessage(ctx context.Context, input commandgra
 
 	event, err := r.groupChatCommandProcessor.PostMessage(&groupChatId, message, executorId).Get()
 	if err != nil {
-		graphql.AddError(ctx, err)
+		var optimisticLockError *event_store_adapter_go.OptimisticLockError
+		if errors.As(err, &optimisticLockError) {
+			graphql.AddError(ctx, &gqlerror.Error{
+				Path:    graphql.GetPath(ctx),
+				Message: optimisticLockError.Message,
+				Extensions: map[string]interface{}{
+					"code": "OPTIMISTIC_LOCK_ERROR",
+				},
+			})
+		} else {
+			graphql.AddError(ctx, err)
+		}
 		return nil, nil
 	}
 
@@ -223,25 +290,25 @@ func (r *mutationRootResolver) PostMessage(ctx context.Context, input commandgra
 
 // DeleteMessage is the resolver for the deleteMessage field.
 func (r *mutationRootResolver) DeleteMessage(ctx context.Context, input commandgraphql.DeleteMessageInput) (*commandgraphql.GroupChatResult, error) {
-	var errors []error
+	var errorList []error
 
 	groupChatId, err := validator.ValidateGroupChatId(input.GroupChatID).Get()
 	if err != nil {
-		errors = append(errors, err)
+		errorList = append(errorList, err)
 	}
 
 	messageId, err := validator.ValidateMessageId(input.MessageID).Get()
 	if err != nil {
-		errors = append(errors, err)
+		errorList = append(errorList, err)
 	}
 
 	executorId, err := validator.ValidateUserAccountId(input.ExecutorID).Get()
 	if err != nil {
-		errors = append(errors, err)
+		errorList = append(errorList, err)
 	}
 
-	if len(errors) > 0 {
-		for _, err := range errors {
+	if len(errorList) > 0 {
+		for _, err := range errorList {
 			graphql.AddError(ctx, err)
 		}
 		return nil, nil
@@ -249,7 +316,18 @@ func (r *mutationRootResolver) DeleteMessage(ctx context.Context, input commandg
 
 	event, err := r.groupChatCommandProcessor.DeleteMessage(&groupChatId, messageId, executorId).Get()
 	if err != nil {
-		graphql.AddError(ctx, err)
+		var optimisticLockError *event_store_adapter_go.OptimisticLockError
+		if errors.As(err, &optimisticLockError) {
+			graphql.AddError(ctx, &gqlerror.Error{
+				Path:    graphql.GetPath(ctx),
+				Message: optimisticLockError.Message,
+				Extensions: map[string]interface{}{
+					"code": "OPTIMISTIC_LOCK_ERROR",
+				},
+			})
+		} else {
+			graphql.AddError(ctx, err)
+		}
 		return nil, nil
 	}
 
