@@ -44,6 +44,12 @@ This project uses [j5ik2o/event-store-adapter-go](https://github.com/j5ik2o/even
 
 ### Local Environment
 
+#### Build image
+
+```shell
+$ make docker-build
+```
+
 #### Starting Services
 
 ```shell
