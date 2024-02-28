@@ -4,7 +4,6 @@ import (
 	"cqrs-es-example-go/pkg/command/domain"
 	"cqrs-es-example-go/pkg/command/domain/events"
 	"cqrs-es-example-go/pkg/command/domain/models"
-	"fmt"
 	esa "github.com/j5ik2o/event-store-adapter-go"
 	"github.com/samber/mo"
 )
@@ -13,7 +12,7 @@ type GroupChatRepository interface {
 	Store(event events.GroupChatEvent, snapshot *domain.GroupChat) mo.Option[error]
 	StoreEvent(event events.GroupChatEvent, version uint64) mo.Option[error]
 	StoreEventWithSnapshot(event events.GroupChatEvent, snapshot *domain.GroupChat) mo.Option[error]
-	FindById(id *models.GroupChatId) mo.Result[domain.GroupChat]
+	FindById(id *models.GroupChatId) mo.Result[mo.Option[domain.GroupChat]]
 }
 type GroupChatRepositoryOption func(*GroupChatRepositoryImpl) error
 type SnapshotDecider = func(event events.GroupChatEvent, snapshot *domain.GroupChat) bool
@@ -73,18 +72,18 @@ func (g *GroupChatRepositoryImpl) StoreEventWithSnapshot(event events.GroupChatE
 	}
 }
 
-func (g *GroupChatRepositoryImpl) FindById(id *models.GroupChatId) mo.Result[domain.GroupChat] {
+func (g *GroupChatRepositoryImpl) FindById(id *models.GroupChatId) mo.Result[mo.Option[domain.GroupChat]] {
 	result, err := g.eventStore.GetLatestSnapshotById(id)
 	if err != nil {
-		return mo.Err[domain.GroupChat](err)
+		return mo.Err[mo.Option[domain.GroupChat]](err)
 	}
 	if result.Empty() {
-		return mo.Err[domain.GroupChat](fmt.Errorf("not found"))
+		return mo.Ok[mo.Option[domain.GroupChat]](mo.None[domain.GroupChat]())
 	} else {
 		eventsByIdSinceSeqNr, err := g.eventStore.GetEventsByIdSinceSeqNr(id, result.Aggregate().GetSeqNr()+1)
 		if err != nil {
-			return mo.Err[domain.GroupChat](err)
+			return mo.Err[mo.Option[domain.GroupChat]](err)
 		}
-		return mo.Ok[domain.GroupChat](domain.ReplayGroupChat(eventsByIdSinceSeqNr, *result.Aggregate().(*domain.GroupChat)))
+		return mo.Ok[mo.Option[domain.GroupChat]](mo.Some(domain.ReplayGroupChat(eventsByIdSinceSeqNr, *result.Aggregate().(*domain.GroupChat))))
 	}
 }

@@ -8,6 +8,26 @@ import (
 	"github.com/samber/mo"
 )
 
+type CommandProcessError struct {
+	message string
+}
+
+func (c *CommandProcessError) Error() string {
+	return c.message
+}
+
+type NotFoundError struct {
+	CommandProcessError
+}
+
+func NewNotFoundError(message string) *NotFoundError {
+	return &NotFoundError{
+		CommandProcessError{
+			message,
+		},
+	}
+}
+
 type GroupChatCommandProcessor struct {
 	repository repository.GroupChatRepository
 }
@@ -30,9 +50,14 @@ func (g *GroupChatCommandProcessor) CreateGroupChat(name models.GroupChatName, e
 
 // DeleteGroupChat is the command handler for DeleteGroupChat.
 func (g *GroupChatCommandProcessor) DeleteGroupChat(groupChatId *models.GroupChatId, executorId models.UserAccountId) mo.Result[events.GroupChatEvent] {
-	groupChat, err := g.repository.FindById(groupChatId).Get()
+	groupChatOpt, err := g.repository.FindById(groupChatId).Get()
 	if err != nil {
 		return mo.Err[events.GroupChatEvent](err)
+	}
+
+	groupChat, b := groupChatOpt.Get()
+	if !b {
+		return mo.Err[events.GroupChatEvent](NewNotFoundError("The group chat is not found"))
 	}
 
 	pair, err := groupChat.Delete(executorId).Get()
@@ -49,9 +74,14 @@ func (g *GroupChatCommandProcessor) DeleteGroupChat(groupChatId *models.GroupCha
 
 // RenameGroupChat is the command handler for RenameGroupChat.
 func (g *GroupChatCommandProcessor) RenameGroupChat(groupChatId *models.GroupChatId, name models.GroupChatName, executorId models.UserAccountId) mo.Result[events.GroupChatEvent] {
-	groupChat, err := g.repository.FindById(groupChatId).Get()
+	groupChatOpt, err := g.repository.FindById(groupChatId).Get()
 	if err != nil {
 		return mo.Err[events.GroupChatEvent](err)
+	}
+
+	groupChat, b := groupChatOpt.Get()
+	if !b {
+		return mo.Err[events.GroupChatEvent](NewNotFoundError("The group chat is not found"))
 	}
 
 	pair, err := groupChat.Rename(name, executorId).Get()
@@ -67,9 +97,14 @@ func (g *GroupChatCommandProcessor) RenameGroupChat(groupChatId *models.GroupCha
 
 // AddMember is the command handler for AddMember.
 func (g *GroupChatCommandProcessor) AddMember(groupChatId *models.GroupChatId, userAccountId models.UserAccountId, role models.Role, executorId models.UserAccountId) mo.Result[events.GroupChatEvent] {
-	groupChat, err := g.repository.FindById(groupChatId).Get()
+	groupChatOpt, err := g.repository.FindById(groupChatId).Get()
 	if err != nil {
 		return mo.Err[events.GroupChatEvent](err)
+	}
+
+	groupChat, b := groupChatOpt.Get()
+	if !b {
+		return mo.Err[events.GroupChatEvent](NewNotFoundError("The group chat is not found"))
 	}
 
 	memberId := models.NewMemberId()
@@ -87,9 +122,14 @@ func (g *GroupChatCommandProcessor) AddMember(groupChatId *models.GroupChatId, u
 
 // RemoveMember is the command handler for RemoveMember.
 func (g *GroupChatCommandProcessor) RemoveMember(groupChatId *models.GroupChatId, userAccountId models.UserAccountId, executorId models.UserAccountId) mo.Result[events.GroupChatEvent] {
-	groupChat, err := g.repository.FindById(groupChatId).Get()
+	groupChatOpt, err := g.repository.FindById(groupChatId).Get()
 	if err != nil {
 		return mo.Err[events.GroupChatEvent](err)
+	}
+
+	groupChat, b := groupChatOpt.Get()
+	if !b {
+		return mo.Err[events.GroupChatEvent](NewNotFoundError("The group chat is not found"))
 	}
 
 	pair, err := groupChat.RemoveMemberByUserAccountId(userAccountId, executorId).Get()
@@ -106,9 +146,14 @@ func (g *GroupChatCommandProcessor) RemoveMember(groupChatId *models.GroupChatId
 
 // PostMessage is the command handler for PostMessage.
 func (g *GroupChatCommandProcessor) PostMessage(groupChatId *models.GroupChatId, message models.Message, executorId models.UserAccountId) mo.Result[events.GroupChatEvent] {
-	groupChat, err := g.repository.FindById(groupChatId).Get()
+	groupChatOpt, err := g.repository.FindById(groupChatId).Get()
 	if err != nil {
 		return mo.Err[events.GroupChatEvent](err)
+	}
+
+	groupChat, b := groupChatOpt.Get()
+	if !b {
+		return mo.Err[events.GroupChatEvent](NewNotFoundError("The group chat is not found"))
 	}
 
 	pair, err := groupChat.PostMessage(message, executorId).Get()
@@ -125,9 +170,14 @@ func (g *GroupChatCommandProcessor) PostMessage(groupChatId *models.GroupChatId,
 
 // DeleteMessage is the command handler for DeleteMessage.
 func (g *GroupChatCommandProcessor) DeleteMessage(groupChatId *models.GroupChatId, messageId models.MessageId, executorId models.UserAccountId) mo.Result[events.GroupChatEvent] {
-	groupChat, err := g.repository.FindById(groupChatId).Get()
+	groupChatOpt, err := g.repository.FindById(groupChatId).Get()
 	if err != nil {
 		return mo.Err[events.GroupChatEvent](err)
+	}
+
+	groupChat, b := groupChatOpt.Get()
+	if !b {
+		return mo.Err[events.GroupChatEvent](NewNotFoundError("The group chat is not found"))
 	}
 
 	pair, err := groupChat.DeleteMessage(messageId, executorId).Get()
