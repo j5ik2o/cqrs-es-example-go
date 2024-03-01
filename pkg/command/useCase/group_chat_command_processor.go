@@ -22,7 +22,7 @@ func NewGroupChatCommandProcessor(repository repository.GroupChatRepository) Gro
 // CreateGroupChat is the command handler for CreateGroupChat.
 func (g *GroupChatCommandProcessor) CreateGroupChat(name models.GroupChatName, executorId models.UserAccountId) mo.Result[events.GroupChatEvent] {
 	groupChat, event := domain.NewGroupChat(name, executorId)
-	errOpt := g.repository.StoreEventWithSnapshot(event, &groupChat)
+	errOpt := g.repository.Store(event, &groupChat)
 	if err, b := errOpt.Get(); b {
 		return mo.Err[events.GroupChatEvent](err)
 	}
@@ -39,7 +39,7 @@ func (g *GroupChatCommandProcessor) DeleteGroupChat(groupChatId *models.GroupCha
 	if err != nil {
 		return mo.Err[events.GroupChatEvent](err)
 	}
-	errOpt := g.repository.StoreEventWithSnapshot(pair.V2, &pair.V1)
+	errOpt := g.repository.Store(pair.V2, &pair.V1)
 	if err, b := errOpt.Get(); b {
 		return mo.Err[events.GroupChatEvent](err)
 	}
@@ -56,7 +56,7 @@ func (g *GroupChatCommandProcessor) RenameGroupChat(groupChatId *models.GroupCha
 	if err != nil {
 		return mo.Err[events.GroupChatEvent](err)
 	}
-	errOpt := g.repository.StoreEventWithSnapshot(pair.V2, &pair.V1)
+	errOpt := g.repository.Store(pair.V2, &pair.V1)
 	if err, b := errOpt.Get(); b {
 		return mo.Err[events.GroupChatEvent](err)
 	}
@@ -74,7 +74,7 @@ func (g *GroupChatCommandProcessor) AddMember(groupChatId *models.GroupChatId, u
 	if err != nil {
 		return mo.Err[events.GroupChatEvent](err)
 	}
-	errOpt := g.repository.StoreEventWithSnapshot(pair.V2, &pair.V1)
+	errOpt := g.repository.Store(pair.V2, &pair.V1)
 	if err, b := errOpt.Get(); b {
 		return mo.Err[events.GroupChatEvent](err)
 	}
@@ -91,7 +91,7 @@ func (g *GroupChatCommandProcessor) RemoveMember(groupChatId *models.GroupChatId
 	if err != nil {
 		return mo.Err[events.GroupChatEvent](err)
 	}
-	errOpt := g.repository.StoreEventWithSnapshot(pair.V2, &pair.V1)
+	errOpt := g.repository.Store(pair.V2, &pair.V1)
 	if err, b := errOpt.Get(); b {
 		return mo.Err[events.GroupChatEvent](err)
 	}
@@ -108,7 +108,7 @@ func (g *GroupChatCommandProcessor) PostMessage(groupChatId *models.GroupChatId,
 	if err != nil {
 		return mo.Err[events.GroupChatEvent](err)
 	}
-	errOpt := g.repository.StoreEventWithSnapshot(pair.V2, &pair.V1)
+	errOpt := g.repository.Store(pair.V2, &pair.V1)
 	if err, b := errOpt.Get(); b {
 		return mo.Err[events.GroupChatEvent](err)
 	}
@@ -125,7 +125,7 @@ func (g *GroupChatCommandProcessor) DeleteMessage(groupChatId *models.GroupChatI
 	if err != nil {
 		return mo.Err[events.GroupChatEvent](err)
 	}
-	errOpt := g.repository.StoreEventWithSnapshot(pair.V2, &pair.V1)
+	errOpt := g.repository.Store(pair.V2, &pair.V1)
 	if err, b := errOpt.Get(); b {
 		return mo.Err[events.GroupChatEvent](err)
 	}

@@ -107,7 +107,10 @@ var writeApiCmd = &cobra.Command{
 			panic(err)
 		}
 
-		groupChatRepository := repository.NewGroupChatRepository(eventStore)
+		groupChatRepository, err := repository.NewGroupChatRepository(eventStore, repository.WithRetention(100))
+		if err != nil {
+			panic(err)
+		}
 		groupChatCommandProcessor := useCase.NewGroupChatCommandProcessor(&groupChatRepository)
 
 		srv := handler.NewDefaultServer(commandgraphql.NewExecutableSchema(commandgraphql.Config{Resolvers: commandgraphql.NewResolver(groupChatCommandProcessor)}))
