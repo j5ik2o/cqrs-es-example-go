@@ -199,12 +199,12 @@ func (g *GroupChat) AddMember(
 		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatAddMemberErr("The userAccountId is already the member of the group chat"))
 	}
 	if !g.members.IsAdministrator(&executorId) {
-		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatAddMemberErr("The executorId is not the member of the group chat"))
+		return mo.Err[GroupChatWithEventPair](errors.NewGroupChatAddMemberErr("The executorId is not the administrator of the group chat"))
 	}
 	newMember := models.NewMember(memberId, userAccountId, role)
 	newState := g.WithMembers(g.members.AddMember(userAccountId))
 	newState.seqNr += 1
-	memberAdded := events.NewGroupChatMemberAdded(newState.id, newMember, newState.seqNr, userAccountId)
+	memberAdded := events.NewGroupChatMemberAdded(newState.id, newMember, newState.seqNr, executorId)
 	pair := gt.New2[GroupChat, events.GroupChatEvent](newState, &memberAdded)
 	return mo.Ok(GroupChatWithEventPair(pair))
 }
