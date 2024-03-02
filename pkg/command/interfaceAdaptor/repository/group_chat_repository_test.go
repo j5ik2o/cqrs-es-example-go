@@ -74,7 +74,7 @@ func Test_GroupChatRepository_OnDynamoDB_FindById(t *testing.T) {
 	}
 
 	{
-		groupChat := repository.FindById(groupChatId).MustGet()
+		groupChat := repository.FindById(groupChatId).MustGet().MustGet()
 		require.NotNil(t, groupChat)
 		assert.Equal(t, groupChat.GetId(), groupChat.GetId())
 		name2 := models.NewGroupChatName("test2").MustGet()
@@ -88,7 +88,7 @@ func Test_GroupChatRepository_OnDynamoDB_FindById(t *testing.T) {
 	senderId := models.NewUserAccountId()
 
 	{
-		groupChat := repository.FindById(groupChatId).MustGet()
+		groupChat := repository.FindById(groupChatId).MustGet().MustGet()
 		addMemberResult := groupChat.AddMember(models.NewMemberId(), senderId, models.MemberRole, adminId).MustGet()
 		groupChatUpdated := addMemberResult.V1
 		event := addMemberResult.V2
@@ -97,7 +97,7 @@ func Test_GroupChatRepository_OnDynamoDB_FindById(t *testing.T) {
 	}
 
 	{
-		groupChat := repository.FindById(groupChatId).MustGet()
+		groupChat := repository.FindById(groupChatId).MustGet().MustGet()
 		messageId := models.NewMessageId()
 		message := models.NewMessage(messageId, "text", senderId).MustGet()
 		postMessageResult := groupChat.PostMessage(message, senderId).MustGet()
@@ -106,7 +106,6 @@ func Test_GroupChatRepository_OnDynamoDB_FindById(t *testing.T) {
 		_, b := repository.Store(event, &groupChatUpdated).Get()
 		require.False(t, b)
 	}
-
 }
 
 func Test_GroupChatRepository_OnMemory_FindById(t *testing.T) {
@@ -127,7 +126,7 @@ func Test_GroupChatRepository_OnMemory_FindById(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, b)
 
-	groupChat2 := repository.FindById(groupChat.GetGroupChatId()).MustGet()
+	groupChat2 := repository.FindById(groupChat.GetGroupChatId()).MustGet().MustGet()
 	require.NotNil(t, groupChat2)
 	assert.Equal(t, groupChat.GetId(), groupChat2.GetId())
 }
