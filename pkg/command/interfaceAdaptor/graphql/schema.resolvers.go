@@ -9,8 +9,8 @@ import (
 	"cqrs-es-example-go/pkg/command/domain"
 	"cqrs-es-example-go/pkg/command/domain/models"
 	commandgraphql "cqrs-es-example-go/pkg/command/interfaceAdaptor/graphql/model"
-	"cqrs-es-example-go/pkg/command/interfaceAdaptor/validator"
-	"cqrs-es-example-go/pkg/command/useCase"
+	"cqrs-es-example-go/pkg/command/interfaceAdaptor/validators"
+	"cqrs-es-example-go/pkg/command/processor"
 	"fmt"
 	esa "github.com/j5ik2o/event-store-adapter-go"
 	"github.com/vektah/gqlparser/v2/gqlerror"
@@ -22,12 +22,12 @@ import (
 func (r *mutationRootResolver) CreateGroupChat(ctx context.Context, input commandgraphql.CreateGroupChatInput) (*commandgraphql.GroupChatResult, error) {
 	var errorList []error
 
-	groupChatName, err := validator.ValidateGroupChatName(input.Name).Get()
+	groupChatName, err := validators.ValidateGroupChatName(input.Name).Get()
 	if err != nil {
 		errorList = append(errorList, err)
 	}
 
-	executorId, err := validator.ValidateUserAccountId(input.ExecutorID).Get()
+	executorId, err := validators.ValidateUserAccountId(input.ExecutorID).Get()
 	if err != nil {
 		errorList = append(errorList, err)
 	}
@@ -50,12 +50,12 @@ func (r *mutationRootResolver) CreateGroupChat(ctx context.Context, input comman
 func (r *mutationRootResolver) DeleteGroupChat(ctx context.Context, input commandgraphql.DeleteGroupChatInput) (*commandgraphql.GroupChatResult, error) {
 	var errorList []error
 
-	groupChatId, err := validator.ValidateGroupChatId(input.GroupChatID).Get()
+	groupChatId, err := validators.ValidateGroupChatId(input.GroupChatID).Get()
 	if err != nil {
 		errorList = append(errorList, err)
 	}
 
-	executorId, err := validator.ValidateUserAccountId(input.ExecutorID).Get()
+	executorId, err := validators.ValidateUserAccountId(input.ExecutorID).Get()
 	if err != nil {
 		errorList = append(errorList, err)
 	}
@@ -78,17 +78,17 @@ func (r *mutationRootResolver) DeleteGroupChat(ctx context.Context, input comman
 func (r *mutationRootResolver) RenameGroupChat(ctx context.Context, input commandgraphql.RenameGroupChatInput) (*commandgraphql.GroupChatResult, error) {
 	var errorList []error
 
-	groupChatId, err := validator.ValidateGroupChatId(input.GroupChatID).Get()
+	groupChatId, err := validators.ValidateGroupChatId(input.GroupChatID).Get()
 	if err != nil {
 		errorList = append(errorList, err)
 	}
 
-	groupChatName, err := validator.ValidateGroupChatName(input.Name).Get()
+	groupChatName, err := validators.ValidateGroupChatName(input.Name).Get()
 	if err != nil {
 		errorList = append(errorList, err)
 	}
 
-	executorId, err := validator.ValidateUserAccountId(input.ExecutorID).Get()
+	executorId, err := validators.ValidateUserAccountId(input.ExecutorID).Get()
 	if err != nil {
 		errorList = append(errorList, err)
 	}
@@ -111,17 +111,17 @@ func (r *mutationRootResolver) RenameGroupChat(ctx context.Context, input comman
 func (r *mutationRootResolver) AddMember(ctx context.Context, input commandgraphql.AddMemberInput) (*commandgraphql.GroupChatResult, error) {
 	var errorList []error
 
-	groupChatId, err := validator.ValidateGroupChatId(input.GroupChatID).Get()
+	groupChatId, err := validators.ValidateGroupChatId(input.GroupChatID).Get()
 	if err != nil {
 		errorList = append(errorList, err)
 	}
 
-	accountId, err := validator.ValidateUserAccountId(input.UserAccountID).Get()
+	accountId, err := validators.ValidateUserAccountId(input.UserAccountID).Get()
 	if err != nil {
 		errorList = append(errorList, err)
 	}
 
-	executorId, err := validator.ValidateUserAccountId(input.ExecutorID).Get()
+	executorId, err := validators.ValidateUserAccountId(input.ExecutorID).Get()
 	if err != nil {
 		errorList = append(errorList, err)
 	}
@@ -149,17 +149,17 @@ func (r *mutationRootResolver) AddMember(ctx context.Context, input commandgraph
 func (r *mutationRootResolver) RemoveMember(ctx context.Context, input commandgraphql.RemoveMemberInput) (*commandgraphql.GroupChatResult, error) {
 	var errorList []error
 
-	groupChatId, err := validator.ValidateGroupChatId(input.GroupChatID).Get()
+	groupChatId, err := validators.ValidateGroupChatId(input.GroupChatID).Get()
 	if err != nil {
 		errorList = append(errorList, err)
 	}
 
-	userAccountId, err := validator.ValidateUserAccountId(input.UserAccountID).Get()
+	userAccountId, err := validators.ValidateUserAccountId(input.UserAccountID).Get()
 	if err != nil {
 		errorList = append(errorList, err)
 	}
 
-	executorId, err := validator.ValidateUserAccountId(input.ExecutorID).Get()
+	executorId, err := validators.ValidateUserAccountId(input.ExecutorID).Get()
 	if err != nil {
 		errorList = append(errorList, err)
 	}
@@ -182,19 +182,19 @@ func (r *mutationRootResolver) RemoveMember(ctx context.Context, input commandgr
 func (r *mutationRootResolver) PostMessage(ctx context.Context, input commandgraphql.PostMessageInput) (*commandgraphql.MessageResult, error) {
 	var errorList []error
 
-	groupChatId, err := validator.ValidateGroupChatId(input.GroupChatID).Get()
+	groupChatId, err := validators.ValidateGroupChatId(input.GroupChatID).Get()
 	if err != nil {
 		errorList = append(errorList, err)
 	}
 
 	messageId := models.NewMessageId()
 
-	executorId, err := validator.ValidateUserAccountId(input.ExecutorID).Get()
+	executorId, err := validators.ValidateUserAccountId(input.ExecutorID).Get()
 	if err != nil {
 		errorList = append(errorList, err)
 	}
 
-	message, err := validator.ValidateMessage(messageId, input.Content, executorId).Get()
+	message, err := validators.ValidateMessage(messageId, input.Content, executorId).Get()
 	if err != nil {
 		errorList = append(errorList, err)
 	}
@@ -217,17 +217,17 @@ func (r *mutationRootResolver) PostMessage(ctx context.Context, input commandgra
 func (r *mutationRootResolver) DeleteMessage(ctx context.Context, input commandgraphql.DeleteMessageInput) (*commandgraphql.GroupChatResult, error) {
 	var errorList []error
 
-	groupChatId, err := validator.ValidateGroupChatId(input.GroupChatID).Get()
+	groupChatId, err := validators.ValidateGroupChatId(input.GroupChatID).Get()
 	if err != nil {
 		errorList = append(errorList, err)
 	}
 
-	messageId, err := validator.ValidateMessageId(input.MessageID).Get()
+	messageId, err := validators.ValidateMessageId(input.MessageID).Get()
 	if err != nil {
 		errorList = append(errorList, err)
 	}
 
-	executorId, err := validator.ValidateUserAccountId(input.ExecutorID).Get()
+	executorId, err := validators.ValidateUserAccountId(input.ExecutorID).Get()
 	if err != nil {
 		errorList = append(errorList, err)
 	}
@@ -268,7 +268,7 @@ func errorHandling(ctx context.Context, err error) {
 				"code": "409",
 			},
 		})
-	case *useCase.NotFoundError:
+	case *processor.NotFoundError:
 		graphql.AddError(ctx, &gqlerror.Error{
 			Path:    graphql.GetPath(ctx),
 			Message: e.Error(),

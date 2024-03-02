@@ -1,4 +1,4 @@
-package validator
+package validators
 
 import (
 	"cqrs-es-example-go/pkg/command/domain/models"

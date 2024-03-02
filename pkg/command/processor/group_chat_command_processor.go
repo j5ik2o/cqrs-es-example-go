@@ -1,4 +1,4 @@
-package useCase
+package processor
 
 import (
 	"cqrs-es-example-go/pkg/command/domain"
