@@ -1,57 +1,57 @@
 package domain
 
-type GroupChatErr struct {
+type GroupChatError struct {
 	message string
 }
 
-type GroupChatRenameErr struct {
-	GroupChatErr
+type GroupChatRenameError struct {
+	GroupChatError
 }
 
-func NewGroupChatRenameErr(message string) *GroupChatRenameErr {
-	return &GroupChatRenameErr{GroupChatErr{message}}
+func NewGroupChatRenameError(message string) *GroupChatRenameError {
+	return &GroupChatRenameError{GroupChatError{message}}
 }
 
-func (e *GroupChatErr) Error() string {
+func (e *GroupChatError) Error() string {
 	return e.message
 }
 
-type GroupChatAddMemberErr struct {
-	GroupChatErr
+type GroupChatAddMemberError struct {
+	GroupChatError
 }
 
-func NewGroupChatAddMemberErr(message string) *GroupChatAddMemberErr {
-	return &GroupChatAddMemberErr{GroupChatErr{message}}
+func NewGroupChatAddMemberError(message string) *GroupChatAddMemberError {
+	return &GroupChatAddMemberError{GroupChatError{message}}
 }
 
-type GroupChatDeleteErr struct {
-	GroupChatErr
+type GroupChatDeleteError struct {
+	GroupChatError
 }
 
-func NewGroupChatDeleteErr(message string) *GroupChatDeleteErr {
-	return &GroupChatDeleteErr{GroupChatErr{message}}
+func NewGroupChatDeleteError(message string) *GroupChatDeleteError {
+	return &GroupChatDeleteError{GroupChatError{message}}
 }
 
-type GroupChatDeleteMessageErr struct {
-	GroupChatErr
+type GroupChatDeleteMessageError struct {
+	GroupChatError
 }
 
-func NewGroupChatDeleteMessageErr(message string) *GroupChatDeleteMessageErr {
-	return &GroupChatDeleteMessageErr{GroupChatErr{message}}
+func NewGroupChatDeleteMessageError(message string) *GroupChatDeleteMessageError {
+	return &GroupChatDeleteMessageError{GroupChatError{message}}
 }
 
-type GroupChatPostMessageErr struct {
-	GroupChatErr
+type GroupChatPostMessageError struct {
+	GroupChatError
 }
 
-func NewGroupChatPostMessageErr(message string) *GroupChatPostMessageErr {
-	return &GroupChatPostMessageErr{GroupChatErr{message}}
+func NewGroupChatPostMessageError(message string) *GroupChatPostMessageError {
+	return &GroupChatPostMessageError{GroupChatError{message}}
 }
 
-type GroupChatRemoveMemberErr struct {
-	GroupChatErr
+type GroupChatRemoveMemberError struct {
+	GroupChatError
 }
 
-func NewGroupChatRemoveMemberErr(message string) *GroupChatRemoveMemberErr {
-	return &GroupChatRemoveMemberErr{GroupChatErr{message}}
+func NewGroupChatRemoveMemberError(message string) *GroupChatRemoveMemberError {
+	return &GroupChatRemoveMemberError{GroupChatError{message}}
 }
