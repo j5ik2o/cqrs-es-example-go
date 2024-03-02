@@ -276,7 +276,7 @@ func errorHandling(ctx context.Context, err error) {
 				"code": "404",
 			},
 		})
-	case *domain.GroupChatErr:
+	case *domain.GroupChatError:
 		graphql.AddError(ctx, &gqlerror.Error{
 			Path:    graphql.GetPath(ctx),
 			Message: e.Error(),
