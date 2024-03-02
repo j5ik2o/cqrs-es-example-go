@@ -4,7 +4,7 @@ import (
 	"context"
 	commandgraphql "cqrs-es-example-go/pkg/command/interfaceAdaptor/graphql"
 	"cqrs-es-example-go/pkg/command/interfaceAdaptor/repository"
-	"cqrs-es-example-go/pkg/command/useCase"
+	"cqrs-es-example-go/pkg/command/processor"
 	"fmt"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
@@ -111,7 +111,7 @@ var writeApiCmd = &cobra.Command{
 		if err != nil {
 			panic(err)
 		}
-		groupChatCommandProcessor := useCase.NewGroupChatCommandProcessor(&groupChatRepository)
+		groupChatCommandProcessor := processor.NewGroupChatCommandProcessor(&groupChatRepository)
 
 		srv := handler.NewDefaultServer(commandgraphql.NewExecutableSchema(commandgraphql.Config{Resolvers: commandgraphql.NewResolver(groupChatCommandProcessor)}))
 
