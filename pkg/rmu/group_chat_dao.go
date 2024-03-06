@@ -3,6 +3,7 @@ package rmu
 import (
 	"cqrs-es-example-go/pkg/command/domain/models"
 	"database/sql"
+	"errors"
 	"github.com/jmoiron/sqlx"
 	"time"
 )
@@ -126,6 +127,11 @@ func (dao *GroupChatDaoImpl) InsertMessage(messageId *models.MessageId, groupCha
 		return err
 	}
 	return nil
+}
+
+func (dao *GroupChatDaoImpl) UpdateMessage(messageId *models.MessageId, text string, updatedA time.Time) error {
+	// TODO
+	return errors.New("not implemented")
 }
 
 func (dao *GroupChatDaoImpl) DeleteMessage(messageId *models.MessageId, updatedAt time.Time) error {

@@ -5,6 +5,7 @@ import (
 	"cqrs-es-example-go/pkg/command/domain/events"
 	"cqrs-es-example-go/pkg/command/domain/models"
 	"cqrs-es-example-go/pkg/command/interfaceAdaptor/repository"
+	"errors"
 	"github.com/samber/mo"
 )
 
@@ -166,6 +167,10 @@ func (g *GroupChatCommandProcessor) PostMessage(groupChatId *models.GroupChatId,
 	}
 
 	return mo.Ok(pair.V2)
+}
+
+func (g *GroupChatCommandProcessor) EditMessage(groupChatId *models.GroupChatId, message models.Message, executorId models.UserAccountId) mo.Result[events.GroupChatEvent] {
+	return mo.Err[events.GroupChatEvent](errors.New("not implemented"))
 }
 
 // DeleteMessage is the command handler for DeleteMessage.

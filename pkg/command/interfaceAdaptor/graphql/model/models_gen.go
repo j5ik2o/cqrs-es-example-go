@@ -31,6 +31,13 @@ type DeleteMessageInput struct {
 	ExecutorID  string `json:"executorId"`
 }
 
+type EditMessageInput struct {
+	GroupChatID string `json:"groupChatId"`
+	MessageID   string `json:"messageId"`
+	Content     string `json:"content"`
+	ExecutorID  string `json:"executorId"`
+}
+
 type GroupChatResult struct {
 	GroupChatID string `json:"groupChatId"`
 }

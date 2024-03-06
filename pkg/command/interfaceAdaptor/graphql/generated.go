@@ -61,6 +61,7 @@ type ComplexityRoot struct {
 		CreateGroupChat func(childComplexity int, input commandgraphql.CreateGroupChatInput) int
 		DeleteGroupChat func(childComplexity int, input commandgraphql.DeleteGroupChatInput) int
 		DeleteMessage   func(childComplexity int, input commandgraphql.DeleteMessageInput) int
+		EditMessage     func(childComplexity int, input commandgraphql.EditMessageInput) int
 		PostMessage     func(childComplexity int, input commandgraphql.PostMessageInput) int
 		RemoveMember    func(childComplexity int, input commandgraphql.RemoveMemberInput) int
 		RenameGroupChat func(childComplexity int, input commandgraphql.RenameGroupChatInput) int
@@ -78,6 +79,7 @@ type MutationRootResolver interface {
 	AddMember(ctx context.Context, input commandgraphql.AddMemberInput) (*commandgraphql.GroupChatResult, error)
 	RemoveMember(ctx context.Context, input commandgraphql.RemoveMemberInput) (*commandgraphql.GroupChatResult, error)
 	PostMessage(ctx context.Context, input commandgraphql.PostMessageInput) (*commandgraphql.MessageResult, error)
+	EditMessage(ctx context.Context, input commandgraphql.EditMessageInput) (*commandgraphql.GroupChatResult, error)
 	DeleteMessage(ctx context.Context, input commandgraphql.DeleteMessageInput) (*commandgraphql.GroupChatResult, error)
 }
 type QueryRootResolver interface {
@@ -172,6 +174,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.MutationRoot.DeleteMessage(childComplexity, args["input"].(commandgraphql.DeleteMessageInput)), true
 
+	case "MutationRoot.editMessage":
+		if e.complexity.MutationRoot.EditMessage == nil {
+			break
+		}
+
+		args, err := ec.field_MutationRoot_editMessage_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.MutationRoot.EditMessage(childComplexity, args["input"].(commandgraphql.EditMessageInput)), true
+
 	case "MutationRoot.postMessage":
 		if e.complexity.MutationRoot.PostMessage == nil {
 			break
@@ -227,6 +241,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputCreateGroupChatInput,
 		ec.unmarshalInputDeleteGroupChatInput,
 		ec.unmarshalInputDeleteMessageInput,
+		ec.unmarshalInputEditMessageInput,
 		ec.unmarshalInputPostMessageInput,
 		ec.unmarshalInputRemoveMemberInput,
 		ec.unmarshalInputRenameGroupChatInput,
@@ -398,6 +413,21 @@ func (ec *executionContext) field_MutationRoot_deleteMessage_args(ctx context.Co
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalNDeleteMessageInput2cqrsᚑesᚑexampleᚑgoᚋpkgᚋcommandᚋinterfaceAdaptorᚋgraphqlᚋmodelᚐDeleteMessageInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_MutationRoot_editMessage_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 commandgraphql.EditMessageInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNEditMessageInput2cqrsᚑesᚑexampleᚑgoᚋpkgᚋcommandᚋinterfaceAdaptorᚋgraphqlᚋmodelᚐEditMessageInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -986,6 +1016,65 @@ func (ec *executionContext) fieldContext_MutationRoot_postMessage(ctx context.Co
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_MutationRoot_postMessage_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MutationRoot_editMessage(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MutationRoot_editMessage(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.MutationRoot().EditMessage(rctx, fc.Args["input"].(commandgraphql.EditMessageInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*commandgraphql.GroupChatResult)
+	fc.Result = res
+	return ec.marshalNGroupChatResult2ᚖcqrsᚑesᚑexampleᚑgoᚋpkgᚋcommandᚋinterfaceAdaptorᚋgraphqlᚋmodelᚐGroupChatResult(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MutationRoot_editMessage(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MutationRoot",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "groupChatId":
+				return ec.fieldContext_GroupChatResult_groupChatId(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type GroupChatResult", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_MutationRoot_editMessage_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -3154,6 +3243,54 @@ func (ec *executionContext) unmarshalInputDeleteMessageInput(ctx context.Context
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputEditMessageInput(ctx context.Context, obj interface{}) (commandgraphql.EditMessageInput, error) {
+	var it commandgraphql.EditMessageInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"groupChatId", "messageId", "content", "executorId"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "groupChatId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("groupChatId"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.GroupChatID = data
+		case "messageId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("messageId"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.MessageID = data
+		case "content":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("content"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Content = data
+		case "executorId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("executorId"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExecutorID = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputPostMessageInput(ctx context.Context, obj interface{}) (commandgraphql.PostMessageInput, error) {
 	var it commandgraphql.PostMessageInput
 	asMap := map[string]interface{}{}
@@ -3425,6 +3562,13 @@ func (ec *executionContext) _MutationRoot(ctx context.Context, sel ast.Selection
 		case "postMessage":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._MutationRoot_postMessage(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "editMessage":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._MutationRoot_editMessage(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -3889,6 +4033,11 @@ func (ec *executionContext) unmarshalNDeleteGroupChatInput2cqrsᚑesᚑexample�
 
 func (ec *executionContext) unmarshalNDeleteMessageInput2cqrsᚑesᚑexampleᚑgoᚋpkgᚋcommandᚋinterfaceAdaptorᚋgraphqlᚋmodelᚐDeleteMessageInput(ctx context.Context, v interface{}) (commandgraphql.DeleteMessageInput, error) {
 	res, err := ec.unmarshalInputDeleteMessageInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNEditMessageInput2cqrsᚑesᚑexampleᚑgoᚋpkgᚋcommandᚋinterfaceAdaptorᚋgraphqlᚋmodelᚐEditMessageInput(ctx context.Context, v interface{}) (commandgraphql.EditMessageInput, error) {
+	res, err := ec.unmarshalInputEditMessageInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 

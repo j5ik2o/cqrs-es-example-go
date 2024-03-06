@@ -331,6 +331,11 @@ func (g *GroupChat) PostMessage(message models.Message, executorId models.UserAc
 	return mo.Ok(GroupChatWithEventPair(pair))
 }
 
+func (g *GroupChat) EditMessage(message models.Message, executorId models.UserAccountId) mo.Result[GroupChatWithEventPair] {
+	// TODO
+	return mo.Err[GroupChatWithEventPair](fmt.Errorf("not implemented"))
+}
+
 // DeleteMessage deletes the message from the aggregate.
 //
 // # Parameters:

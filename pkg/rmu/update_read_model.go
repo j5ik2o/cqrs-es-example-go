@@ -29,6 +29,7 @@ type GroupChatDao interface {
 	DeleteMember(aggregateId *models.GroupChatId, userAccountId *models.UserAccountId) error
 
 	InsertMessage(messageId *models.MessageId, aggregateId *models.GroupChatId, userAccountId *models.UserAccountId, text string, createdAt time.Time) error
+	UpdateMessage(messageId *models.MessageId, text string, updatedAt time.Time) error
 	DeleteMessage(messageId *models.MessageId, updatedAt time.Time) error
 }
 
