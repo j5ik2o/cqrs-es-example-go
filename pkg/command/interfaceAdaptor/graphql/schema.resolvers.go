@@ -12,10 +12,10 @@ import (
 	"cqrs-es-example-go/pkg/command/interfaceAdaptor/validators"
 	"cqrs-es-example-go/pkg/command/processor"
 	"fmt"
-	esa "github.com/j5ik2o/event-store-adapter-go"
-	"github.com/vektah/gqlparser/v2/gqlerror"
 
 	"github.com/99designs/gqlgen/graphql"
+	esa "github.com/j5ik2o/event-store-adapter-go"
+	"github.com/vektah/gqlparser/v2/gqlerror"
 )
 
 // CreateGroupChat is the resolver for the createGroupChat field.
@@ -213,6 +213,11 @@ func (r *mutationRootResolver) PostMessage(ctx context.Context, input commandgra
 	return &commandgraphql.MessageResult{GroupChatID: event.GetAggregateId().AsString(), MessageID: messageId.String()}, nil
 }
 
+// EditMessage is the resolver for the editMessage field.
+func (r *mutationRootResolver) EditMessage(ctx context.Context, input commandgraphql.EditMessageInput) (*commandgraphql.GroupChatResult, error) {
+	panic(fmt.Errorf("not implemented: EditMessage - editMessage"))
+}
+
 // DeleteMessage is the resolver for the deleteMessage field.
 func (r *mutationRootResolver) DeleteMessage(ctx context.Context, input commandgraphql.DeleteMessageInput) (*commandgraphql.GroupChatResult, error) {
 	var errorList []error
@@ -246,6 +251,26 @@ func (r *mutationRootResolver) DeleteMessage(ctx context.Context, input commandg
 	return &commandgraphql.GroupChatResult{GroupChatID: event.GetAggregateId().AsString()}, nil
 }
 
+// HealthCheck is the resolver for the healthCheck field.
+func (r *queryRootResolver) HealthCheck(ctx context.Context) (string, error) {
+	panic(fmt.Errorf("not implemented: HealthCheck - healthCheck"))
+}
+
+// MutationRoot returns MutationRootResolver implementation.
+func (r *Resolver) MutationRoot() MutationRootResolver { return &mutationRootResolver{r} }
+
+// QueryRoot returns QueryRootResolver implementation.
+func (r *Resolver) QueryRoot() QueryRootResolver { return &queryRootResolver{r} }
+
+type mutationRootResolver struct{ *Resolver }
+type queryRootResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//     it when you're done.
+//   - You have helper methods in this file. Move them out to keep these resolver files clean.
 func validationErrorHandling(ctx context.Context, errorList []error) {
 	for _, err := range errorList {
 		graphql.AddError(ctx, &gqlerror.Error{
@@ -257,7 +282,6 @@ func validationErrorHandling(ctx context.Context, errorList []error) {
 		})
 	}
 }
-
 func errorHandling(ctx context.Context, err error) {
 	switch e := err.(type) {
 	case *esa.OptimisticLockError:
@@ -294,17 +318,3 @@ func errorHandling(ctx context.Context, err error) {
 		})
 	}
 }
-
-// HealthCheck is the resolver for the healthCheck field.
-func (r *queryRootResolver) HealthCheck(ctx context.Context) (string, error) {
-	panic(fmt.Errorf("not implemented: HealthCheck - healthCheck"))
-}
-
-// MutationRoot returns MutationRootResolver implementation.
-func (r *Resolver) MutationRoot() MutationRootResolver { return &mutationRootResolver{r} }
-
-// QueryRoot returns QueryRootResolver implementation.
-func (r *Resolver) QueryRoot() QueryRootResolver { return &queryRootResolver{r} }
-
-type mutationRootResolver struct{ *Resolver }
-type queryRootResolver struct{ *Resolver }

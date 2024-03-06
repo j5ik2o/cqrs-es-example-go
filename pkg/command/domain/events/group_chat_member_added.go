@@ -37,8 +37,8 @@ func (g *GroupChatMemberAdded) ToJSON() map[string]interface{} {
 		"id":           g.id,
 		"aggregate_id": g.aggregateId.ToJSON(),
 		"member":       g.member.ToJSON(),
-		"seq_nr":       g.seqNr,
 		"executor_id":  g.executorId.ToJSON(),
+		"seq_nr":       g.seqNr,
 		"occurred_at":  g.occurredAt,
 	}
 }

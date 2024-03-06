@@ -37,8 +37,8 @@ func (g *GroupChatMessageDeleted) ToJSON() map[string]interface{} {
 		"id":           g.id,
 		"aggregate_id": g.aggregateId.ToJSON(),
 		"message_id":   g.messageId.ToJSON(),
-		"seq_nr":       g.seqNr,
 		"executor_id":  g.executorId.ToJSON(),
+		"seq_nr":       g.seqNr,
 		"occurred_at":  g.occurredAt,
 	}
 }

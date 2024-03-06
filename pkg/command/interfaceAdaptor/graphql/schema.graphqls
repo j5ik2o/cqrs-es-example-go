@@ -51,6 +51,13 @@ input PostMessageInput {
   executorId: String!
 }
 
+input EditMessageInput {
+  groupChatId: String!
+  messageId: String!
+  content: String!
+  executorId: String!
+}
+
 input DeleteMessageInput {
   groupChatId: String!
   messageId: String!
@@ -64,6 +71,7 @@ type MutationRoot {
   addMember(input: AddMemberInput!): GroupChatResult!
   removeMember(input: RemoveMemberInput!): GroupChatResult!
   postMessage(input: PostMessageInput!): MessageResult!
+  editMessage(input: EditMessageInput!): GroupChatResult!
   deleteMessage(input: DeleteMessageInput!): GroupChatResult!
 }
 
