@@ -40,6 +40,7 @@ Please refer to [here](https://github.com/j5ik2o/cqrs-es-example) for implementa
 ## Stack
 
 - [99designs/gqlgen](https://github.com/99designs/gqlgen)
+- [jmoiron/sqlx](https://github.com/jmoiron/sqlx)
 
 ## System Architecture Diagram
 
