@@ -26,9 +26,7 @@ Please refer to [here](https://github.com/j5ik2o/cqrs-es-example) for implementa
 - [ ] Read Model Updater on AWS Lambda
 - [ ] Deployment to AWS
 
-## Overview
-
-### Component Composition
+## Component Composition
 
 - Write API Server
   - API is implemented by GraphQL (Mutation)
@@ -38,6 +36,10 @@ Please refer to [here](https://github.com/j5ik2o/cqrs-es-example) for implementa
   - Locally, run code that emulates Lambda behavior (local-rmu)
 - Read API Server
   - API is implemented by GraphQL (Query)
+
+## Stack
+
+- [99designs/gqlgen](https://github.com/99designs/gqlgen)
 
 ## System Architecture Diagram
 
