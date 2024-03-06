@@ -39,7 +39,7 @@ Please refer to [here](https://github.com/j5ik2o/cqrs-es-example) for implementa
 - Read API Server
   - API is implemented by GraphQL (Query)
 
-### System Architecture Diagram
+## System Architecture Diagram
 
 ![](docs/images/system-layout.png)
 
