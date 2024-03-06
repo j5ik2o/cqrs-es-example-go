@@ -39,8 +39,11 @@ Please refer to [here](https://github.com/j5ik2o/cqrs-es-example) for implementa
 
 ## Stack
 
+This OSS repository mainly utilizes the following technology stack.
+
 - [99designs/gqlgen](https://github.com/99designs/gqlgen)
 - [jmoiron/sqlx](https://github.com/jmoiron/sqlx)
+- [j5ik2o/cqrs-es-example](https://github.com/j5ik2o/cqrs-es-example)
 
 ## System Architecture Diagram
 
