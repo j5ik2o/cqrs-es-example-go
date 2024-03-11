@@ -209,7 +209,37 @@ func (r *mutationRootResolver) PostMessage(ctx context.Context, input commandgra
 
 // EditMessage is the resolver for the editMessage field.
 func (r *mutationRootResolver) EditMessage(ctx context.Context, input commandgraphql.EditMessageInput) (*commandgraphql.GroupChatResult, error) {
-	panic(fmt.Errorf("not implemented: EditMessage - editMessage"))
+	var errorList []error
+
+	groupChatId, err := validators.ValidateGroupChatId(input.GroupChatID).Get()
+	if err != nil {
+		errorList = append(errorList, err)
+	}
+
+	messageId := models.NewMessageId()
+
+	executorId, err := validators.ValidateUserAccountId(input.ExecutorID).Get()
+	if err != nil {
+		errorList = append(errorList, err)
+	}
+
+	message, err := validators.ValidateMessage(messageId, input.Content, executorId).Get()
+	if err != nil {
+		errorList = append(errorList, err)
+	}
+
+	if len(errorList) > 0 {
+		validationErrorHandling(ctx, errorList)
+		return nil, nil
+	}
+
+	event, err := r.groupChatCommandProcessor.EditMessage(&groupChatId, message, executorId).Get()
+	if err != nil {
+		errorHandling(ctx, err)
+		return nil, nil
+	}
+
+	return &commandgraphql.GroupChatResult{GroupChatID: event.GetAggregateId().AsString()}, nil
 }
 
 // DeleteMessage is the resolver for the deleteMessage field.

@@ -53,3 +53,7 @@ func (m *Message) GetSenderId() *UserAccountId {
 func (m *Message) Equals(other *Message) bool {
 	return m.id.Equals(&other.id) && m.text == other.text && m.senderId.Equals(&other.senderId)
 }
+
+func (m *Message) WithText(text string) mo.Result[Message] {
+	return NewMessage(m.id, text, m.senderId)
+}

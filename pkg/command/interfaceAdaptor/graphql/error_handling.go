@@ -2,7 +2,7 @@ package commandgraphql
 
 import (
 	"context"
-	"cqrs-es-example-go/pkg/command/domain"
+	domain "cqrs-es-example-go/pkg/command/domain/errors"
 	"cqrs-es-example-go/pkg/command/processor"
 	"github.com/99designs/gqlgen/graphql"
 	esa "github.com/j5ik2o/event-store-adapter-go"

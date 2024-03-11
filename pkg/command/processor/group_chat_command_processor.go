@@ -5,7 +5,6 @@ import (
 	"cqrs-es-example-go/pkg/command/domain/events"
 	"cqrs-es-example-go/pkg/command/domain/models"
 	"cqrs-es-example-go/pkg/command/interfaceAdaptor/repository"
-	"errors"
 	"github.com/samber/mo"
 )
 
@@ -198,7 +197,26 @@ func (g *GroupChatCommandProcessor) PostMessage(groupChatId *models.GroupChatId,
 }
 
 func (g *GroupChatCommandProcessor) EditMessage(groupChatId *models.GroupChatId, message models.Message, executorId models.UserAccountId) mo.Result[events.GroupChatEvent] {
-	return mo.Err[events.GroupChatEvent](errors.New("not implemented"))
+	groupChatOpt, err := g.repository.FindById(groupChatId).Get()
+	if err != nil {
+		return mo.Err[events.GroupChatEvent](NewRepositoryError("Failed to find the group chat", err))
+	}
+
+	groupChat, b := groupChatOpt.Get()
+	if !b {
+		return mo.Err[events.GroupChatEvent](NewNotFoundError("The group chat is not found"))
+	}
+
+	pair, err := groupChat.EditMessage(message, executorId).Get()
+	if err != nil {
+		return mo.Err[events.GroupChatEvent](NewDomainLogicError("Failed to post the message to the group chat", err))
+	}
+
+	if err, b := g.repository.Store(pair.V2, &pair.V1).Get(); b {
+		return mo.Err[events.GroupChatEvent](NewRepositoryError("Failed to store the group chat", err))
+	}
+
+	return mo.Ok(pair.V2)
 }
 
 // DeleteMessage is the command handler for DeleteMessage.

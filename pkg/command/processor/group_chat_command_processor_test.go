@@ -144,6 +144,33 @@ func Test_PostMessage(t *testing.T) {
 	require.True(t, message.Equals(event.GetMessage()))
 }
 
+func Test_EditMessage(t *testing.T) {
+	// Give
+	groupChatRepository, err := repository.NewGroupChatRepository(event_store_adapter_go.NewEventStoreOnMemory())
+	require.NoError(t, err)
+	commandProcessor := NewGroupChatCommandProcessor(&groupChatRepository)
+	groupName := models.NewGroupChatName("test").MustGet()
+	executorId := models.NewUserAccountId()
+	result, _ := commandProcessor.CreateGroupChat(groupName, executorId).Get()
+	groupChatId, _ := result.GetAggregateId().(*models.GroupChatId)
+	memberUserAccountId := models.NewUserAccountId()
+	var memberRole models.Role = models.MemberRole
+	_, _ = commandProcessor.AddMember(groupChatId, memberUserAccountId, memberRole, executorId).Get()
+	messageId := models.NewMessageId()
+	message := models.NewMessage(messageId, "test", memberUserAccountId).MustGet()
+	_, _ = commandProcessor.PostMessage(groupChatId, message, memberUserAccountId).Get()
+	message = message.WithText("test2").MustGet()
+	result, err = commandProcessor.EditMessage(groupChatId, message, memberUserAccountId).Get()
+
+	require.NoError(t, err)
+	event, ok := result.(*events.GroupChatMessagePosted)
+	require.True(t, ok)
+	actualGroupChatId, ok := event.GetAggregateId().(*models.GroupChatId)
+	require.True(t, ok)
+	require.True(t, groupChatId.Equals(actualGroupChatId))
+	require.True(t, message.Equals(event.GetMessage()))
+}
+
 func Test_DeleteMessage(t *testing.T) {
 	// Given
 	groupChatRepository, err := repository.NewGroupChatRepository(event_store_adapter_go.NewEventStoreOnMemory())

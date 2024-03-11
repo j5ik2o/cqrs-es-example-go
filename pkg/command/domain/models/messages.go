@@ -1,6 +1,9 @@
 package models
 
-import "github.com/samber/mo"
+import (
+	"cqrs-es-example-go/pkg/command/domain/errors"
+	"github.com/samber/mo"
+)
 
 // Messages is a value object that represents a list of messages.
 type Messages struct {
@@ -40,22 +43,37 @@ func (m *Messages) Contains(id *MessageId) bool {
 	return ok
 }
 
-func (m *Messages) Add(message Message) mo.Option[Messages] {
+func (m *Messages) Add(message Message) mo.Result[Messages] {
 	if m.Contains(message.GetId()) {
-		return mo.None[Messages]()
+		return mo.Err[Messages](errors.NewAlreadyExistsMessageError("message already exists: " + message.GetId().GetValue()))
 	}
 	newMap := m.ToMap()
 	newMap[message.GetId().GetValue()] = message
-	return mo.Some(NewMessagesFromMap(newMap))
+	return mo.Ok(NewMessagesFromMap(newMap))
 }
 
-func (m *Messages) Remove(id *MessageId) mo.Option[Messages] {
+func (m *Messages) Edit(message Message) mo.Result[Messages] {
+	if !m.Contains(message.GetId()) {
+		return mo.Err[Messages](errors.NewMessageNotFoundError("message not found: " + message.GetId().GetValue()))
+	}
+	if m.values[message.GetId().GetValue()].senderId != message.senderId {
+		return mo.Err[Messages](errors.NewNotSenderError("not authorized: " + message.GetId().GetValue()))
+	}
+	newMap := m.ToMap()
+	newMap[message.GetId().GetValue()] = message
+	return mo.Ok(NewMessagesFromMap(newMap))
+}
+
+func (m *Messages) Remove(id *MessageId, senderId UserAccountId) mo.Result[Messages] {
 	if !m.Contains(id) {
-		return mo.None[Messages]()
+		return mo.Err[Messages](errors.NewMessageNotFoundError("message not found: " + id.GetValue()))
+	}
+	if m.values[id.GetValue()].senderId != senderId {
+		return mo.Err[Messages](errors.NewNotSenderError("not authorized: " + id.GetValue()))
 	}
 	newMap := m.ToMap()
 	delete(newMap, id.GetValue())
-	return mo.Some(NewMessagesFromMap(newMap))
+	return mo.Ok(NewMessagesFromMap(newMap))
 }
 
 func (m *Messages) Get(id *MessageId) mo.Option[Message] {
