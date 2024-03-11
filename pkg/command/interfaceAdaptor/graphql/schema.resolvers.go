@@ -216,9 +216,12 @@ func (r *mutationRootResolver) EditMessage(ctx context.Context, input commandgra
 		errorList = append(errorList, err)
 	}
 
-	messageId := models.NewMessageId()
-
 	executorId, err := validators.ValidateUserAccountId(input.ExecutorID).Get()
+	if err != nil {
+		errorList = append(errorList, err)
+	}
+
+	messageId, err := validators.ValidateMessageId(input.MessageID).Get()
 	if err != nil {
 		errorList = append(errorList, err)
 	}
