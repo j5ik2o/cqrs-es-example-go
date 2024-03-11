@@ -97,7 +97,31 @@ func Test_GroupChat_PostMessage(t *testing.T) {
 	message := models.NewMessage(messageId, "test", userAccountId).MustGet()
 
 	// When
-	tuple2, err := groupChat.PostMessage(message, userAccountId).Get()
+	tuple1, err := groupChat.PostMessage(message, userAccountId).Get()
+
+	// Then
+	require.NoError(t, err)
+	require.Equal(t, groupChat.id, tuple1.V1.id)
+	require.Equal(t, groupChat.seqNr+1, tuple1.V1.seqNr)
+	require.True(t, tuple1.V1.GetMessages().Get(&messageId).IsPresent())
+	require.Equal(t, message, tuple1.V1.GetMessages().Get(&messageId).MustGet())
+}
+
+func Test_GroupChat_EditMessage(t *testing.T) {
+	// Given
+	adminId := models.NewUserAccountId()
+	groupChatName := models.NewGroupChatName("test").MustGet()
+	userAccountId := models.NewUserAccountId()
+	groupChat, _ := NewGroupChat(groupChatName, adminId)
+	groupChat = groupChat.AddMember(models.NewMemberId(), userAccountId, models.MemberRole, adminId).MustGet().V1
+	messageId := models.NewMessageId()
+	message := models.NewMessage(messageId, "test", userAccountId).MustGet()
+
+	tuple1, err := groupChat.PostMessage(message, userAccountId).Get()
+	groupChat = tuple1.V1
+
+	message = message.WithText("test2").MustGet()
+	tuple2, err := groupChat.EditMessage(message, userAccountId).Get()
 
 	// Then
 	require.NoError(t, err)
