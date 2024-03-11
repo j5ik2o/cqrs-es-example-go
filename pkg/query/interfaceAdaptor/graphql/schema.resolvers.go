@@ -19,7 +19,8 @@ func (r *queryRootResolver) GetGroupChat(ctx context.Context, groupChatID string
 					 FROM group_chats AS gc JOIN members AS m ON gc.id = m.group_chat_id
 					 WHERE gc.disabled = 'false' AND m.group_chat_id = ? AND m.user_account_id = ?`)
 	if err != nil {
-		return nil, err
+		errorHandling(ctx, err)
+		return nil, nil
 	}
 	defer func(stmt *sql.Stmt) {
 		err := stmt.Close()
@@ -36,7 +37,8 @@ func (r *queryRootResolver) GetGroupChat(ctx context.Context, groupChatID string
 		var updatedAt time.Time
 		err = row.Scan(&id, &name, &ownerID, &createdAt, &updatedAt)
 		if err != nil {
-			return nil, err
+			errorHandling(ctx, err)
+			return nil, nil
 		}
 		return &querygraphql.GroupChat{
 			ID:        id,
@@ -56,7 +58,8 @@ func (r *queryRootResolver) GetGroupChats(ctx context.Context, userAccountID str
 					 FROM group_chats AS gc JOIN members AS m ON gc.id = m.group_chat_id
            WHERE gc.disabled = 'false' AND m.user_account_id = ?`)
 	if err != nil {
-		return nil, err
+		errorHandling(ctx, err)
+		return nil, nil
 	}
 	defer func(stmt *sql.Stmt) {
 		err := stmt.Close()
@@ -66,9 +69,15 @@ func (r *queryRootResolver) GetGroupChats(ctx context.Context, userAccountID str
 	}(stmt)
 	rows, err := stmt.Query(userAccountID)
 	if err != nil {
-		return nil, err
+		errorHandling(ctx, err)
+		return nil, nil
 	}
-	defer rows.Close()
+	defer func(rows *sql.Rows) {
+		err := rows.Close()
+		if err != nil {
+			panic(err.Error())
+		}
+	}(rows)
 
 	results := make([]*querygraphql.GroupChat, 0)
 	for rows.Next() {
@@ -79,7 +88,8 @@ func (r *queryRootResolver) GetGroupChats(ctx context.Context, userAccountID str
 		var updatedAt time.Time
 		err = rows.Scan(&id, &name, &ownerID, &createdAt, &updatedAt)
 		if err != nil {
-			return nil, err
+			errorHandling(ctx, err)
+			return nil, nil
 		}
 		results = append(results, &querygraphql.GroupChat{
 			ID:        id,
@@ -100,7 +110,8 @@ func (r *queryRootResolver) GetMember(ctx context.Context, groupChatID string, u
 					 FROM group_chats AS gc JOIN members AS m ON gc.id = m.group_chat_id
 					 WHERE gc.disabled = 'false' AND m.group_chat_id = ? AND m.user_account_id = ?`)
 	if err != nil {
-		return nil, err
+		errorHandling(ctx, err)
+		return nil, nil
 	}
 	defer func(stmt *sql.Stmt) {
 		err := stmt.Close()
@@ -118,7 +129,8 @@ func (r *queryRootResolver) GetMember(ctx context.Context, groupChatID string, u
 		var updatedAt time.Time
 		err = row.Scan(&id, &groupChatId, &userAccountId, &role, &createdAt, &updatedAt)
 		if err != nil {
-			return nil, err
+			errorHandling(ctx, err)
+			return nil, nil
 		}
 		return &querygraphql.Member{
 			ID:            id,
@@ -140,7 +152,8 @@ func (r *queryRootResolver) GetMembers(ctx context.Context, groupChatID string, 
            WHERE gc.disabled = 'false' AND m.group_chat_id = ?
 						AND EXISTS (SELECT 1 FROM members AS m2 WHERE m2.group_chat_id = m.group_chat_id AND m2.user_account_id = ?)`)
 	if err != nil {
-		return nil, err
+		errorHandling(ctx, err)
+		return nil, nil
 	}
 	defer func(stmt *sql.Stmt) {
 		err := stmt.Close()
@@ -169,7 +182,8 @@ func (r *queryRootResolver) GetMembers(ctx context.Context, groupChatID string, 
 		var updatedAt time.Time
 		err = rows.Scan(&id, &groupChatId, &userAccountId, &role, &createdAt, &updatedAt)
 		if err != nil {
-			return nil, err
+			errorHandling(ctx, err)
+			return nil, nil
 		}
 		results = append(results, &querygraphql.Member{
 			ID:            id,
@@ -192,7 +206,8 @@ func (r *queryRootResolver) GetMessage(ctx context.Context, messageID string, us
            WHERE gc.disabled = 'false' AND m.disabled = 'false' AND m.id = ?
             AND EXISTS ( SELECT 1 FROM members AS mem WHERE mem.group_chat_id = m.group_chat_id AND mem.user_account_id = ? )`)
 	if err != nil {
-		return nil, err
+		errorHandling(ctx, err)
+		return nil, nil
 	}
 	defer func(stmt *sql.Stmt) {
 		err := stmt.Close()
@@ -210,7 +225,8 @@ func (r *queryRootResolver) GetMessage(ctx context.Context, messageID string, us
 		var updatedAt time.Time
 		err = row.Scan(&id, &groupChatId, &userAccountId, &text, &createdAt, &updatedAt)
 		if err != nil {
-			return nil, err
+			errorHandling(ctx, err)
+			return nil, nil
 		}
 		return &querygraphql.Message{
 			ID:            id,
@@ -232,7 +248,8 @@ func (r *queryRootResolver) GetMessages(ctx context.Context, groupChatID string,
            WHERE gc.disabled = 'false' AND m.disabled = 'false' AND m.group_chat_id = ?
             AND EXISTS (SELECT 1 FROM members AS mem WHERE mem.group_chat_id = m.group_chat_id AND mem.user_account_id = ?)`)
 	if err != nil {
-		return nil, err
+		errorHandling(ctx, err)
+		return nil, nil
 	}
 	defer func(stmt *sql.Stmt) {
 		err := stmt.Close()
@@ -242,7 +259,8 @@ func (r *queryRootResolver) GetMessages(ctx context.Context, groupChatID string,
 	}(stmt)
 	rows, err := stmt.Query(groupChatID, userAccountID)
 	if err != nil {
-		return nil, err
+		errorHandling(ctx, err)
+		return nil, nil
 	}
 	defer func(rows *sql.Rows) {
 		err := rows.Close()
@@ -261,7 +279,8 @@ func (r *queryRootResolver) GetMessages(ctx context.Context, groupChatID string,
 		var updatedAt time.Time
 		err = rows.Scan(&id, &groupChatId, &userAccountId, &text, &createdAt, &updatedAt)
 		if err != nil {
-			return nil, err
+			errorHandling(ctx, err)
+			return nil, nil
 		}
 		results = append(results, &querygraphql.Message{
 			ID:            id,
