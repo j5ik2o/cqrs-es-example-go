@@ -6,16 +6,10 @@ package commandgraphql
 
 import (
 	"context"
-	"cqrs-es-example-go/pkg/command/domain"
 	"cqrs-es-example-go/pkg/command/domain/models"
 	commandgraphql "cqrs-es-example-go/pkg/command/interfaceAdaptor/graphql/model"
 	"cqrs-es-example-go/pkg/command/interfaceAdaptor/validators"
-	"cqrs-es-example-go/pkg/command/processor"
 	"fmt"
-
-	"github.com/99designs/gqlgen/graphql"
-	esa "github.com/j5ik2o/event-store-adapter-go"
-	"github.com/vektah/gqlparser/v2/gqlerror"
 )
 
 // CreateGroupChat is the resolver for the createGroupChat field.
@@ -264,57 +258,3 @@ func (r *Resolver) QueryRoot() QueryRootResolver { return &queryRootResolver{r} 
 
 type mutationRootResolver struct{ *Resolver }
 type queryRootResolver struct{ *Resolver }
-
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//     it when you're done.
-//   - You have helper methods in this file. Move them out to keep these resolver files clean.
-func validationErrorHandling(ctx context.Context, errorList []error) {
-	for _, err := range errorList {
-		graphql.AddError(ctx, &gqlerror.Error{
-			Path:    graphql.GetPath(ctx),
-			Message: err.Error(),
-			Extensions: map[string]interface{}{
-				"code": "400",
-			},
-		})
-	}
-}
-func errorHandling(ctx context.Context, err error) {
-	switch e := err.(type) {
-	case *esa.OptimisticLockError:
-		graphql.AddError(ctx, &gqlerror.Error{
-			Path:    graphql.GetPath(ctx),
-			Message: e.Error(),
-			Extensions: map[string]interface{}{
-				"code": "409",
-			},
-		})
-	case *processor.NotFoundError:
-		graphql.AddError(ctx, &gqlerror.Error{
-			Path:    graphql.GetPath(ctx),
-			Message: e.Error(),
-			Extensions: map[string]interface{}{
-				"code": "404",
-			},
-		})
-	case *domain.GroupChatError:
-		graphql.AddError(ctx, &gqlerror.Error{
-			Path:    graphql.GetPath(ctx),
-			Message: e.Error(),
-			Extensions: map[string]interface{}{
-				"code": "422",
-			},
-		})
-	default:
-		graphql.AddError(ctx, &gqlerror.Error{
-			Path:    graphql.GetPath(ctx),
-			Message: err.Error(),
-			Extensions: map[string]interface{}{
-				"code": "500",
-			},
-		})
-	}
-}
