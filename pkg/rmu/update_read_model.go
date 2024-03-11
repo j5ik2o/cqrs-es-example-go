@@ -20,19 +20,6 @@ type ReadModelUpdater struct {
 	dao GroupChatDao
 }
 
-type GroupChatDao interface {
-	InsertGroupChat(aggregateId *models.GroupChatId, name *models.GroupChatName, administratorId *models.UserAccountId, createdAt time.Time) error
-	DeleteGroupChat(aggregateId *models.GroupChatId, updatedAt time.Time) error
-	UpdateName(aggregateId *models.GroupChatId, name *models.GroupChatName, updatedAt time.Time) error
-
-	InsertMember(aggregateId *models.GroupChatId, member *models.Member, createdAt time.Time) error
-	DeleteMember(aggregateId *models.GroupChatId, userAccountId *models.UserAccountId) error
-
-	InsertMessage(messageId *models.MessageId, aggregateId *models.GroupChatId, userAccountId *models.UserAccountId, text string, createdAt time.Time) error
-	UpdateMessage(messageId *models.MessageId, text string, updatedAt time.Time) error
-	DeleteMessage(messageId *models.MessageId, updatedAt time.Time) error
-}
-
 // NewReadModelUpdater is a constructor for ReadModelUpdater.
 func NewReadModelUpdater(dao GroupChatDao) ReadModelUpdater {
 	return ReadModelUpdater{dao}
@@ -88,6 +75,12 @@ func (r *ReadModelUpdater) UpdateReadModel(ctx context.Context, event dynamodbev
 			case *events.GroupChatMessagePosted:
 				ev := event.(*events.GroupChatMessagePosted)
 				err2 := postMessage(ev, r)
+				if err2 != nil {
+					return err2
+				}
+			case *events.GroupChatMessageEdited:
+				ev := event.(*events.GroupChatMessageEdited)
+				err2 := editMessage(ev, r)
 				if err2 != nil {
 					return err2
 				}
@@ -192,6 +185,19 @@ func postMessage(ev *events.GroupChatMessagePosted, r *ReadModelUpdater) error {
 		return err
 	}
 	slog.Info(fmt.Sprintf("postMessage: finished"))
+	return nil
+}
+
+func editMessage(ev *events.GroupChatMessageEdited, r *ReadModelUpdater) error {
+	slog.Info(fmt.Sprintf("editMessage: start: ev = %v", ev))
+	messageId := ev.GetMessage().GetId()
+	text := ev.GetMessage().GetText()
+	createdAt := convertToTime(ev.GetOccurredAt())
+	err := r.dao.UpdateMessage(messageId, text, createdAt)
+	if err != nil {
+		return err
+	}
+	slog.Info(fmt.Sprintf("editMessage: finished"))
 	return nil
 }
 
