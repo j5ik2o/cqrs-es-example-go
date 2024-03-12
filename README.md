@@ -49,7 +49,10 @@ This OSS repository mainly utilizes the following technology stack.
 
 ![](docs/images/system-layout.png)
 
-## Usage
+## Development Environment
+
+- [Tools Setup](docs/TOOLS_INSTALLATION.md)
+- [Build and Test](docs/BUILD_AND_TEST.md)
 
 ### Local Environment
 
