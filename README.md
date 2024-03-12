@@ -43,7 +43,7 @@ This OSS repository mainly utilizes the following technology stack.
 
 - [99designs/gqlgen](https://github.com/99designs/gqlgen)
 - [jmoiron/sqlx](https://github.com/jmoiron/sqlx)
-- [j5ik2o/cqrs-es-example-go](https://github.com/j5ik2o/cqrs-es-example-go)
+- [j5ik2o/event-store-adapter-go](https://github.com/j5ik2o/event-store-adapter-go)
 
 ## System Architecture Diagram
 
