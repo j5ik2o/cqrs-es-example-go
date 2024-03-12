@@ -2,9 +2,9 @@
 
 ## Write API Server: GraphQLのSDLを確認する方法
 
-`pkg/query/graph/schema.graphqls`を確認してください。
+`pkg/command/intefaceAdaptor/graph/schema.graphqls`を確認してください。
 
 ## Read API Server: GraphQLのSDLを確認する方法
 
-`pkg/query/graph/schema.graphqls`を確認してください。
+`pkg/query/intefaceAdaptor/graph/schema.graphqls`を確認してください。
 
