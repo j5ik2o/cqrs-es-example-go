@@ -1,6 +1,6 @@
 # ツールのインストール 
 
-## rust
+## Go
 
 ```shell
 $ curl -sLk https://raw.githubusercontent.com/kevincobain2000/gobrew/master/git.io.sh | sh
