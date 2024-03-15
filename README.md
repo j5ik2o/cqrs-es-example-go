@@ -56,44 +56,7 @@ This OSS repository mainly utilizes the following technology stack.
 
 ### Local Environment
 
-#### Build image
-
-```shell
-$ make docker-build
-```
-
-#### Starting Services
-
-```shell
-$ make docker-compose-up
-./tools/scripts/docker-compose-up.sh
-ARCH=arm64
- Container read-api-server-1  Stopping
-...
- Container docker-compose-migration-1  Started
- Container read-api-server-1  Starting
- Container read-api-server-1  Started
-```
-
-#### Testing
-
-```shell
-$ make verify-group-chat
-...
-GroupChat:
-{
-  "data": {
-    "getGroupChat": {
-      "id": "GroupChat-01HPG4EV94HMPT08GZS0ZWW0VJ",
-      "name": "group-chat-example-1",
-      "ownerId": "UserAccount-01H42K4ABWQ5V2XQEP3A48VE0Z",
-      "createdAt": "2024-02-13 02:24:12 +0000 UTC",
-      "updatedAt": "2024-02-13 02:24:12 +0000 UTC"
-    }
-  }
-}
-...
-```
+- [Debugging with Docker Compose](docs/DEBUG_ON_DOCKER_COMPOSE.md)
 
 ## Links
 
