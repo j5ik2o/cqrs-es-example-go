@@ -4,6 +4,7 @@ import (
 	"context"
 	"cqrs-es-example-go/pkg/command/domain"
 	"cqrs-es-example-go/pkg/command/domain/models"
+	"cqrs-es-example-go/test"
 	"encoding/json"
 	"fmt"
 	esa "github.com/j5ik2o/event-store-adapter-go"
@@ -25,7 +26,7 @@ func Test_GroupChatRepository_OnDynamoDB_FindById(t *testing.T) {
 	// Given
 	ctx := context.Background()
 
-	container, err := CreateContainer(ctx)
+	container, err := test.CreateLocalStackContainer(ctx)
 	require.NoError(t, err)
 	assert.NotNil(t, container)
 

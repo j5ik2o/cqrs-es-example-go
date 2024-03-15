@@ -121,9 +121,39 @@ func (m *Members) FindByUserAccountId(userAccountId *UserAccountId) mo.Option[*M
 	return mo.None[*Member]()
 }
 
+func (m *Members) ContainsByMemberId(memberId *MemberId) bool {
+	for _, member := range m.values {
+		if member.id.Equals(memberId) {
+			return true
+		}
+	}
+	return false
+}
+
+func (m *Members) ContainsByUserAccountId(userAccountId *UserAccountId) bool {
+	for _, member := range m.values {
+		if member.userAccountId.Equals(userAccountId) {
+			return true
+		}
+	}
+	return false
+}
+
 // ToSlice converts to slice.
 func (m *Members) ToSlice() []Member {
 	copiedMembers := make([]Member, len(m.values))
 	copy(copiedMembers, m.values)
 	return copiedMembers
+}
+
+func (m *Members) Equals(other *Members) bool {
+	if len(m.values) != len(other.values) {
+		return false
+	}
+	for i, member := range m.values {
+		if !member.Equals(&other.values[i]) {
+			return false
+		}
+	}
+	return true
 }

@@ -27,6 +27,10 @@ func ConvertMemberFromJSON(value map[string]interface{}) Member {
 	)
 }
 
+func (m *Member) Equals(other *Member) bool {
+	return m.id.Equals(&other.id) && m.userAccountId.Equals(&other.userAccountId) && m.role == other.role
+}
+
 // ToJSON converts to JSON.
 //
 // However, this method is out of layer.

@@ -13,7 +13,10 @@ import (
 
 func TestReadModelDao_InsertGroupChat(t *testing.T) {
 	ctx := context.Background()
-	err, port := test.StartContainer(t, ctx)
+	container, err := test.CreateMySQLContainer(ctx)
+	require.NoError(t, err)
+	port, err := container.MappedPort(ctx, "3306")
+	require.NoError(t, err)
 	dataSourceName := test.GetDataSourceName(port)
 
 	db, err := sqlx.Connect("mysql", dataSourceName)
@@ -24,9 +27,7 @@ func TestReadModelDao_InsertGroupChat(t *testing.T) {
 	defer func(db *sqlx.DB) {
 		if db != nil {
 			err := db.Close()
-			if err != nil {
-				panic(err.Error())
-			}
+			require.NoError(t, err)
 		}
 	}(db)
 
@@ -52,7 +53,10 @@ func TestReadModelDao_InsertGroupChat(t *testing.T) {
 
 func TestReadModelDao_DeleteGroupChat(t *testing.T) {
 	ctx := context.Background()
-	err, port := test.StartContainer(t, ctx)
+	container, err := test.CreateMySQLContainer(ctx)
+	require.NoError(t, err)
+	port, err := container.MappedPort(ctx, "3306")
+	require.NoError(t, err)
 	dataSourceName := test.GetDataSourceName(port)
 
 	db, err := sqlx.Connect("mysql", dataSourceName)
@@ -63,9 +67,7 @@ func TestReadModelDao_DeleteGroupChat(t *testing.T) {
 	defer func(db *sqlx.DB) {
 		if db != nil {
 			err := db.Close()
-			if err != nil {
-				panic(err.Error())
-			}
+			require.NoError(t, err)
 		}
 	}(db)
 
@@ -102,7 +104,10 @@ func TestReadModelDao_DeleteGroupChat(t *testing.T) {
 
 func TestReadModelDao_RenameGroupChat(t *testing.T) {
 	ctx := context.Background()
-	err, port := test.StartContainer(t, ctx)
+	container, err := test.CreateMySQLContainer(ctx)
+	require.NoError(t, err)
+	port, err := container.MappedPort(ctx, "3306")
+	require.NoError(t, err)
 	dataSourceName := test.GetDataSourceName(port)
 
 	db, err := sqlx.Connect("mysql", dataSourceName)
@@ -113,9 +118,7 @@ func TestReadModelDao_RenameGroupChat(t *testing.T) {
 	defer func(db *sqlx.DB) {
 		if db != nil {
 			err := db.Close()
-			if err != nil {
-				panic(err.Error())
-			}
+			require.NoError(t, err)
 		}
 	}(db)
 
@@ -144,7 +147,10 @@ func TestReadModelDao_RenameGroupChat(t *testing.T) {
 
 func TestReadModelDao_InsertMember(t *testing.T) {
 	ctx := context.Background()
-	err, port := test.StartContainer(t, ctx)
+	container, err := test.CreateMySQLContainer(ctx)
+	require.NoError(t, err)
+	port, err := container.MappedPort(ctx, "3306")
+	require.NoError(t, err)
 	dataSourceName := test.GetDataSourceName(port)
 
 	db, err := sqlx.Connect("mysql", dataSourceName)
@@ -155,9 +161,7 @@ func TestReadModelDao_InsertMember(t *testing.T) {
 	defer func(db *sqlx.DB) {
 		if db != nil {
 			err := db.Close()
-			if err != nil {
-				panic(err.Error())
-			}
+			require.NoError(t, err)
 		}
 	}(db)
 
@@ -185,7 +189,10 @@ func TestReadModelDao_InsertMember(t *testing.T) {
 
 func TestReadModelDao_RemoveMember(t *testing.T) {
 	ctx := context.Background()
-	err, port := test.StartContainer(t, ctx)
+	container, err := test.CreateMySQLContainer(ctx)
+	require.NoError(t, err)
+	port, err := container.MappedPort(ctx, "3306")
+	require.NoError(t, err)
 	dataSourceName := test.GetDataSourceName(port)
 
 	db, err := sqlx.Connect("mysql", dataSourceName)
@@ -196,9 +203,7 @@ func TestReadModelDao_RemoveMember(t *testing.T) {
 	defer func(db *sqlx.DB) {
 		if db != nil {
 			err := db.Close()
-			if err != nil {
-				panic(err.Error())
-			}
+			require.NoError(t, err)
 		}
 	}(db)
 
@@ -232,20 +237,18 @@ func TestReadModelDao_RemoveMember(t *testing.T) {
 
 func TestReadModelDao_InsertMessage(t *testing.T) {
 	ctx := context.Background()
-	err, port := test.StartContainer(t, ctx)
+	container, err := test.CreateMySQLContainer(ctx)
+	require.NoError(t, err)
+	port, err := container.MappedPort(ctx, "3306")
+	require.NoError(t, err)
 	dataSourceName := test.GetDataSourceName(port)
 
 	db, err := sqlx.Connect("mysql", dataSourceName)
-	if err != nil {
-		panic(err.Error())
-	}
 	require.NoError(t, err)
 	defer func(db *sqlx.DB) {
 		if db != nil {
 			err := db.Close()
-			if err != nil {
-				panic(err.Error())
-			}
+			require.NoError(t, err)
 		}
 	}(db)
 
@@ -279,20 +282,18 @@ func TestReadModelDao_InsertMessage(t *testing.T) {
 
 func TestReadModelDao_DeleteMessage(t *testing.T) {
 	ctx := context.Background()
-	err, port := test.StartContainer(t, ctx)
+	container, err := test.CreateMySQLContainer(ctx)
+	require.NoError(t, err)
+	port, err := container.MappedPort(ctx, "3306")
+	require.NoError(t, err)
 	dataSourceName := test.GetDataSourceName(port)
 
 	db, err := sqlx.Connect("mysql", dataSourceName)
-	if err != nil {
-		panic(err.Error())
-	}
 	require.NoError(t, err)
 	defer func(db *sqlx.DB) {
 		if db != nil {
 			err := db.Close()
-			if err != nil {
-				panic(err.Error())
-			}
+			require.NoError(t, err)
 		}
 	}(db)
 
