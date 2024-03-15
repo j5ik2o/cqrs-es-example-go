@@ -1,15 +1,15 @@
-## ビルド方法
+## How to build
 
-ビルドを行う前に、Dockerを必ず起動してください。
+Be sure to start Docker before performing a build.
 
 ```shell
 $ make prepare # 初回のみ 
 $ make build
 ```
 
-## テスト方法
+## How to test
 
-テストを実行する前に、Dockerを必ず起動してください。
+Be sure to start Docker before running the test.
 
 ```shell
 $ make test

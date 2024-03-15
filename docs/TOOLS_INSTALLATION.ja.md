@@ -1,4 +1,4 @@
-# Tools Installation
+# ツールのインストール 
 
 ## Go
 
@@ -18,7 +18,7 @@ $ echo -e "\n. $(brew --prefix asdf)/libexec/asdf.sh" >> ${ZDOTDIR:-~}/.zshrc
 
 https://asdf-vm.com/
 
-For Ubuntu, install according to the following
+Ubuntuの場合は以下に従ってインストールしてください。
 
 https://asdf-vm.com/guide/getting-started.html
 
@@ -38,7 +38,7 @@ https://github.com/ryodocx/asdf-jq
 
 #### Mac
 
-Follow the instructions below to install it.
+以下に従ってインストールしてください。
 
 Docker Desktop for Mac
 
@@ -46,13 +46,13 @@ https://docs.docker.com/desktop/install/mac-install/
 
 #### Ubuntu
 
-Follow the instructions below to install it.
+以下に従ってインストールしてください。
 
 - Docker Desktop for Ubuntu
   - https://docs.docker.com/desktop/install/debian/
 - Docker Engine for Ubuntu
   - https://docs.docker.com/engine/install/ubuntu/
 
-In addition, to be able to use it without sudo, please follow these steps.
+さらにsudoなしで使えるようにするために以下の手順を実行してください
 
 https://qiita.com/katoyu_try1/items/1bdaaad9f64af86bbfb7

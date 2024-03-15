@@ -29,11 +29,11 @@
 
 ## 開発環境
 
-- [ツールのセットアップ](docs/TOOLS_INSTALLATION.md)
+- [ツールのセットアップ](docs/TOOLS_INSTALLATION.ja.md)
 
 ### ローカル環境
 
-- [Docker Composeでのデバッグ](docs/DEBUG_ON_DOCKER_COMPOSE.md)
+- [Docker Composeでのデバッグ](docs/DEBUG_ON_DOCKER_COMPOSE.ja.md)
 
 ## 参考リンク
 

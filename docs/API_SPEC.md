@@ -1,10 +1,10 @@
-# API仕様の確認方法
+# How to check API specifications
 
-## Write API Server: GraphQLのSDLを確認する方法
+## Write API Server: How to check GraphQL SDL
 
-`pkg/command/intefaceAdaptor/graph/schema.graphqls`を確認してください。
+Check `pkg/command/intefaceAdaptor/graph/schema.graphqls`
 
-## Read API Server: GraphQLのSDLを確認する方法
+## Read API Server: How to check GraphQL SDL
 
-`pkg/query/intefaceAdaptor/graph/schema.graphqls`を確認してください。
+Check `pkg/query/intefaceAdaptor/graph/schema.graphqls`
 
