@@ -24,5 +24,5 @@ $ make docker-compose-down
 ## 動作確認
 
 ```shell
-$ makers verify-group-chat
+$ make verify-group-chat
 ```
