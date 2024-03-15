@@ -3,7 +3,7 @@
 ## ビルドイメージ
 
 ```shell
-$ make docker-compose-build
+$ make docker-build
 ```
 
 ## docker-composeの起動
