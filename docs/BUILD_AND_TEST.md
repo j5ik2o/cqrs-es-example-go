@@ -3,7 +3,7 @@
 Be sure to start Docker before performing a build.
 
 ```shell
-$ make prepare # 初回のみ 
+$ make prepare # first time only 
 $ make build
 ```
 
