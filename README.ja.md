@@ -19,9 +19,22 @@
 
 ## コンポーネント構成
 
-- Write APIサーバ: 書き込み専用Web API
-- Read Model Updater: ジャーナルに基づいて読み取りモデルを構築する非同期プロセス
-- Read API Server: GraphQLによって実装された読み取り専用API
+- Write API Server
+  - GraphQLによって実装された書き込み専用API
+  - イベントに基づく集約は[j5ik2o/event-store-adapter-go](https://github.com/j5ik2o/event-store-adapter-go)によって実装されている。
+- Read Model Updater
+  - ジャーナルに基づいて読み取りモデルを構築するLambda
+  - ローカルで、Lambdaの動作をエミュレートするコードを実行する（local-rmu）
+- Read API Server
+  - GraphQLによって実装された読み取り専用API
+
+## スタック
+
+このOSSリポジトリは、主に以下の技術スタックを利用している。
+
+- [99designs/gqlgen](https://github.com/99designs/gqlgen)
+- [jmoiron/sqlx](https://github.com/jmoiron/sqlx)
+- [j5ik2o/event-store-adapter-go](https://github.com/j5ik2o/event-store-adapter-go)
 
 ## システムアーキテクチャ図
 
