@@ -1,27 +1,27 @@
-# Docker Compose上でデバッグする
+# Debugging on Docker Compose
 
-## ビルドイメージ
+## Build the image
 
 ```shell
 $ make docker-build
 ```
 
-## docker-composeの起動
+## Start docker-compose
 
 ```shell
 $ make docker-compose-up
 ```
 
-必要なデータベースとテーブルが作成され、アプリケーションも起動します。
-開発目的でデータベースだけを起動したい場合は、`docker-compose-up`ではなく`docker-compose-up-db`を実行してください。
+The required database and tables will be created and the application will be started.
+If you want to start only the database for development purposes, run `docker-compose-up-db` instead of `docker-compose-up`.
 
-## docker-composeの停止
+## Stop docker-compose
 
 ```shell
 $ make docker-compose-down
 ```
 
-## 動作確認
+## Verification
 
 ```shell
 $ make verify-group-chat
