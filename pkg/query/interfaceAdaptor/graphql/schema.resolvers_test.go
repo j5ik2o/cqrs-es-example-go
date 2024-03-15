@@ -16,23 +16,20 @@ import (
 
 func Test_GetGroupChat(t *testing.T) {
 	ctx := context.Background()
-	err, port := test.StartContainer(t, ctx)
-
+	container, err := test.CreateMySQLContainer(ctx)
+	require.NoError(t, err)
+	port, err := container.MappedPort(ctx, "3306")
+	require.NoError(t, err)
 	dataSourceName := test.GetDataSourceName(port)
 
 	db, err := sqlx.Connect("mysql", dataSourceName)
-	if err != nil {
-		panic(err.Error())
-	}
+	require.NoError(t, err)
 	defer func(db *sqlx.DB) {
 		if db != nil {
 			err := db.Close()
-			if err != nil {
-				panic(err.Error())
-			}
+			require.NoError(t, err)
 		}
 	}(db)
-	require.NoError(t, err)
 
 	err = test.MigrateDB(t, err, db, "../../../../")
 
@@ -57,23 +54,21 @@ func Test_GetGroupChat(t *testing.T) {
 
 func Test_GetGroupChats(t *testing.T) {
 	ctx := context.Background()
-	err, port := test.StartContainer(t, ctx)
+	container, err := test.CreateMySQLContainer(ctx)
+	require.NoError(t, err)
+	port, err := container.MappedPort(ctx, "3306")
+	require.NoError(t, err)
 
 	dataSourceName := test.GetDataSourceName(port)
 
 	db, err := sqlx.Connect("mysql", dataSourceName)
-	if err != nil {
-		panic(err.Error())
-	}
+	require.NoError(t, err)
 	defer func(db *sqlx.DB) {
 		if db != nil {
 			err := db.Close()
-			if err != nil {
-				panic(err.Error())
-			}
+			require.NoError(t, err)
 		}
 	}(db)
-	require.NoError(t, err)
 
 	err = test.MigrateDB(t, err, db, "../../../../")
 

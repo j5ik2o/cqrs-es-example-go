@@ -115,3 +115,15 @@ func (m *Messages) ToSlice() []Message {
 	}
 	return result
 }
+
+func (m *Messages) Equals(other *Messages) bool {
+	if len(m.values) != len(other.values) {
+		return false
+	}
+	for _, v := range m.values {
+		if !v.Equals(&v) {
+			return false
+		}
+	}
+	return true
+}

@@ -9,14 +9,14 @@ import (
 	"github.com/golang-migrate/migrate/v4/database/mysql"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/jmoiron/sqlx"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
+	"github.com/testcontainers/testcontainers-go/modules/localstack"
 	testcontainermysql "github.com/testcontainers/testcontainers-go/modules/mysql"
 	"testing"
 )
 
-func StartContainer(t *testing.T, ctx context.Context) (error, nat.Port) {
+func CreateMySQLContainer(ctx context.Context) (*testcontainermysql.MySQLContainer, error) {
 	container, err := testcontainermysql.RunContainer(ctx,
 		testcontainers.WithImage("mysql:8.2"),
 		// mysql.WithConfigFile(filepath.Join("testdata", "my_8.cnf")),
@@ -25,11 +25,26 @@ func StartContainer(t *testing.T, ctx context.Context) (error, nat.Port) {
 		testcontainermysql.WithPassword("ceer"),
 		// testcontainermysql.WithScripts(filepath.Join("testdata", "schema.sql")),
 	)
-	require.NoError(t, err)
-	assert.NotNil(t, container)
-	port, err := container.MappedPort(ctx, "3306")
-	require.NoError(t, err)
-	return err, port
+	return container, err
+}
+
+func CreateLocalStackContainer(ctx context.Context) (*localstack.LocalStackContainer, error) {
+	container, err := localstack.RunContainer(
+		ctx,
+		testcontainers.CustomizeRequest(testcontainers.GenericContainerRequest{
+			ContainerRequest: testcontainers.ContainerRequest{
+				Image: "localstack/localstack:2.1.0",
+				Env: map[string]string{
+					"SERVICES":              "dynamodb",
+					"DEFAULT_REGION":        "us-east-1",
+					"EAGER_SERVICE_LOADING": "1",
+					"DYNAMODB_SHARED_DB":    "1",
+					"DYNAMODB_IN_MEMORY":    "1",
+				},
+			},
+		}),
+	)
+	return container, err
 }
 
 func GetDataSourceName(port nat.Port) string {

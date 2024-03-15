@@ -21,6 +21,11 @@ type GroupChat struct {
 	deleted  bool
 }
 
+func (g *GroupChat) Equals(other *GroupChat) bool {
+	return g.id.Equals(&other.id) && g.name.Equals(&other.name) && g.members.Equals(&other.members) && g.messages.Equals(&other.messages) && g.seqNr == other.seqNr && g.version == other.version && g.deleted == other.deleted
+
+}
+
 // ReplayGroupChat replays the events to the aggregate.
 func ReplayGroupChat(events []esa.Event, snapshot GroupChat) GroupChat {
 	result := snapshot

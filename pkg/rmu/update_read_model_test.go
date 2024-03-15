@@ -19,7 +19,9 @@ var eventData []byte
 
 func TestUpdateReadModel(t *testing.T) {
 	ctx := context.Background()
-	err, port := test.StartContainer(t, ctx)
+	container, err := test.CreateMySQLContainer(ctx)
+	require.NoError(t, err)
+	port, err := container.MappedPort(ctx, "3306")
 	dataSourceName := test.GetDataSourceName(port)
 
 	db, err := sqlx.Connect("mysql", dataSourceName)
