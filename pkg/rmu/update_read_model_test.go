@@ -28,14 +28,9 @@ func TestUpdateReadModel(t *testing.T) {
 	defer func(db *sqlx.DB) {
 		if db != nil {
 			err := db.Close()
-			if err != nil {
-				panic(err.Error())
-			}
+			require.NoError(t, err)
 		}
 	}(db)
-	if err != nil {
-		panic(err.Error())
-	}
 	require.NoError(t, err)
 
 	err = test.MigrateDB(t, err, db, "../../")
