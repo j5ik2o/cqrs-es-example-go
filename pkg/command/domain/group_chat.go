@@ -371,7 +371,11 @@ func (g *GroupChat) DeleteMessage(messageId models.MessageId, executorId models.
 	if !g.members.IsMember(&executorId) {
 		return mo.Err[GroupChatWithEventPair](errors.NewNotMemberError("The executorId is not the member of the group chat"))
 	}
-	newState := g.WithMessages(g.messages.Remove(&messageId, executorId).MustGet())
+	result, err := g.messages.Remove(&messageId, executorId).Get()
+	if err != nil {
+		return mo.Err[GroupChatWithEventPair](err)
+	}
+	newState := g.WithMessages(result)
 	newState.seqNr += 1
 	messageDeleted := events.NewGroupChatMessageDeleted(newState.id, messageId, newState.seqNr, executorId)
 	pair := gt.New2[GroupChat, events.GroupChatEvent](newState, &messageDeleted)
