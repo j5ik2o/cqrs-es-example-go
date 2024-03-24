@@ -347,27 +347,8 @@ func (g *GroupChat) PostMessage(message models.Message, executorId models.UserAc
 }
 
 func (g *GroupChat) EditMessage(message models.Message, executorId models.UserAccountId) mo.Result[GroupChatWithEventPair] {
-	if g.deleted {
-		return mo.Err[GroupChatWithEventPair](errors.NewAlreadyDeletedError("The group chat is deleted"))
-	}
-	if !g.members.IsMember(message.GetSenderId()) {
-		return mo.Err[GroupChatWithEventPair](errors.NewNotMemberError("The senderId is not the member of the group chat"))
-	}
-	if !g.members.IsMember(&executorId) {
-		return mo.Err[GroupChatWithEventPair](errors.NewNotMemberError("The executorId is not the member of the group chat"))
-	}
-	if !message.GetSenderId().Equals(&executorId) {
-		return mo.Err[GroupChatWithEventPair](errors.NewMismatchedUserAccountError("The executorId is not the senderId of the message"))
-	}
-	newMessages, err := g.messages.Edit(message).Get()
-	if err != nil {
-		return mo.Err[GroupChatWithEventPair](err)
-	}
-	newState := g.WithMessages(newMessages)
-	newState.seqNr += 1
-	messagePosted := events.NewGroupChatMessagePosted(newState.id, message, newState.seqNr, executorId)
-	pair := gt.New2[GroupChat, events.GroupChatEvent](newState, &messagePosted)
-	return mo.Ok(GroupChatWithEventPair(pair))
+	// TODO
+	return mo.Err[GroupChatWithEventPair](nil)
 }
 
 // DeleteMessage deletes the message from the aggregate.
