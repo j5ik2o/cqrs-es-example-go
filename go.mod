@@ -27,7 +27,7 @@ require (
 	github.com/testcontainers/testcontainers-go/modules/localstack v0.29.1
 	github.com/testcontainers/testcontainers-go/modules/mysql v0.29.1
 	github.com/vektah/gqlparser/v2 v2.5.11
-	golang.org/x/tools v0.19.0
+	golang.org/x/tools v0.20.0
 	honnef.co/go/tools v0.4.7
 )
 
@@ -110,9 +110,10 @@ require (
 	go.uber.org/atomic v1.7.0 // indirect
 	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225 // indirect
 	golang.org/x/exp/typeparams v0.0.0-20221208152030-732eee02a75a // indirect
-	golang.org/x/mod v0.16.0 // indirect
-	golang.org/x/net v0.22.0 // indirect
-	golang.org/x/sys v0.18.0 // indirect
+	golang.org/x/mod v0.17.0 // indirect
+	golang.org/x/net v0.24.0 // indirect
+	golang.org/x/sync v0.7.0 // indirect
+	golang.org/x/sys v0.19.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240304212257-790db918fca8 // indirect
 	google.golang.org/grpc v1.62.0 // indirect
