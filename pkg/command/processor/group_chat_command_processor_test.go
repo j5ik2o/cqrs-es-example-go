@@ -4,7 +4,7 @@ import (
 	"cqrs-es-example-go/pkg/command/domain/events"
 	"cqrs-es-example-go/pkg/command/domain/models"
 	"cqrs-es-example-go/pkg/command/interfaceAdaptor/repository"
-	event_store_adapter_go "github.com/j5ik2o/event-store-adapter-go"
+	event_store_adapter_go "github.com/j5ik2o/event-store-adapter-go/pkg"
 	"github.com/stretchr/testify/require"
 	"testing"
 )

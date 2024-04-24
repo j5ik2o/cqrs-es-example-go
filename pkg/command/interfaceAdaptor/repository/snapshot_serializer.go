@@ -3,7 +3,7 @@ package repository
 import (
 	"cqrs-es-example-go/pkg/command/domain"
 	"encoding/json"
-	esa "github.com/j5ik2o/event-store-adapter-go"
+	esa "github.com/j5ik2o/event-store-adapter-go/pkg"
 )
 
 type SnapshotSerializer struct{}

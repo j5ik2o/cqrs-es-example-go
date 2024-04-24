@@ -9,7 +9,7 @@ import (
 	"fmt"
 	dynamodbevents "github.com/aws/aws-lambda-go/events"
 	_ "github.com/go-sql-driver/mysql"
-	esa "github.com/j5ik2o/event-store-adapter-go"
+	esa "github.com/j5ik2o/event-store-adapter-go/pkg"
 	"github.com/samber/mo"
 	"log/slog"
 	"strings"
