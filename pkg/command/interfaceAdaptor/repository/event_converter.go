@@ -4,7 +4,7 @@ import (
 	"cqrs-es-example-go/pkg/command/domain/events"
 	"cqrs-es-example-go/pkg/command/domain/models"
 	"fmt"
-	esa "github.com/j5ik2o/event-store-adapter-go"
+	esa "github.com/j5ik2o/event-store-adapter-go/pkg"
 	"log/slog"
 )
 

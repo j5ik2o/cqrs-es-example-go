@@ -6,7 +6,7 @@ import (
 	"cqrs-es-example-go/pkg/command/domain/models"
 	"fmt"
 	gt "github.com/barweiss/go-tuple"
-	esa "github.com/j5ik2o/event-store-adapter-go"
+	esa "github.com/j5ik2o/event-store-adapter-go/pkg"
 	"github.com/samber/mo"
 )
 

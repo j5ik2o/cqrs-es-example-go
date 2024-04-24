@@ -5,7 +5,7 @@ import (
 	domain "cqrs-es-example-go/pkg/command/domain/errors"
 	"cqrs-es-example-go/pkg/command/processor"
 	"github.com/99designs/gqlgen/graphql"
-	esa "github.com/j5ik2o/event-store-adapter-go"
+	esa "github.com/j5ik2o/event-store-adapter-go/pkg"
 	"github.com/pkg/errors"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 )

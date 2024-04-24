@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
-	esa "github.com/j5ik2o/event-store-adapter-go"
+	esa "github.com/j5ik2o/event-store-adapter-go/pkg"
 	"github.com/olivere/env"
 	"github.com/spf13/cobra"
 	"log/slog"
