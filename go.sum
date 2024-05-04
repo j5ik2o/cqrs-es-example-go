@@ -141,6 +141,8 @@ github.com/inconshreveable/mousetrap v1.1.0 h1:wN+x4NVGpMsO7ErUn/mUI3vEoE6Jt13X2
 github.com/inconshreveable/mousetrap v1.1.0/go.mod h1:vpF70FUmC8bwa3OWnCshd2FqLfsEA9PFc4w1p2J65bw=
 github.com/j5ik2o/event-store-adapter-go v1.0.22 h1:zSO/naW3FaZ8Ae4GOZmtDDtezcsePbrJ7VI+KBYHGYE=
 github.com/j5ik2o/event-store-adapter-go v1.0.22/go.mod h1:UuvyooFb2iwAZBUbhfx6+tzU6AZg0lCg3KulOAgEzkM=
+github.com/j5ik2o/event-store-adapter-go v1.0.23 h1:3j1B48lNCrzuYQCD92SFPn6NQ+kAPIS69LUbHd6krmc=
+github.com/j5ik2o/event-store-adapter-go v1.0.23/go.mod h1:MONAP4k4nc4v4dingZXbqgpeiulVJ382RPfwzeXQKfU=
 github.com/jmespath/go-jmespath v0.4.0 h1:BEgLn5cpjn8UN1mAw4NjwDrS35OdebyEtFe+9YPoQUg=
 github.com/jmespath/go-jmespath v0.4.0/go.mod h1:T8mJZnbsbmF+m6zOOFylbeCJqk5+pHWvzYPziyZiYoo=
 github.com/jmespath/go-jmespath/internal/testify v1.5.1 h1:shLQSRRSCCPj3f2gpwzGwWFoC7ycTf1rcQZHOlsJ6N8=
