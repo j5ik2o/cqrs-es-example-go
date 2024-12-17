@@ -1,8 +1,8 @@
 module cqrs-es-example-go
 
-go 1.22
+go 1.22.0
 
-toolchain go1.22.5
+toolchain go1.23.4
 
 require (
 	github.com/99designs/gqlgen v0.17.49
@@ -29,7 +29,7 @@ require (
 	github.com/testcontainers/testcontainers-go/modules/localstack v0.34.0
 	github.com/testcontainers/testcontainers-go/modules/mysql v0.32.0
 	github.com/vektah/gqlparser/v2 v2.5.16
-	golang.org/x/tools v0.22.0
+	golang.org/x/tools v0.28.0
 	honnef.co/go/tools v0.4.7
 )
 
@@ -113,14 +113,14 @@ require (
 	go.opentelemetry.io/otel/metric v1.24.0 // indirect
 	go.opentelemetry.io/otel/trace v1.24.0 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
-	golang.org/x/crypto v0.24.0 // indirect
+	golang.org/x/crypto v0.30.0 // indirect
 	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225 // indirect
 	golang.org/x/exp/typeparams v0.0.0-20221208152030-732eee02a75a // indirect
-	golang.org/x/mod v0.18.0 // indirect
-	golang.org/x/net v0.26.0 // indirect
-	golang.org/x/sync v0.7.0 // indirect
-	golang.org/x/sys v0.21.0 // indirect
-	golang.org/x/text v0.16.0 // indirect
+	golang.org/x/mod v0.22.0 // indirect
+	golang.org/x/net v0.32.0 // indirect
+	golang.org/x/sync v0.10.0 // indirect
+	golang.org/x/sys v0.28.0 // indirect
+	golang.org/x/text v0.21.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240318140521-94a12d6c2237 // indirect
 	google.golang.org/grpc v1.64.1 // indirect
 	google.golang.org/protobuf v1.34.1 // indirect
