@@ -639,6 +639,8 @@ github.com/testcontainers/testcontainers-go/modules/mysql v0.31.0 h1:790+S8ewZYC
 github.com/testcontainers/testcontainers-go/modules/mysql v0.31.0/go.mod h1:REFmO+lSG9S6uSBEwIMZCxeI36uhScjTwChYADeO3JA=
 github.com/testcontainers/testcontainers-go/modules/mysql v0.32.0 h1:6vjJOVJSWDTyNvQmB8EFTmv20ScquRWZa+pM1hZNodc=
 github.com/testcontainers/testcontainers-go/modules/mysql v0.32.0/go.mod h1:Q91G1jl4fSl75OICi+Bb6BQeU7LpKZaSfKvHOXRwPyI=
+github.com/testcontainers/testcontainers-go/modules/mysql v0.34.0 h1:Tqz17mGXjPORHFS/oBUGdeJyIsZXLsVVHRhaBqhewGI=
+github.com/testcontainers/testcontainers-go/modules/mysql v0.34.0/go.mod h1:hDpm3DLfjo7rd6232wWflEBDGr6Ow9ys43mJTiJwWx8=
 github.com/tklauser/go-sysconf v0.3.12/go.mod h1:Ho14jnntGE1fpdOqQEEaiKRpvIavV0hSfmBq8nJbHYI=
 github.com/tklauser/go-sysconf v0.3.13 h1:GBUpcahXSpR2xN01jhkNAbTLRk2Yzgggk8IM08lq3r4=
 github.com/tklauser/go-sysconf v0.3.13/go.mod h1:zwleP4Q4OehZHGn4CYZDipCgg9usW5IJePewFCGVEa0=
