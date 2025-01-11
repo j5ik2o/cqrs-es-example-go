@@ -27,7 +27,7 @@ require (
 	github.com/swaggo/swag v1.16.4
 	github.com/testcontainers/testcontainers-go v0.35.0
 	github.com/testcontainers/testcontainers-go/modules/localstack v0.35.0
-	github.com/testcontainers/testcontainers-go/modules/mysql v0.34.0
+	github.com/testcontainers/testcontainers-go/modules/mysql v0.35.0
 	github.com/vektah/gqlparser/v2 v2.5.21
 	golang.org/x/tools v0.29.0
 	honnef.co/go/tools v0.4.7
