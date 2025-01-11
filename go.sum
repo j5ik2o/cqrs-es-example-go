@@ -603,6 +603,8 @@ github.com/j5ik2o/event-store-adapter-go v1.0.77 h1:fybNAf9OQpxNmS7xHj4arAAkW7Jh
 github.com/j5ik2o/event-store-adapter-go v1.0.77/go.mod h1:YoGgvmJYpa5McG8BfL6DfD8N8NPWV+xVLGrc0mtZdcM=
 github.com/j5ik2o/event-store-adapter-go v1.0.78 h1:xhLdJ/B+AjJkb0GvybgcCdBO+pfmvRUz/CWc/T3KvP8=
 github.com/j5ik2o/event-store-adapter-go v1.0.78/go.mod h1:P6sTrANX9uLPcxb0yIhlN36h9mDwJDcNU36ITA3V7OY=
+github.com/j5ik2o/event-store-adapter-go v1.0.79 h1:E5grHcJxlERKow+UHvKMjypjjDC0f62qzlNe8HoWGGs=
+github.com/j5ik2o/event-store-adapter-go v1.0.79/go.mod h1:EuW+YScXb5CM1l7SSU/497Hu2mS02TJdUuwdcGMsVsQ=
 github.com/jmespath/go-jmespath v0.4.0 h1:BEgLn5cpjn8UN1mAw4NjwDrS35OdebyEtFe+9YPoQUg=
 github.com/jmespath/go-jmespath v0.4.0/go.mod h1:T8mJZnbsbmF+m6zOOFylbeCJqk5+pHWvzYPziyZiYoo=
 github.com/jmespath/go-jmespath/internal/testify v1.5.1 h1:shLQSRRSCCPj3f2gpwzGwWFoC7ycTf1rcQZHOlsJ6N8=
@@ -723,6 +725,8 @@ github.com/testcontainers/testcontainers-go v0.32.0 h1:ug1aK08L3gCHdhknlTTwWjPHP
 github.com/testcontainers/testcontainers-go v0.32.0/go.mod h1:CRHrzHLQhlXUsa5gXjTOfqIEJcrK5+xMDmBr/WMI88E=
 github.com/testcontainers/testcontainers-go v0.34.0 h1:5fbgF0vIN5u+nD3IWabQwRybuB4GY8G2HHgCkbMzMHo=
 github.com/testcontainers/testcontainers-go v0.34.0/go.mod h1:6P/kMkQe8yqPHfPWNulFGdFHTD8HB2vLq/231xY2iPQ=
+github.com/testcontainers/testcontainers-go v0.35.0 h1:uADsZpTKFAtp8SLK+hMwSaa+X+JiERHtd4sQAFmXeMo=
+github.com/testcontainers/testcontainers-go v0.35.0/go.mod h1:oEVBj5zrfJTrgjwONs1SsRbnBtH9OKl+IGl3UMcr2B4=
 github.com/testcontainers/testcontainers-go/modules/localstack v0.30.0 h1:2Q+ZB3QVUQSrP/nSlgZJFg45aXAHgtCW37Dkph42zHI=
 github.com/testcontainers/testcontainers-go/modules/localstack v0.30.0/go.mod h1:UWzBQnm1RgDuKJ9InMUbCfWlRtg2MkDuDDaizKm5VTc=
 github.com/testcontainers/testcontainers-go/modules/localstack v0.31.0 h1:pPz0J5Gbu7eAirpWP7QDT/v3s0zpNb/sNA8Ww/rjkoQ=
@@ -731,6 +735,8 @@ github.com/testcontainers/testcontainers-go/modules/localstack v0.32.0 h1:FITjE+
 github.com/testcontainers/testcontainers-go/modules/localstack v0.32.0/go.mod h1:JasdXHmUT8MTDYfyJza3JjO/k+QA3m8K2GQfnFQM++g=
 github.com/testcontainers/testcontainers-go/modules/localstack v0.34.0 h1:WkjVmea0XQyGTY10Er8fOsVjHQ77iJCmTExnx6fC3Tw=
 github.com/testcontainers/testcontainers-go/modules/localstack v0.34.0/go.mod h1:rTo76O/BBeAtfazMQqLvfwBrntBBwDP7/+Z60dm3e9U=
+github.com/testcontainers/testcontainers-go/modules/localstack v0.35.0 h1:0EbOXcy8XQkyDUs1Y9YPUHOUByNnlGsLi5B3ln8F/RU=
+github.com/testcontainers/testcontainers-go/modules/localstack v0.35.0/go.mod h1:MlHuaWQimz+15dmQ6R2S1vpYxhGFEpmRZQsL2NVWNng=
 github.com/testcontainers/testcontainers-go/modules/mysql v0.30.0 h1:wrePvxfU/2HFALKyBqpNs6VoPPvThzHy9aN+PCxse9g=
 github.com/testcontainers/testcontainers-go/modules/mysql v0.30.0/go.mod h1:Srnlf7wwA7s6K4sKKhjAoBHJcKorRINR/i5dCA4ZyGk=
 github.com/testcontainers/testcontainers-go/modules/mysql v0.31.0 h1:790+S8ewZYCbG+o8IiFlZ8ZZ33XbNO6zV9qhU6xhlRk=
