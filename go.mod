@@ -16,7 +16,7 @@ require (
 	github.com/docker/go-connections v0.5.0
 	github.com/go-sql-driver/mysql v1.9.0
 	github.com/golang-migrate/migrate/v4 v4.18.2
-	github.com/j5ik2o/event-store-adapter-go v1.0.88
+	github.com/j5ik2o/event-store-adapter-go v1.0.89
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/oklog/ulid/v2 v2.1.0
 	github.com/olivere/env v1.1.0
