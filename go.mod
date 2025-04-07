@@ -14,7 +14,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/dynamodbstreams v1.25.2
 	github.com/barweiss/go-tuple v1.1.2
 	github.com/docker/go-connections v0.5.0
-	github.com/go-sql-driver/mysql v1.9.1
+	github.com/go-sql-driver/mysql v1.9.2
 	github.com/golang-migrate/migrate/v4 v4.18.2
 	github.com/j5ik2o/event-store-adapter-go v1.0.97
 	github.com/jmoiron/sqlx v1.4.0
