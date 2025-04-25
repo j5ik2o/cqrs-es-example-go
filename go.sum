@@ -1009,6 +1009,8 @@ github.com/magiconair/properties v1.8.7 h1:IeQXZAiQcpL9mgcAe1Nu6cX9LLw6ExEHKjN0V
 github.com/magiconair/properties v1.8.7/go.mod h1:Dhd985XPs7jluiymwWYZ0G4Z61jb3vdS329zhj2hYo0=
 github.com/magiconair/properties v1.8.9 h1:nWcCbLq1N2v/cpNsy5WvQ37Fb+YElfq20WJ/a8RkpQM=
 github.com/magiconair/properties v1.8.9/go.mod h1:Dhd985XPs7jluiymwWYZ0G4Z61jb3vdS329zhj2hYo0=
+github.com/magiconair/properties v1.8.10 h1:s31yESBquKXCV9a/ScB3ESkOjUYYv+X0rg8SYxI99mE=
+github.com/magiconair/properties v1.8.10/go.mod h1:Dhd985XPs7jluiymwWYZ0G4Z61jb3vdS329zhj2hYo0=
 github.com/mailru/easyjson v0.7.7 h1:UGYAvKxe3sBsEDzO8ZeWOSlIQfWFlxbzLZe7hwFURr0=
 github.com/mailru/easyjson v0.7.7/go.mod h1:xzfreul335JAWq5oZzymOObrkdz5UnU4kGfJJLY9Nlc=
 github.com/mattn/go-sqlite3 v1.14.6/go.mod h1:NyWgC/yNuGj7Q9rpYnZvas74GogHl5/Z4A/KQRfk6bU=
@@ -1115,6 +1117,8 @@ github.com/testcontainers/testcontainers-go v0.35.0 h1:uADsZpTKFAtp8SLK+hMwSaa+X
 github.com/testcontainers/testcontainers-go v0.35.0/go.mod h1:oEVBj5zrfJTrgjwONs1SsRbnBtH9OKl+IGl3UMcr2B4=
 github.com/testcontainers/testcontainers-go v0.36.0 h1:YpffyLuHtdp5EUsI5mT4sRw8GZhO/5ozyDT1xWGXt00=
 github.com/testcontainers/testcontainers-go v0.36.0/go.mod h1:yk73GVJ0KUZIHUtFna6MO7QS144qYpoY8lEEtU9Hed0=
+github.com/testcontainers/testcontainers-go v0.37.0 h1:L2Qc0vkTw2EHWQ08djon0D2uw7Z/PtHS/QzZZ5Ra/hg=
+github.com/testcontainers/testcontainers-go v0.37.0/go.mod h1:QPzbxZhQ6Bclip9igjLFj6z0hs01bU8lrl2dHQmgFGM=
 github.com/testcontainers/testcontainers-go/modules/localstack v0.30.0 h1:2Q+ZB3QVUQSrP/nSlgZJFg45aXAHgtCW37Dkph42zHI=
 github.com/testcontainers/testcontainers-go/modules/localstack v0.30.0/go.mod h1:UWzBQnm1RgDuKJ9InMUbCfWlRtg2MkDuDDaizKm5VTc=
 github.com/testcontainers/testcontainers-go/modules/localstack v0.31.0 h1:pPz0J5Gbu7eAirpWP7QDT/v3s0zpNb/sNA8Ww/rjkoQ=
@@ -1127,6 +1131,8 @@ github.com/testcontainers/testcontainers-go/modules/localstack v0.35.0 h1:0EbOXc
 github.com/testcontainers/testcontainers-go/modules/localstack v0.35.0/go.mod h1:MlHuaWQimz+15dmQ6R2S1vpYxhGFEpmRZQsL2NVWNng=
 github.com/testcontainers/testcontainers-go/modules/localstack v0.36.0 h1:zVwbe46NYg2vtC26aF0ndClK5S9J7TgAliQbTLyHm+0=
 github.com/testcontainers/testcontainers-go/modules/localstack v0.36.0/go.mod h1:rxyzj5nX/OUn7QK5PVxKYHJg1eeNtNzWMX2hSbNNJk0=
+github.com/testcontainers/testcontainers-go/modules/localstack v0.37.0 h1:nPuxUYseqS0eYJg7KDJd95PhoMhdpTnSNtkDLwWFngo=
+github.com/testcontainers/testcontainers-go/modules/localstack v0.37.0/go.mod h1:Mw+N4qqJ5iWbg45yWsdLzICfeCEwvYNudfAHHFqCU8Q=
 github.com/testcontainers/testcontainers-go/modules/mysql v0.30.0 h1:wrePvxfU/2HFALKyBqpNs6VoPPvThzHy9aN+PCxse9g=
 github.com/testcontainers/testcontainers-go/modules/mysql v0.30.0/go.mod h1:Srnlf7wwA7s6K4sKKhjAoBHJcKorRINR/i5dCA4ZyGk=
 github.com/testcontainers/testcontainers-go/modules/mysql v0.31.0 h1:790+S8ewZYCbG+o8IiFlZ8ZZ33XbNO6zV9qhU6xhlRk=
@@ -1139,6 +1145,8 @@ github.com/testcontainers/testcontainers-go/modules/mysql v0.35.0 h1:9voGAf+1KxC
 github.com/testcontainers/testcontainers-go/modules/mysql v0.35.0/go.mod h1:rxKSkFpc5XZtG00prjqPfobuMgt5EpFEOrzZgYdOX0c=
 github.com/testcontainers/testcontainers-go/modules/mysql v0.36.0 h1:WUYu/gB23et+T9XCqfmYJB7eWW8/1qqPCxNIaRbS0yk=
 github.com/testcontainers/testcontainers-go/modules/mysql v0.36.0/go.mod h1:ED7dKWk3JE/dMRJ3t45TNGf3h9/htQG5au5gd1DuQcw=
+github.com/testcontainers/testcontainers-go/modules/mysql v0.37.0 h1:LqUos1oR5iuuzorFnSvxsHNdYdCHB/DfI82CuT58wbI=
+github.com/testcontainers/testcontainers-go/modules/mysql v0.37.0/go.mod h1:vHEEHx5Kf+uq5hveaVAMrTzPY8eeRZcKcl23MRw5Tkc=
 github.com/tklauser/go-sysconf v0.3.12/go.mod h1:Ho14jnntGE1fpdOqQEEaiKRpvIavV0hSfmBq8nJbHYI=
 github.com/tklauser/go-sysconf v0.3.13 h1:GBUpcahXSpR2xN01jhkNAbTLRk2Yzgggk8IM08lq3r4=
 github.com/tklauser/go-sysconf v0.3.13/go.mod h1:zwleP4Q4OehZHGn4CYZDipCgg9usW5IJePewFCGVEa0=
