@@ -1035,6 +1035,8 @@ github.com/j5ik2o/event-store-adapter-go v1.0.104 h1:EoW2eIm4sdf5rfxxkFSBZrmezMQ
 github.com/j5ik2o/event-store-adapter-go v1.0.104/go.mod h1:OWi+zXzdVG7MszqqwLNkQxE7hJzRZcpC5UU46wBvQH4=
 github.com/j5ik2o/event-store-adapter-go v1.0.105 h1:kUs1oVHJYjccQfTREUO3g1z4VWflGBK2QBpP3UTEkRs=
 github.com/j5ik2o/event-store-adapter-go v1.0.105/go.mod h1:pJHfXiSz2aIm89bndmckyY1wUYHyqJe86I5hP2f/eL0=
+github.com/j5ik2o/event-store-adapter-go v1.0.106 h1:UTQda4Ue0itmQsGAHNC3SHkMzERF1vtp3O2UVC9K8Os=
+github.com/j5ik2o/event-store-adapter-go v1.0.106/go.mod h1:kei+hlaGbWifgfB008p6gYTDQd98vPVqsnM7PxuSSus=
 github.com/jmespath/go-jmespath v0.4.0 h1:BEgLn5cpjn8UN1mAw4NjwDrS35OdebyEtFe+9YPoQUg=
 github.com/jmespath/go-jmespath v0.4.0/go.mod h1:T8mJZnbsbmF+m6zOOFylbeCJqk5+pHWvzYPziyZiYoo=
 github.com/jmespath/go-jmespath/internal/testify v1.5.1 h1:shLQSRRSCCPj3f2gpwzGwWFoC7ycTf1rcQZHOlsJ6N8=
