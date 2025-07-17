@@ -24,7 +24,7 @@ require (
 	github.com/samber/mo v1.14.0
 	github.com/spf13/cobra v1.9.1
 	github.com/stretchr/testify v1.10.0
-	github.com/swaggo/swag v1.16.4
+	github.com/swaggo/swag v1.16.5
 	github.com/testcontainers/testcontainers-go v0.38.0
 	github.com/testcontainers/testcontainers-go/modules/localstack v0.38.0
 	github.com/testcontainers/testcontainers-go/modules/mysql v0.38.0
