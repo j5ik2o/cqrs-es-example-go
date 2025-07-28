@@ -5,7 +5,7 @@ go 1.23.8
 toolchain go1.24.5
 
 require (
-	github.com/99designs/gqlgen v0.17.77
+	github.com/99designs/gqlgen v0.17.78
 	github.com/aws/aws-lambda-go v1.49.0
 	github.com/aws/aws-sdk-go-v2 v1.36.6
 	github.com/aws/aws-sdk-go-v2/config v1.29.18
