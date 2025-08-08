@@ -13,10 +13,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.46.0
 	github.com/aws/aws-sdk-go-v2/service/dynamodbstreams v1.28.0
 	github.com/barweiss/go-tuple v1.1.2
-	github.com/docker/go-connections v0.5.0
+	github.com/docker/go-connections v0.6.0
 	github.com/go-sql-driver/mysql v1.9.3
 	github.com/golang-migrate/migrate/v4 v4.18.3
-	github.com/j5ik2o/event-store-adapter-go v1.0.115
+	github.com/j5ik2o/event-store-adapter-go v1.0.116
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/oklog/ulid/v2 v2.1.1
 	github.com/olivere/env v1.1.0

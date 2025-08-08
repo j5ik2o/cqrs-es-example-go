@@ -148,6 +148,8 @@ github.com/docker/docker v28.2.2+incompatible h1:CjwRSksz8Yo4+RmQ339Dp/D2tGO5Jxw
 github.com/docker/docker v28.2.2+incompatible/go.mod h1:eEKB0N0r5NX/I1kEveEz05bcu8tLC/8azJZsviup8Sk=
 github.com/docker/go-connections v0.5.0 h1:USnMq7hx7gwdVZq1L49hLXaFtUdTADjXGp+uj1Br63c=
 github.com/docker/go-connections v0.5.0/go.mod h1:ov60Kzw0kKElRwhNs9UlUHAE/F9Fe6GLaXnqyDdmEXc=
+github.com/docker/go-connections v0.6.0 h1:LlMG9azAe1TqfR7sO+NJttz1gy6KO7VJBh+pMmjSD94=
+github.com/docker/go-connections v0.6.0/go.mod h1:AahvXYshr6JgfUJGdDCs2b5EZG/vmaMAntpSFH5BFKE=
 github.com/docker/go-units v0.5.0 h1:69rxXcBk27SvSaaxTtLh/8llcHD8vYHT7WSdRZ/jvr4=
 github.com/docker/go-units v0.5.0/go.mod h1:fgPhTUdO+D/Jk86RDLlptpiXQzgHJF7gydDDbaIK4Dk=
 github.com/ebitengine/purego v0.8.4 h1:CF7LEKg5FFOsASUj0+QwaXf8Ht6TlFxg09+S9wz0omw=
@@ -207,6 +209,8 @@ github.com/j5ik2o/event-store-adapter-go v1.0.114 h1:gbTSNlNW69EIPeGolZp1tZweAu6
 github.com/j5ik2o/event-store-adapter-go v1.0.114/go.mod h1:LiXV1xwmhK01rSV7MipiUdO/PRxtqQQwTJk8mHaDleQ=
 github.com/j5ik2o/event-store-adapter-go v1.0.115 h1:5qAc6QM+67njCcj1mg+kfuJcvAiDCAqm3onLf3vpI4k=
 github.com/j5ik2o/event-store-adapter-go v1.0.115/go.mod h1:oP/F/oyMvpvfJgvrTdLBmg4Ivxtam6OB0D4BbAbG988=
+github.com/j5ik2o/event-store-adapter-go v1.0.116 h1:UPTvBvryFkDofJVaZ7bQ9qdj8II9Zeq8G/UzFWskYbY=
+github.com/j5ik2o/event-store-adapter-go v1.0.116/go.mod h1:LuKt67uGKBvSCTPDTLHgY3YYauXOj2z6eBPEI4VAc4U=
 github.com/jmoiron/sqlx v1.4.0 h1:1PLqN7S1UYp5t4SrVVnt4nUVNemrDAtxlulVe+Qgm3o=
 github.com/jmoiron/sqlx v1.4.0/go.mod h1:ZrZ7UsYB/weZdl2Bxg6jCRO9c3YHl8r3ahlKmRT4JLY=
 github.com/josharian/intern v1.0.0 h1:vlS4z54oSdjm0bgjRigI+G1HpF+tI+9rE5LLzOg8HmY=
