@@ -14,7 +14,7 @@ services:
       MYSQL_PASSWORD: ceer
       MYSQL_DATABASE: ceer
   migration:
-    image: migrate/migrate:v4.18.3
+    image: migrate/migrate:v4.19.0
     volumes:
       - ../migrate/migrations:/migrations
     entrypoint:
