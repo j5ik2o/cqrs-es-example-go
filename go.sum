@@ -539,6 +539,8 @@ github.com/j5ik2o/event-store-adapter-go v1.0.136 h1:xoRYxG/ZgG8fUSlO/dgNH1A7ZRz
 github.com/j5ik2o/event-store-adapter-go v1.0.136/go.mod h1:yQaYwNfNivKSgkxw+kkojFCHaQK93UqLlqymSmYkcTE=
 github.com/j5ik2o/event-store-adapter-go v1.0.137 h1:NYa/4k6Ow0pR2BC4WOkT96KOlxckbIdyK3JN0KczX0I=
 github.com/j5ik2o/event-store-adapter-go v1.0.137/go.mod h1:nPtaL5BT6OwtwM8vIxSgnbhKd8DjwB6owbodarHi9qI=
+github.com/j5ik2o/event-store-adapter-go v1.0.138 h1:eJGyEOusR40qHZ6iAFwsrVdGe9q0uB0Gttwn+RusaqY=
+github.com/j5ik2o/event-store-adapter-go v1.0.138/go.mod h1:jltZE2pGzRNk9IQOMh4hmL2tqyo1L8SVHQP6DgSVwt8=
 github.com/jmoiron/sqlx v1.4.0 h1:1PLqN7S1UYp5t4SrVVnt4nUVNemrDAtxlulVe+Qgm3o=
 github.com/jmoiron/sqlx v1.4.0/go.mod h1:ZrZ7UsYB/weZdl2Bxg6jCRO9c3YHl8r3ahlKmRT4JLY=
 github.com/josharian/intern v1.0.0 h1:vlS4z54oSdjm0bgjRigI+G1HpF+tI+9rE5LLzOg8HmY=
