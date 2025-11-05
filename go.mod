@@ -2,7 +2,7 @@ module cqrs-es-example-go
 
 go 1.24.0
 
-toolchain go1.25.3
+toolchain go1.25.4
 
 require (
 	github.com/99designs/gqlgen v0.17.81
