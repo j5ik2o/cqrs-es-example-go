@@ -37,4 +37,4 @@ jobs:
         with:
           go-version: '1.25'
       - run: |
-          make docker-compose-e2e-test
+          make verify-group-chat
