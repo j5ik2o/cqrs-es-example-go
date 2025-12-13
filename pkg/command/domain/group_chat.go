@@ -38,27 +38,43 @@ func ReplayGroupChat(events []esa.Event, snapshot GroupChat) GroupChat {
 // ApplyEvent applies the event to the aggregate.
 func (g *GroupChat) ApplyEvent(event esa.Event) GroupChat {
 	switch e := event.(type) {
+	case *events.GroupChatCreated:
+		id := e.GetAggregateId().(*models.GroupChatId)
+		return NewGroupChatFrom(*id, *e.GetName(), *e.GetMembers(), models.NewMessages(), e.GetSeqNr(), 1, false)
 	case *events.GroupChatDeleted:
-		result := g.Delete(*e.GetExecutorId()).MustGet()
-		return result.V1
+		newState := g.WithDeleted()
+		newState.seqNr = e.GetSeqNr()
+		return newState
 	case *events.GroupChatMemberAdded:
-		result := g.AddMember(*e.GetMember().GetId(), *e.GetMember().GetUserAccountId(), e.GetMember().GetRole(), *e.GetExecutorId()).MustGet()
-		return result.V1
+		newState := g.WithMembers(g.members.AddMember(*e.GetMember().GetUserAccountId()))
+		newState.seqNr = e.GetSeqNr()
+		return newState
 	case *events.GroupChatMemberRemoved:
-		result := g.RemoveMemberByUserAccountId(*e.GetUserAccountId(), *e.GetExecutorId()).MustGet()
-		return result.V1
+		newState := g.WithMembers(g.members.RemoveMemberByUserAccountId(e.GetUserAccountId()))
+		newState.seqNr = e.GetSeqNr()
+		return newState
 	case *events.GroupChatRenamed:
-		result := g.Rename(*e.GetName(), *e.GetExecutorId()).MustGet()
-		return result.V1
+		newState := g.WithName(*e.GetName())
+		newState.seqNr = e.GetSeqNr()
+		return newState
 	case *events.GroupChatMessagePosted:
-		result := g.PostMessage(*e.GetMessage(), *e.GetExecutorId()).MustGet()
-		return result.V1
+		messagesMap := g.messages.ToMap()
+		messagesMap[e.GetMessage().GetId().GetValue()] = *e.GetMessage()
+		newState := g.WithMessages(models.NewMessagesFromMap(messagesMap))
+		newState.seqNr = e.GetSeqNr()
+		return newState
 	case *events.GroupChatMessageEdited:
-		result := g.EditMessage(*e.GetMessage(), *e.GetExecutorId()).MustGet()
-		return result.V1
+		messagesMap := g.messages.ToMap()
+		messagesMap[e.GetMessage().GetId().GetValue()] = *e.GetMessage()
+		newState := g.WithMessages(models.NewMessagesFromMap(messagesMap))
+		newState.seqNr = e.GetSeqNr()
+		return newState
 	case *events.GroupChatMessageDeleted:
-		result := g.DeleteMessage(*e.GetMessageId(), *e.GetExecutorId()).MustGet()
-		return result.V1
+		messagesMap := g.messages.ToMap()
+		delete(messagesMap, e.GetMessageId().GetValue())
+		newState := g.WithMessages(models.NewMessagesFromMap(messagesMap))
+		newState.seqNr = e.GetSeqNr()
+		return newState
 	default:
 		return *g
 	}
