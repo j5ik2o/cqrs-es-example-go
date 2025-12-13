@@ -365,8 +365,8 @@ func (g *GroupChat) EditMessage(message models.Message, executorId models.UserAc
 	}
 	newState := g.WithMessages(newMessages)
 	newState.seqNr += 1
-	messagePosted := events.NewGroupChatMessagePosted(newState.id, message, newState.seqNr, executorId)
-	pair := gt.New2[GroupChat, events.GroupChatEvent](newState, &messagePosted)
+	messageEdited := events.NewGroupChatMessageEdited(newState.id, message, newState.seqNr, executorId)
+	pair := gt.New2[GroupChat, events.GroupChatEvent](newState, &messageEdited)
 	return mo.Ok(GroupChatWithEventPair(pair))
 }
 
