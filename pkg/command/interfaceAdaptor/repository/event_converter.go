@@ -111,6 +111,20 @@ func EventConverter(m map[string]interface{}) (esa.Event, error) {
 			occurredAt,
 		)
 		return &event, nil
+	case "GroupChatMessageEdited":
+		message, err := models.ConvertMessageFromJSON(m["message"].(map[string]interface{})).Get()
+		if err != nil {
+			return nil, err
+		}
+		event := events.NewGroupChatMessageEditedFrom(
+			eventId,
+			groupChatId,
+			message,
+			seqNr,
+			executorId,
+			occurredAt,
+		)
+		return &event, nil
 	case "GroupChatMessageDeleted":
 		messageId := models.ConvertMessageIdFromJSON(m["message_id"].(map[string]interface{}))
 		event := events.NewGroupChatMessageDeletedFrom(

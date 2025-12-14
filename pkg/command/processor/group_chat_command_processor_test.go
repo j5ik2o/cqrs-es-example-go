@@ -163,7 +163,7 @@ func Test_EditMessage(t *testing.T) {
 	result, err = commandProcessor.EditMessage(groupChatId, message, memberUserAccountId).Get()
 
 	require.NoError(t, err)
-	event, ok := result.(*events.GroupChatMessagePosted)
+	event, ok := result.(*events.GroupChatMessageEdited)
 	require.True(t, ok)
 	actualGroupChatId, ok := event.GetAggregateId().(*models.GroupChatId)
 	require.True(t, ok)

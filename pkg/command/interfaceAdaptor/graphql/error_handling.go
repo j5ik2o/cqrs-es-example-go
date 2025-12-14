@@ -25,7 +25,7 @@ func validationErrorHandling(ctx context.Context, errorList []error) {
 func errorHandling(ctx context.Context, err error) {
 	switch e := err.(type) {
 	case *processor.RepositoryError:
-		var optimisticLockError esa.OptimisticLockError
+		var optimisticLockError *esa.OptimisticLockError
 		if errors.As(e.Cause, &optimisticLockError) {
 			graphql.AddError(ctx, &gqlerror.Error{
 				Path:    graphql.GetPath(ctx),
@@ -53,7 +53,7 @@ func errorHandling(ctx context.Context, err error) {
 			},
 		})
 	case *processor.DomainLogicError:
-		var groupChatError domain.GroupChatError
+		var groupChatError *domain.GroupChatError
 		if errors.As(e.Cause, &groupChatError) {
 			graphql.AddError(ctx, &gqlerror.Error{
 				Path:    graphql.GetPath(ctx),

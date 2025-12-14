@@ -8,6 +8,8 @@ cd $(dirname "$0") || exit
 export ARCH=$(uname -m)
 echo "ARCH=${ARCH}"
 
+export AWS_REGION=ap-northeast-1
+
 if [ "$ARCH" = "x86_64" ]; then
   ARCH="amd64"
 fi
