@@ -5,7 +5,7 @@ go 1.24.0
 toolchain go1.25.5
 
 require (
-	github.com/99designs/gqlgen v0.17.85
+	github.com/99designs/gqlgen v0.17.86
 	github.com/aws/aws-lambda-go v1.51.1
 	github.com/aws/aws-sdk-go-v2 v1.41.1
 	github.com/aws/aws-sdk-go-v2/config v1.32.7
@@ -74,7 +74,7 @@ require (
 	github.com/go-openapi/spec v0.20.14 // indirect
 	github.com/go-openapi/swag v0.22.9 // indirect
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
-	github.com/goccy/go-yaml v1.19.0 // indirect
+	github.com/goccy/go-yaml v1.19.2 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/websocket v1.5.1 // indirect
@@ -125,7 +125,7 @@ require (
 	golang.org/x/sync v0.19.0 // indirect
 	golang.org/x/sys v0.39.0 // indirect
 	golang.org/x/telemetry v0.0.0-20251203150158-8fff8a5912fc // indirect
-	golang.org/x/text v0.32.0 // indirect
+	golang.org/x/text v0.33.0 // indirect
 	golang.org/x/tools/go/expect v0.1.1-deprecated // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
