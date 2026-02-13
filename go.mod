@@ -1,6 +1,6 @@
 module cqrs-es-example-go
 
-go 1.24.0
+go 1.25.0
 
 toolchain go1.26.0
 
@@ -30,7 +30,7 @@ require (
 	github.com/testcontainers/testcontainers-go/modules/mysql v0.40.0
 	github.com/vektah/gqlparser/v2 v2.5.31
 	golang.org/x/tools v0.42.0
-	honnef.co/go/tools v0.6.1
+	honnef.co/go/tools v0.7.0
 )
 
 require (
