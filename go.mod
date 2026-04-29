@@ -14,7 +14,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/dynamodbstreams v1.32.15
 	github.com/barweiss/go-tuple v1.1.2
 	github.com/docker/go-connections v0.7.0
-	github.com/go-sql-driver/mysql v1.9.3
+	github.com/go-sql-driver/mysql v1.10.0
 	github.com/golang-migrate/migrate/v4 v4.19.1
 	github.com/j5ik2o/event-store-adapter-go v1.0.175
 	github.com/jmoiron/sqlx v1.4.0
@@ -35,7 +35,7 @@ require (
 
 require (
 	dario.cat/mergo v1.0.2 // indirect
-	filippo.io/edwards25519 v1.1.0 // indirect
+	filippo.io/edwards25519 v1.2.0 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20250102033503-faa5f7b0171c // indirect
 	github.com/BurntSushi/toml v1.5.0 // indirect
 	github.com/KyleBanks/depth v1.2.1 // indirect
