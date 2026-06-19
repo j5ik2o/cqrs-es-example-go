@@ -28,7 +28,7 @@ require (
 	github.com/testcontainers/testcontainers-go v0.43.0
 	github.com/testcontainers/testcontainers-go/modules/localstack v0.43.0
 	github.com/testcontainers/testcontainers-go/modules/mysql v0.43.0
-	github.com/vektah/gqlparser/v2 v2.5.34
+	github.com/vektah/gqlparser/v2 v2.5.35
 	golang.org/x/tools v0.46.0
 	honnef.co/go/tools v0.7.0
 )
