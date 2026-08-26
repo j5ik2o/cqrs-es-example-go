@@ -1,36 +1,7 @@
 module cqrs-es-example-go
 
-go 1.26.0
-
-toolchain go1.27.0
-
-require (
-	github.com/99designs/gqlgen v0.17.94
-	github.com/aws/aws-lambda-go v1.54.0
-	github.com/aws/aws-sdk-go-v2 v1.43.8
-	github.com/aws/aws-sdk-go-v2/config v1.32.39
-	github.com/aws/aws-sdk-go-v2/credentials v1.19.38
-	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.63.5
-	github.com/aws/aws-sdk-go-v2/service/dynamodbstreams v1.36.8
-	github.com/barweiss/go-tuple v1.1.2
-	github.com/docker/go-connections v0.8.1
-	github.com/go-sql-driver/mysql v1.10.0
-	github.com/golang-migrate/migrate/v4 v4.19.1
-	github.com/j5ik2o/event-store-adapter-go v1.0.186
-	github.com/jmoiron/sqlx v1.4.0
-	github.com/oklog/ulid/v2 v2.1.2
-	github.com/olivere/env v1.1.0
-	github.com/pkg/errors v0.9.1
-	github.com/samber/mo v1.17.0
-	github.com/spf13/cobra v1.10.2
-	github.com/stretchr/testify v1.12.1
-	github.com/swaggo/swag v1.16.6
-	github.com/testcontainers/testcontainers-go v0.44.0
-	github.com/testcontainers/testcontainers-go/modules/localstack v0.44.0
-	github.com/testcontainers/testcontainers-go/modules/mysql v0.44.0
-	github.com/vektah/gqlparser/v2 v2.5.36
-	golang.org/x/tools v0.49.0
-	honnef.co/go/tools v0.8.1
+golang.org/x/tools v0.49.0
+honnef.co/go/tools v0.8.1
 )
 
 require (
@@ -92,7 +63,7 @@ require (
 	github.com/magiconair/properties v1.8.10 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/moby/docker-image-spec v1.3.1 // indirect
-	github.com/moby/go-archive v0.2.0 // indirect
+	github.com/moby/go-archive v0.3.0 // indirect
 	github.com/moby/moby/api v1.55.0 // indirect
 	github.com/moby/moby/client v0.5.0 // indirect
 	github.com/moby/patternmatcher v0.6.1 // indirect
@@ -126,7 +97,7 @@ require (
 	golang.org/x/crypto v0.55.0 // indirect
 	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225 // indirect
 	golang.org/x/exp/typeparams v0.0.0-20231108232855-2478ac86f678 // indirect
-	golang.org/x/mod v0.39.0 // indirect
+	golang.org/x/mod v0.40.0 // indirect
 	golang.org/x/net v0.58.0 // indirect
 	golang.org/x/sync v0.22.0 // indirect
 	golang.org/x/sys v0.47.0 // indirect
