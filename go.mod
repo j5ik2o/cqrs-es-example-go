@@ -5,7 +5,7 @@ go 1.26.0
 toolchain go1.27.1
 
 require (
-	github.com/99designs/gqlgen v0.17.94
+	github.com/99designs/gqlgen v0.17.95
 	github.com/aws/aws-lambda-go v1.55.0
 	github.com/aws/aws-sdk-go-v2 v1.45.1
 	github.com/aws/aws-sdk-go-v2/config v1.33.2
@@ -113,7 +113,7 @@ require (
 	github.com/tklauser/go-sysconf v0.4.0 // indirect
 	github.com/tklauser/numcpus v0.12.0 // indirect
 	github.com/urfave/cli/v2 v2.27.7 // indirect
-	github.com/urfave/cli/v3 v3.10.1 // indirect
+	github.com/urfave/cli/v3 v3.11.0 // indirect
 	github.com/xrash/smetrics v0.0.0-20240521201337-686a1a2994c1 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
@@ -126,7 +126,7 @@ require (
 	golang.org/x/crypto v0.55.0 // indirect
 	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225 // indirect
 	golang.org/x/exp/typeparams v0.0.0-20231108232855-2478ac86f678 // indirect
-	golang.org/x/mod v0.39.0 // indirect
+	golang.org/x/mod v0.40.0 // indirect
 	golang.org/x/net v0.58.0 // indirect
 	golang.org/x/sync v0.22.0 // indirect
 	golang.org/x/sys v0.47.0 // indirect
