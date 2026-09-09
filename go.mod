@@ -15,7 +15,7 @@ require (
 	github.com/barweiss/go-tuple v1.1.2
 	github.com/docker/go-connections v0.8.1
 	github.com/go-sql-driver/mysql v1.10.1
-	github.com/golang-migrate/migrate/v4 v4.20.0
+	github.com/golang-migrate/migrate/v4 v4.20.1
 	github.com/j5ik2o/event-store-adapter-go v1.0.192
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/oklog/ulid/v2 v2.1.2
