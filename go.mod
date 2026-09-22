@@ -11,7 +11,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.33.5
 	github.com/aws/aws-sdk-go-v2/credentials v1.20.5
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.69.0
-	github.com/aws/aws-sdk-go-v2/service/dynamodbstreams v1.41.0
+	github.com/aws/aws-sdk-go-v2/service/dynamodbstreams v1.42.0
 	github.com/barweiss/go-tuple v1.1.2
 	github.com/docker/go-connections v0.8.1
 	github.com/go-sql-driver/mysql v1.10.1
