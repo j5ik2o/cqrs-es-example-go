@@ -30,7 +30,7 @@ require (
 	github.com/testcontainers/testcontainers-go/modules/mysql v0.44.0
 	github.com/vektah/gqlparser/v2 v2.5.62
 	golang.org/x/tools v0.52.0
-	honnef.co/go/tools v0.8.1
+	honnef.co/go/tools v0.8.2
 )
 
 require (
