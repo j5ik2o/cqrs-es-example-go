@@ -42,6 +42,8 @@ github.com/99designs/gqlgen v0.17.94 h1:+3EUDVgX/8gDyDL+7NUqCo4cy2ylylwW0GvR1dGi
 github.com/99designs/gqlgen v0.17.94/go.mod h1:o+XaAMpPA/AX4rqeiK03tZUb/5T+WCgpRDD4aujgdas=
 github.com/99designs/gqlgen v0.17.95 h1:882h7F5iJImgtyUVttc4MOK2NbzbMYc2oyNeHqkjpP4=
 github.com/99designs/gqlgen v0.17.95/go.mod h1:kHYPrpwOXDU1OQyxIg3Z7nVXSnlUoHVWBY7CMJCAM4M=
+github.com/99designs/gqlgen v0.17.97 h1:Dv4OZ+Mvt38+1cemFYatThs3Y3tq2fjuV2OFWq2R7kc=
+github.com/99designs/gqlgen v0.17.97/go.mod h1:Fk3sbEOHsiIkcmUhhTxe/Jmm3oXKDgc5L70P0rWOljw=
 github.com/AdaLogics/go-fuzz-headers v0.0.0-20240806141605-e8a1dd7889d6 h1:He8afgbRMd7mFxO99hRNu+6tazq8nFF9lIwo9JFroBk=
 github.com/AdaLogics/go-fuzz-headers v0.0.0-20240806141605-e8a1dd7889d6/go.mod h1:8o94RPi1/7XTJvwPpRSzSUedZrtlirdB3r9Z20bi2f8=
 github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 h1:L/gRVlceqvL25UVaW/CKtUDjefjrs0SPonmDGUVOYP0=
@@ -2386,6 +2388,8 @@ github.com/urfave/cli/v3 v3.10.1 h1:7Kx9H50hrHbRbyxgO1KP6/BcbiGRz0uYh5YyQ30JEEY=
 github.com/urfave/cli/v3 v3.10.1/go.mod h1:ysVLtOEmg2tOy6PknnYVhDoouyC/6N42TMeoMzskhso=
 github.com/urfave/cli/v3 v3.11.0 h1:P/euJp99kb9p0tlVY+iYTLYYTAQlfl0hR2gUO1Img1Q=
 github.com/urfave/cli/v3 v3.11.0/go.mod h1:ysVLtOEmg2tOy6PknnYVhDoouyC/6N42TMeoMzskhso=
+github.com/urfave/cli/v3 v3.14.0 h1:a8414NQlHJs0c/iBsulKLzlES0n/lEAskbL2LKpU4/s=
+github.com/urfave/cli/v3 v3.14.0/go.mod h1:vXn6HxPNccJSzQr2QvwVncOKrgYGIHU0HY5h8B2nQj4=
 github.com/vektah/gqlparser/v2 v2.5.30 h1:EqLwGAFLIzt1wpx1IPpY67DwUujF1OfzgEyDsLrN6kE=
 github.com/vektah/gqlparser/v2 v2.5.30/go.mod h1:D1/VCZtV3LPnQrcPBeR/q5jkSQIPti0uYCP/RI0gIeo=
 github.com/vektah/gqlparser/v2 v2.5.31 h1:YhWGA1mfTjID7qJhd1+Vxhpk5HTgydrGU9IgkWBTJ7k=
