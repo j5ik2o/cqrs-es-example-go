@@ -60,6 +60,8 @@ github.com/PuerkitoBio/goquery v1.10.3 h1:pFYcNSqHxBD06Fpj/KsbStFRsgRATgnf3LeXiU
 github.com/PuerkitoBio/goquery v1.10.3/go.mod h1:tMUX0zDMHXYlAQk6p35XxQMqMweEKB7iK7iLNd4RH4Y=
 github.com/agnivade/levenshtein v1.2.1 h1:EHBY3UOn1gwdy/VbFwgo4cxecRznFk7fKWN1KOX7eoM=
 github.com/agnivade/levenshtein v1.2.1/go.mod h1:QVVI16kDrtSuwcpd0p1+xMC6Z/VfhtCyDIjcwga4/DU=
+github.com/agnivade/levenshtein v1.2.2 h1:fI8RgiztYX1Nn5pBHHqQ9EMCCklhrmXqPRIedFmx5M4=
+github.com/agnivade/levenshtein v1.2.2/go.mod h1:QVVI16kDrtSuwcpd0p1+xMC6Z/VfhtCyDIjcwga4/DU=
 github.com/andreyvit/diff v0.0.0-20170406064948-c7f18ee00883 h1:bvNMNQO63//z+xNgfBlViaCIJKLlCJ6/fmUseuG0wVQ=
 github.com/andreyvit/diff v0.0.0-20170406064948-c7f18ee00883/go.mod h1:rCTlJbsFo29Kk6CurOXKm700vrz8f0KW0JNfpkRJY/8=
 github.com/andybalholm/cascadia v1.3.3 h1:AG2YHrzJIm4BZ19iwJ/DAua6Btl3IwJX+VI4kktS1LM=
@@ -2452,6 +2454,8 @@ github.com/vektah/gqlparser/v2 v2.5.62 h1:GJP/emj1wIWKs0U3SHcAgzknWgylTqQ1qH2gNL
 github.com/vektah/gqlparser/v2 v2.5.62/go.mod h1:JNK+plRwKdXLsF/qPFPe5tE0z4s1WeroD9S5LR8um/Q=
 github.com/vektah/gqlparser/v2 v2.5.63 h1:vzHg/+/z7kZA3N4FhbGtF1pRo99KUpPzwXahk1bQtYk=
 github.com/vektah/gqlparser/v2 v2.5.63/go.mod h1:JNK+plRwKdXLsF/qPFPe5tE0z4s1WeroD9S5LR8um/Q=
+github.com/vektah/gqlparser/v2 v2.5.64 h1:N32yM6hQ6Kd5RdjCCEJsUrbCebVoA9yLLMOIa88Mkk0=
+github.com/vektah/gqlparser/v2 v2.5.64/go.mod h1:nILRSUbsWDTuf8hSmAgFxuYh0SaMZdkvl6JSEbkJX8g=
 github.com/xrash/smetrics v0.0.0-20240521201337-686a1a2994c1 h1:gEOO8jv9F4OT7lGCjxCBTO/36wtF6j2nSip77qHd4x4=
 github.com/xrash/smetrics v0.0.0-20240521201337-686a1a2994c1/go.mod h1:Ohn+xnUBiLI6FVj/9LpzZWtj1/D6lUovWYBkxHVV3aM=
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=

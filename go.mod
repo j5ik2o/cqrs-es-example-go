@@ -28,7 +28,7 @@ require (
 	github.com/testcontainers/testcontainers-go v0.44.0
 	github.com/testcontainers/testcontainers-go/modules/localstack v0.44.0
 	github.com/testcontainers/testcontainers-go/modules/mysql v0.44.0
-	github.com/vektah/gqlparser/v2 v2.5.63
+	github.com/vektah/gqlparser/v2 v2.5.64
 	golang.org/x/tools v0.52.0
 	honnef.co/go/tools v0.8.2
 )
@@ -40,7 +40,7 @@ require (
 	github.com/BurntSushi/toml v1.5.0 // indirect
 	github.com/KyleBanks/depth v1.2.1 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
-	github.com/agnivade/levenshtein v1.2.1 // indirect
+	github.com/agnivade/levenshtein v1.2.2 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.20.4 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.5.7 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.8.7 // indirect
