@@ -3,12 +3,12 @@ package test
 import (
 	"context"
 	"fmt"
-	"github.com/docker/go-connections/nat"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/mysql"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/jmoiron/sqlx"
+	"github.com/moby/moby/api/types/network"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/localstack"
@@ -47,7 +47,7 @@ func CreateLocalStackContainer(ctx context.Context) (*localstack.LocalStackConta
 	return container, err
 }
 
-func GetDataSourceName(port nat.Port) string {
+func GetDataSourceName(port network.Port) string {
 	dbUrl := fmt.Sprintf("ceer:ceer@tcp(localhost:%s)/ceer", port.Port())
 	dataSourceName := fmt.Sprintf("%s?parseTime=true", dbUrl)
 	return dataSourceName
