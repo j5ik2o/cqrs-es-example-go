@@ -366,16 +366,33 @@ func journalEvents(aggregateID string, headEvents ...headEvent) []JournalEvent {
 func newReadModelTestDB(t *testing.T) *sqlx.DB {
 	t.Helper()
 	ctx := context.Background()
-	container, err := test.CreateMySQLContainer(ctx)
-	require.NoError(t, err)
-	t.Cleanup(func() { require.NoError(t, container.Terminate(ctx)) })
-	port, err := container.MappedPort(ctx, "3306")
-	require.NoError(t, err)
-	db, err := sqlx.Connect("mysql", test.GetDataSourceName(port))
-	require.NoError(t, err)
-	t.Cleanup(func() { require.NoError(t, db.Close()) })
-	require.NoError(t, test.MigrateDB(t, nil, db, "../../"))
-	return db
+	deadline := time.Now().Add(2 * time.Minute)
+	var lastErr error
+	for {
+		container, err := test.CreateMySQLContainer(ctx)
+		if err == nil {
+			port, portErr := container.MappedPort(ctx, "3306")
+			if portErr != nil {
+				lastErr = portErr
+			} else if db, dbErr := sqlx.Connect("mysql", test.GetDataSourceName(port)); dbErr != nil {
+				lastErr = dbErr
+			} else {
+				t.Cleanup(func() { require.NoError(t, container.Terminate(ctx)) })
+				t.Cleanup(func() { require.NoError(t, db.Close()) })
+				require.NoError(t, test.MigrateDB(t, nil, db, "../../"))
+				return db
+			}
+			_ = container.Terminate(ctx)
+		} else {
+			lastErr = err
+		}
+		if time.Now().After(deadline) {
+			require.NoError(t, lastErr)
+		}
+		// A shared Docker daemon can time out while starting a container.
+		// Retry so a resource spike does not fail the test body.
+		time.Sleep(2 * time.Second)
+	}
 }
 
 func readModelPosition(t *testing.T, db *sqlx.DB, aggregateID string) int64 {

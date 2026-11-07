@@ -2,7 +2,10 @@ package test
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -19,8 +22,6 @@ import (
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/localstack"
 	testcontainermysql "github.com/testcontainers/testcontainers-go/modules/mysql"
-	"testing"
-	"time"
 )
 
 func CreateMySQLContainer(ctx context.Context) (*testcontainermysql.MySQLContainer, error) {
@@ -79,66 +80,94 @@ func CreateDynamoDBClient(t *testing.T, ctx context.Context, l *localstack.Local
 // the change feed comes from the head table (DY-3).
 func CreateJournalTable(t *testing.T, ctx context.Context, client *dynamodb.Client, tableName string) error {
 	t.Helper()
-	_, err := client.CreateTable(ctx, &dynamodb.CreateTableInput{
-		TableName: aws.String(tableName),
-		AttributeDefinitions: []types.AttributeDefinition{
-			{AttributeName: aws.String("aid"), AttributeType: types.ScalarAttributeTypeS},
-			{AttributeName: aws.String("seq_nr"), AttributeType: types.ScalarAttributeTypeN},
-		},
-		KeySchema: []types.KeySchemaElement{
-			{AttributeName: aws.String("aid"), KeyType: types.KeyTypeHash},
-			{AttributeName: aws.String("seq_nr"), KeyType: types.KeyTypeRange},
-		},
-		BillingMode: types.BillingModePayPerRequest,
+	return createTableEventually(t, func() error {
+		_, err := client.CreateTable(ctx, &dynamodb.CreateTableInput{
+			TableName: aws.String(tableName),
+			AttributeDefinitions: []types.AttributeDefinition{
+				{AttributeName: aws.String("aid"), AttributeType: types.ScalarAttributeTypeS},
+				{AttributeName: aws.String("seq_nr"), AttributeType: types.ScalarAttributeTypeN},
+			},
+			KeySchema: []types.KeySchemaElement{
+				{AttributeName: aws.String("aid"), KeyType: types.KeyTypeHash},
+				{AttributeName: aws.String("seq_nr"), KeyType: types.KeyTypeRange},
+			},
+			BillingMode: types.BillingModePayPerRequest,
+		})
+		return err
 	})
-	return err
 }
 
 func CreateSnapshotTable(t *testing.T, ctx context.Context, client *dynamodb.Client, tableName string, historyIndexName string) error {
 	t.Helper()
-	_, err := client.CreateTable(ctx, &dynamodb.CreateTableInput{
-		TableName: aws.String(tableName),
-		AttributeDefinitions: []types.AttributeDefinition{
-			{AttributeName: aws.String("aid"), AttributeType: types.ScalarAttributeTypeS},
-			{AttributeName: aws.String("skey"), AttributeType: types.ScalarAttributeTypeN},
-			{AttributeName: aws.String("active_history_seq_nr"), AttributeType: types.ScalarAttributeTypeN},
-		},
-		KeySchema: []types.KeySchemaElement{
-			{AttributeName: aws.String("aid"), KeyType: types.KeyTypeHash},
-			{AttributeName: aws.String("skey"), KeyType: types.KeyTypeRange},
-		},
-		BillingMode: types.BillingModePayPerRequest,
-		GlobalSecondaryIndexes: []types.GlobalSecondaryIndex{
-			{
-				IndexName: aws.String(historyIndexName),
-				KeySchema: []types.KeySchemaElement{
-					{AttributeName: aws.String("aid"), KeyType: types.KeyTypeHash},
-					{AttributeName: aws.String("active_history_seq_nr"), KeyType: types.KeyTypeRange},
-				},
-				Projection: &types.Projection{ProjectionType: types.ProjectionTypeKeysOnly},
+	return createTableEventually(t, func() error {
+		_, err := client.CreateTable(ctx, &dynamodb.CreateTableInput{
+			TableName: aws.String(tableName),
+			AttributeDefinitions: []types.AttributeDefinition{
+				{AttributeName: aws.String("aid"), AttributeType: types.ScalarAttributeTypeS},
+				{AttributeName: aws.String("skey"), AttributeType: types.ScalarAttributeTypeN},
+				{AttributeName: aws.String("active_history_seq_nr"), AttributeType: types.ScalarAttributeTypeN},
 			},
-		},
+			KeySchema: []types.KeySchemaElement{
+				{AttributeName: aws.String("aid"), KeyType: types.KeyTypeHash},
+				{AttributeName: aws.String("skey"), KeyType: types.KeyTypeRange},
+			},
+			BillingMode: types.BillingModePayPerRequest,
+			GlobalSecondaryIndexes: []types.GlobalSecondaryIndex{
+				{
+					IndexName: aws.String(historyIndexName),
+					KeySchema: []types.KeySchemaElement{
+						{AttributeName: aws.String("aid"), KeyType: types.KeyTypeHash},
+						{AttributeName: aws.String("active_history_seq_nr"), KeyType: types.KeyTypeRange},
+					},
+					Projection: &types.Projection{ProjectionType: types.ProjectionTypeKeysOnly},
+				},
+			},
+		})
+		return err
 	})
-	return err
 }
 
 func CreateHeadTable(t *testing.T, ctx context.Context, client *dynamodb.Client, tableName string) error {
 	t.Helper()
-	_, err := client.CreateTable(ctx, &dynamodb.CreateTableInput{
-		TableName: aws.String(tableName),
-		AttributeDefinitions: []types.AttributeDefinition{
-			{AttributeName: aws.String("aid"), AttributeType: types.ScalarAttributeTypeS},
-		},
-		KeySchema: []types.KeySchemaElement{
-			{AttributeName: aws.String("aid"), KeyType: types.KeyTypeHash},
-		},
-		BillingMode: types.BillingModePayPerRequest,
-		StreamSpecification: &types.StreamSpecification{
-			StreamEnabled:  aws.Bool(true),
-			StreamViewType: types.StreamViewTypeNewImage,
-		},
+	return createTableEventually(t, func() error {
+		_, err := client.CreateTable(ctx, &dynamodb.CreateTableInput{
+			TableName: aws.String(tableName),
+			AttributeDefinitions: []types.AttributeDefinition{
+				{AttributeName: aws.String("aid"), AttributeType: types.ScalarAttributeTypeS},
+			},
+			KeySchema: []types.KeySchemaElement{
+				{AttributeName: aws.String("aid"), KeyType: types.KeyTypeHash},
+			},
+			BillingMode: types.BillingModePayPerRequest,
+			StreamSpecification: &types.StreamSpecification{
+				StreamEnabled:  aws.Bool(true),
+				StreamViewType: types.StreamViewTypeNewImage,
+			},
+		})
+		return err
 	})
-	return err
+}
+
+// createTableEventually retries CreateTable because LocalStack can reset the
+// connection while its DynamoDB provider is still warming up. ResourceInUse
+// means another attempt already created the table.
+func createTableEventually(t *testing.T, create func() error) error {
+	t.Helper()
+	deadline := time.Now().Add(60 * time.Second)
+	for {
+		err := create()
+		if err == nil {
+			return nil
+		}
+		var inUse *types.ResourceInUseException
+		if errors.As(err, &inUse) {
+			return nil
+		}
+		if time.Now().After(deadline) {
+			return err
+		}
+		time.Sleep(time.Second)
+	}
 }
 
 // WaitForDynamoDB waits until LocalStack answers DynamoDB requests. The health
