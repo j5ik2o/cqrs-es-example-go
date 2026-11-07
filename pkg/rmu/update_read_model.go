@@ -80,7 +80,7 @@ func (r *ReadModelUpdater) UpdateReadModel(ctx context.Context, event dynamodbev
 func (r *ReadModelUpdater) HandleDynamoDBEvent(ctx context.Context, event dynamodbevents.DynamoDBEvent) (dynamodbevents.DynamoDBEventResponse, error) {
 	response := dynamodbevents.DynamoDBEventResponse{}
 	blocked := map[string]bool{}
-	for _, record := range event.Records {
+	for i, record := range event.Records {
 		aggregateID, ok := RecordAggregateID(record)
 		if ok && blocked[aggregateID] {
 			response.BatchItemFailures = append(response.BatchItemFailures, dynamodbevents.DynamoDBBatchItemFailure{
@@ -94,6 +94,17 @@ func (r *ReadModelUpdater) HandleDynamoDBEvent(ctx context.Context, event dynamo
 			})
 			if ok {
 				blocked[aggregateID] = true
+			}
+			if _, isPermanent := ClassifyFailure(err); !isPermanent {
+				// A storage outage has already consumed the retry budget. The
+				// remaining records would spend the same budget and risk the
+				// Lambda timeout, so hand them all back for redelivery.
+				for _, rest := range event.Records[i+1:] {
+					response.BatchItemFailures = append(response.BatchItemFailures, dynamodbevents.DynamoDBBatchItemFailure{
+						ItemIdentifier: rest.EventID,
+					})
+				}
+				break
 			}
 		}
 	}

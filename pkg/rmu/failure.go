@@ -74,6 +74,12 @@ func ClassifyFailure(err error) (FailureKind, bool) {
 		// record whose recovery task would be lost.
 		return FailureKindUnknown, false
 	}
+	var resyncErr *ResyncError
+	if errors.As(err, &resyncErr) {
+		// A resync reports permanent per-aggregate failures alongside a scan
+		// error. Whether to retry depends on the scan, which IsRetryable owns.
+		return FailureKindUnknown, false
+	}
 	var permanentFailure *PermanentFailure
 	if errors.As(err, &permanentFailure) {
 		return permanentFailure.Kind, true
@@ -96,6 +102,10 @@ func IsRetryable(err error) bool {
 	}
 	if errors.Is(err, context.Canceled) {
 		return false
+	}
+	var resyncErr *ResyncError
+	if errors.As(err, &resyncErr) {
+		return resyncErr.Scan != nil && IsRetryable(resyncErr.Scan)
 	}
 	if _, ok := ClassifyFailure(err); ok {
 		return false

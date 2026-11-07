@@ -124,8 +124,10 @@ var localRmuCmd = &cobra.Command{
 		// The first start has no positions at all, and a restart may follow a
 		// stop longer than the 24-hour stream retention. Reconcile every head
 		// before consuming the stream; the stream then covers the gap between
-		// the scan and the first read.
-		resync(ctx, resyncer, retryPolicy, "initial reconciliation")
+		// the scan and the first read. A transient scan failure is retried
+		// rather than left until the next trim event.
+		resyncBackoff := rmu.NewBackoff(500*time.Millisecond, 30*time.Second)
+		resyncUntilResolved(ctx, resyncer, retryPolicy, resyncBackoff, "initial reconciliation")
 		if completed, err := recoveryService.RecoverPending(ctx); err != nil {
 			slog.Warn("some pending recovery tasks did not complete", "completed", completed, "error", err)
 		} else if completed > 0 {
@@ -139,7 +141,7 @@ var localRmuCmd = &cobra.Command{
 				int32(streamMaxItemCount), &readModelUpdater, pollBackoff)
 			if errors.Is(err, errStreamTrimmed) {
 				slog.Warn("the reader fell behind the stream retention window; running a full resync", "error", err)
-				resync(ctx, resyncer, retryPolicy, "resync after trimmed stream")
+				resyncUntilResolved(ctx, resyncer, retryPolicy, resyncBackoff, "resync after trimmed stream")
 				backoff.Reset()
 				continue
 			}
@@ -152,7 +154,24 @@ var localRmuCmd = &cobra.Command{
 	},
 }
 
-func resync(ctx context.Context, resyncer *rmu.Resyncer, policy rmu.RetryPolicy, label string) {
+func resyncUntilResolved(ctx context.Context, resyncer *rmu.Resyncer, policy rmu.RetryPolicy, backoff *rmu.Backoff, label string) {
+	for {
+		err := resync(ctx, resyncer, policy, label)
+		if err == nil {
+			return
+		}
+		if !rmu.IsRetryable(err) {
+			// Permanent per-aggregate failures were recorded as recovery tasks.
+			// Continuing keeps the stream moving while they are repaired.
+			return
+		}
+		if sleepErr := backoffSleep(ctx, backoff.Next()); sleepErr != nil {
+			return
+		}
+	}
+}
+
+func resync(ctx context.Context, resyncer *rmu.Resyncer, policy rmu.RetryPolicy, label string) error {
 	err := policy.Do(ctx, func() error {
 		result, err := resyncer.Resync(ctx)
 		if err == nil {
@@ -161,11 +180,9 @@ func resync(ctx context.Context, resyncer *rmu.Resyncer, policy rmu.RetryPolicy,
 		return err
 	})
 	if err != nil {
-		// Permanent per-aggregate failures were already recorded as recovery
-		// tasks and logged inside the resyncer. A storage failure is retried by
-		// the stream loop.
 		slog.Error(label+" did not complete", "error", err)
 	}
+	return err
 }
 
 func durationEnv(name string, fallback time.Duration) time.Duration {

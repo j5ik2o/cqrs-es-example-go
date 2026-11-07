@@ -123,9 +123,19 @@ func (s *RecoveryService) RecoverPending(ctx context.Context) (int, error) {
 	if err != nil {
 		return 0, fmt.Errorf("list recovery tasks: %w", err)
 	}
+	storeID, err := s.storeID.StoreID(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("read store id for recovery tasks: %w", err)
+	}
 	completed := 0
 	var errs []error
 	for _, task := range tasks {
+		// Tasks of another projection or store are not this worker's work.
+		// Skipping them keeps a shared table from blocking every run.
+		if task.ProjectionName != s.projectionName || task.ProjectionVersion != s.projectionVersion ||
+			task.StoreID != storeID {
+			continue
+		}
 		if err := s.Recover(ctx, task); err != nil {
 			errs = append(errs, err)
 			continue

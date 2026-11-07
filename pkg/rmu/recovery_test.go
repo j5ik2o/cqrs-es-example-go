@@ -432,6 +432,108 @@ func TestHandleDynamoDBEvent_RecordsTaskForMalformedHeadRecord(t *testing.T) {
 	require.Equal(t, FailureKindEventPayload, store.tasks[0].FailureType)
 }
 
+func TestHandleDynamoDBEvent_StopsAfterTransientFailure(t *testing.T) {
+	ctx := context.Background()
+	db := newReadModelTestDB(t)
+	broken := newReadModelFixture(t)
+	healthyB := newReadModelFixture(t)
+	healthyC := newReadModelFixture(t)
+	journal := &fakeJournalReader{
+		events: map[string][]JournalEvent{
+			broken.aid(): journalEvents(broken.aid(), broken.create),
+		},
+		errs: []error{errors.New("connection refused")},
+	}
+	updater := NewReadModelUpdater(NewGroupChatDaoImpl(db), journal)
+
+	response, err := updater.HandleDynamoDBEvent(ctx, dynamodbevents.DynamoDBEvent{
+		Records: []dynamodbevents.DynamoDBEventRecord{
+			headRecord(t, "MODIFY", broken.aid(), broken.addMember),
+			headRecord(t, "INSERT", healthyB.aid(), healthyB.create),
+			headRecord(t, "INSERT", healthyC.aid(), healthyC.create),
+		},
+	})
+	require.NoError(t, err)
+	// Once the storage is failing, the remaining records are handed back
+	// instead of each spending its own retry budget.
+	require.Len(t, response.BatchItemFailures, 3)
+	require.Equal(t, 0, countRows(t, db, `SELECT COUNT(*) FROM read_model_positions`))
+}
+
+func TestRecoveryService_RecoverPendingSkipsOtherProjectionsAndStores(t *testing.T) {
+	ctx := context.Background()
+	db := newReadModelTestDB(t)
+	fixture := newReadModelFixture(t)
+	journal := &fakeJournalReader{events: map[string][]JournalEvent{
+		fixture.aid(): journalEvents(fixture.aid(), fixture.create, fixture.addMember),
+	}}
+	store := &fakeRecoveryTaskStore{tasks: []RecoveryTask{
+		{StoreID: "store-1", ProjectionName: ProjectionName, ProjectionVersion: ProjectionVersion,
+			AggregateID: fixture.aid(), SeqNr: 2},
+		{StoreID: "store-1", ProjectionName: "another-projection", ProjectionVersion: ProjectionVersion,
+			AggregateID: fixture.aid(), SeqNr: 2},
+		{StoreID: "another-store", ProjectionName: ProjectionName, ProjectionVersion: ProjectionVersion,
+			AggregateID: fixture.aid(), SeqNr: 2},
+	}}
+	applier := NewApplier(NewGroupChatDaoImpl(db), journal, 1)
+	recovery := NewRecoveryService(store, staticStoreID{"store-1"}, applier)
+
+	completed, err := recovery.RecoverPending(ctx)
+	require.NoError(t, err)
+	require.Equal(t, 1, completed)
+	require.Equal(t, int64(2), readModelPosition(t, db, fixture.aid()))
+	require.Len(t, store.completed, 1)
+}
+
+func TestResync_TransientScanErrorIsRetryable(t *testing.T) {
+	scanner := &fakeHeadScanner{err: errors.New("connection reset")}
+	resyncer := NewResyncer(nil, scanner, nil)
+
+	_, err := resyncer.Resync(context.Background())
+	require.Error(t, err)
+	var resyncErr *ResyncError
+	require.ErrorAs(t, err, &resyncErr)
+	require.Error(t, resyncErr.Scan)
+	require.True(t, IsRetryable(err))
+
+	permanentOnly := &ResyncError{Permanent: []error{
+		permanent(FailureKindEventPayload, errors.New("bad payload")),
+	}}
+	require.False(t, IsRetryable(permanentOnly))
+	_, isPermanent := ClassifyFailure(permanentOnly)
+	require.False(t, isPermanent)
+}
+
+func TestResync_RecoveryStoreFailureAbortsScanAndIsRetryable(t *testing.T) {
+	ctx := context.Background()
+	db := newReadModelTestDB(t)
+	broken := newReadModelFixture(t)
+	healthy := newReadModelFixture(t)
+	corrupt := corruptHeadEvent(2)
+	journal := &fakeJournalReader{events: map[string][]JournalEvent{
+		broken.aid():  journalEvents(broken.aid(), broken.create, corrupt),
+		healthy.aid(): journalEvents(healthy.aid(), healthy.create, healthy.addMember),
+	}}
+	store := &fakeRecoveryTaskStore{recordErr: errors.New("recovery table is unavailable")}
+	applier := NewApplier(NewGroupChatDaoImpl(db), journal, 1)
+	recovery := NewRecoveryService(store, staticStoreID{"store-1"}, applier)
+	scanner := &fakeHeadScanner{heads: []Head{
+		{AggregateID: broken.aid(), TypeName: models.GroupChatIdPrefix, SeqNr: 2},
+		{AggregateID: healthy.aid(), TypeName: models.GroupChatIdPrefix, SeqNr: 2},
+	}}
+	resyncer := NewResyncer(applier, scanner, recovery)
+
+	_, err := resyncer.Resync(ctx)
+	require.Error(t, err)
+	var resyncErr *ResyncError
+	require.ErrorAs(t, err, &resyncErr)
+	require.Error(t, resyncErr.Scan)
+	require.True(t, IsRetryable(err))
+	// The scan stopped before the healthy aggregate; the next retry will get it.
+	require.Equal(t, 0, countRows(t, db,
+		`SELECT COUNT(*) FROM read_model_positions WHERE aggregate_id = ?`, healthy.aid()))
+}
+
 func corruptHeadEvent(seqNr int64) headEvent {
 	return headEvent{
 		seqNr:      seqNr,
