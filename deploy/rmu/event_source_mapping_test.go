@@ -5,6 +5,8 @@ import (
 	"cqrs-es-example-go/pkg/rmu"
 	"encoding/json"
 	"os"
+	"regexp"
+	"strconv"
 	"testing"
 	"time"
 
@@ -43,6 +45,13 @@ type deployConfig struct {
 		FunctionResponseTypes []string `json:"functionResponseTypes"`
 		MaximumRetryAttempts  int      `json:"maximumRetryAttempts"`
 	} `json:"recoveryWorkerEventSourceMapping"`
+	RecoveryWorkerSchedule struct {
+		RuleName               string `json:"ruleName"`
+		ScheduleExpression     string `json:"scheduleExpression"`
+		State                  string `json:"state"`
+		MaximumRetryAttempts   int    `json:"maximumRetryAttempts"`
+		MaximumEventAgeSeconds int    `json:"maximumEventAgeSeconds"`
+	} `json:"recoveryWorkerSchedule"`
 }
 
 func TestEventSourceMappingMatchesHandlerContract(t *testing.T) {
@@ -94,6 +103,31 @@ func TestMappingSettingsStayInsideServiceLimits(t *testing.T) {
 	// times the function timeout.
 	require.GreaterOrEqual(t, cfg.FailureQueue.VisibilityTimeoutSeconds, cfg.RecoveryWorkerFunction.TimeoutSeconds)
 	require.LessOrEqual(t, cfg.FailureQueue.VisibilityTimeoutSeconds, 43200)
+}
+
+func TestRecoveryScheduleActsAsNotificationSafetyNet(t *testing.T) {
+	cfg := loadDeployConfig(t)
+
+	schedule := cfg.RecoveryWorkerSchedule
+	require.NotEmpty(t, schedule.RuleName)
+	require.Equal(t, "ENABLED", schedule.State)
+	require.GreaterOrEqual(t, schedule.MaximumRetryAttempts, 0)
+	require.LessOrEqual(t, schedule.MaximumRetryAttempts, 185)
+	require.GreaterOrEqual(t, schedule.MaximumEventAgeSeconds, 60)
+	require.LessOrEqual(t, schedule.MaximumEventAgeSeconds, 86400)
+
+	// The schedule is the safety net for a lost SQS notification. A long
+	// interval would leave a failed event unapplied for too long.
+	matches := regexp.MustCompile(`^rate\((\d+) minutes?\)$`).FindStringSubmatch(schedule.ScheduleExpression)
+	require.NotNil(t, matches, "scheduleExpression must be a rate in minutes: %s", schedule.ScheduleExpression)
+	minutes, err := strconv.Atoi(matches[1])
+	require.NoError(t, err)
+	require.LessOrEqual(t, minutes, 15)
+	require.GreaterOrEqual(t, minutes, 1)
+
+	// The recovery worker must be allowed to finish one pass, which now has a
+	// bounded number of tasks, inside the Lambda timeout.
+	require.GreaterOrEqual(t, cfg.RecoveryWorkerFunction.TimeoutSeconds, 60)
 }
 
 func loadDeployConfig(t *testing.T) deployConfig {

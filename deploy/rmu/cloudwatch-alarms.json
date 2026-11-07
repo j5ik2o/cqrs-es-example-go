@@ -1,0 +1,140 @@
+{
+  "version": 1,
+  "namespace": "CQRSEsExampleGo/RMU",
+  "metricFilters": [
+    {
+      "name": "rmu-recovery-pending-tasks",
+      "pattern": "{ $.msg = \"recovery pass finished\" }",
+      "metricName": "RecoveryPendingTasks",
+      "metricValue": "$.pending",
+      "defaultValue": 0
+    },
+    {
+      "name": "rmu-recovery-deferred-passes",
+      "pattern": "{ $.msg = \"recovery pass finished\" }",
+      "metricName": "RecoveryDeferredPasses",
+      "metricValue": "$.deferred",
+      "defaultValue": 0
+    },
+    {
+      "name": "rmu-recovery-task-failures",
+      "pattern": "{ $.msg = \"recovery pass finished\" }",
+      "metricName": "RecoveryTaskFailures",
+      "metricValue": "$.task_failures",
+      "defaultValue": 0
+    },
+    {
+      "name": "rmu-recovery-resync-failures",
+      "pattern": "{ $.msg = \"recovery pass finished\" }",
+      "metricName": "RecoveryResyncFailures",
+      "metricValue": "$.resync_failed",
+      "defaultValue": 0
+    }
+  ],
+  "alarms": [
+    {
+      "name": "rmu-recovery-pending-tasks",
+      "description": "Recovery tasks stayed pending for 15 minutes. Check failure_type and error_message in read_model_recovery_tasks.",
+      "namespace": "CQRSEsExampleGo/RMU",
+      "metricName": "RecoveryPendingTasks",
+      "statistic": "Maximum",
+      "periodSeconds": 300,
+      "evaluationPeriods": 3,
+      "datapointsToAlarm": 3,
+      "threshold": 0,
+      "comparisonOperator": "GreaterThanThreshold",
+      "treatMissingData": "notBreaching"
+    },
+    {
+      "name": "rmu-recovery-deferred-passes",
+      "description": "A recovery pass reached RECOVERY_MAX_TASKS_PER_PASS. Raise the limit or investigate tasks that never complete.",
+      "namespace": "CQRSEsExampleGo/RMU",
+      "metricName": "RecoveryDeferredPasses",
+      "statistic": "Maximum",
+      "periodSeconds": 300,
+      "evaluationPeriods": 1,
+      "threshold": 0,
+      "comparisonOperator": "GreaterThanThreshold",
+      "treatMissingData": "notBreaching"
+    },
+    {
+      "name": "rmu-recovery-task-failures",
+      "description": "Replaying a recovery task failed. The task stays pending and the next scheduled run retries it.",
+      "namespace": "CQRSEsExampleGo/RMU",
+      "metricName": "RecoveryTaskFailures",
+      "statistic": "Sum",
+      "periodSeconds": 300,
+      "evaluationPeriods": 1,
+      "threshold": 0,
+      "comparisonOperator": "GreaterThanThreshold",
+      "treatMissingData": "notBreaching"
+    },
+    {
+      "name": "rmu-recovery-resync-failures",
+      "description": "The head scan or the journal catch-up failed. Check the recovery worker log for the scan error.",
+      "namespace": "CQRSEsExampleGo/RMU",
+      "metricName": "RecoveryResyncFailures",
+      "statistic": "Sum",
+      "periodSeconds": 300,
+      "evaluationPeriods": 1,
+      "threshold": 0,
+      "comparisonOperator": "GreaterThanThreshold",
+      "treatMissingData": "notBreaching"
+    },
+    {
+      "name": "rmu-function-errors",
+      "description": "The RMU Lambda returned an error. Records may have reached the failure queue; run a recovery pass.",
+      "namespace": "AWS/Lambda",
+      "metricName": "Errors",
+      "dimensions": [
+        {
+          "name": "FunctionName",
+          "valueFrom": "rmuFunction"
+        }
+      ],
+      "statistic": "Sum",
+      "periodSeconds": 300,
+      "evaluationPeriods": 1,
+      "threshold": 0,
+      "comparisonOperator": "GreaterThanThreshold",
+      "treatMissingData": "notBreaching"
+    },
+    {
+      "name": "rmu-recovery-worker-errors",
+      "description": "The recovery worker failed to finish a pass, including the scheduled safety-net run.",
+      "namespace": "AWS/Lambda",
+      "metricName": "Errors",
+      "dimensions": [
+        {
+          "name": "FunctionName",
+          "valueFrom": "recoveryFunction"
+        }
+      ],
+      "statistic": "Sum",
+      "periodSeconds": 300,
+      "evaluationPeriods": 1,
+      "threshold": 0,
+      "comparisonOperator": "GreaterThanThreshold",
+      "treatMissingData": "notBreaching"
+    },
+    {
+      "name": "rmu-failure-queue-backlog",
+      "description": "Failed stream batches waited in the failure queue for 15 minutes. Check the recovery worker log and the queue consumer.",
+      "namespace": "AWS/SQS",
+      "metricName": "ApproximateNumberOfMessagesVisible",
+      "dimensions": [
+        {
+          "name": "QueueName",
+          "valueFrom": "failureQueueName"
+        }
+      ],
+      "statistic": "Maximum",
+      "periodSeconds": 300,
+      "evaluationPeriods": 3,
+      "datapointsToAlarm": 3,
+      "threshold": 0,
+      "comparisonOperator": "GreaterThanThreshold",
+      "treatMissingData": "notBreaching"
+    }
+  ]
+}

@@ -30,8 +30,9 @@ Options:
   -h, --help                  Show this help.
 
 The script reads event-source-mapping.json next to it. It sets the function
-timeout and image command, the queue attributes, and both event source
-mappings. It does not change function environment variables.
+timeout and image command, the queue attributes, both event source mappings,
+and the EventBridge schedule that runs the recovery worker when an SQS
+notification is lost. It does not change function environment variables.
 USAGE
 }
 
@@ -131,6 +132,11 @@ if [[ ${#WORKER_RESPONSE_TYPES[@]} -eq 0 ]]; then
   exit 1
 fi
 WORKER_MAX_RETRY=$(value '.recoveryWorkerEventSourceMapping.maximumRetryAttempts')
+SCHEDULE_RULE=$(value '.recoveryWorkerSchedule.ruleName')
+SCHEDULE_EXPRESSION=$(value '.recoveryWorkerSchedule.scheduleExpression')
+SCHEDULE_STATE=$(value '.recoveryWorkerSchedule.state')
+SCHEDULE_MAX_RETRY=$(value '.recoveryWorkerSchedule.maximumRetryAttempts')
+SCHEDULE_MAX_AGE=$(value '.recoveryWorkerSchedule.maximumEventAgeSeconds')
 
 if [[ "$HEAD_BISECT" == "true" ]]; then
   BISECT_FLAG="--bisect-batch-on-function-error"
@@ -143,6 +149,7 @@ echo "failure queue:       ${FAILURE_QUEUE_URL} (retention ${QUEUE_RETENTION}s, 
 echo "head stream mapping: ${HEAD_STREAM_ARN} (batch ${HEAD_BATCH}, bisect ${HEAD_BISECT}, ${HEAD_RESPONSE_TYPES[*]}, retries ${HEAD_MAX_RETRY}, max age ${HEAD_MAX_AGE}s)"
 echo "recovery worker:     ${RECOVERY_FUNCTION} (timeout ${WORKER_TIMEOUT}s, image command ${WORKER_COMMAND})"
 echo "worker mapping:      ${FAILURE_QUEUE_URL} (batch ${WORKER_BATCH}, ${WORKER_RESPONSE_TYPES[*]}, retries ${WORKER_MAX_RETRY})"
+echo "recovery schedule:   ${SCHEDULE_RULE} (${SCHEDULE_EXPRESSION}, ${SCHEDULE_STATE}, retries ${SCHEDULE_MAX_RETRY}, max age ${SCHEDULE_MAX_AGE}s)"
 
 if [[ "$APPLY" != "true" ]]; then
   echo
@@ -218,6 +225,37 @@ else
     --batch-size "$WORKER_BATCH" \
     --function-response-types "${WORKER_RESPONSE_TYPES[@]}" \
     --maximum-retry-attempts "$WORKER_MAX_RETRY"
+fi
+
+# The schedule is the safety net for a lost SQS notification. The worker
+# ignores the event body and replays the pending tasks in MySQL.
+RULE_ARN=$(aws events put-rule \
+  --name "$SCHEDULE_RULE" \
+  --schedule-expression "$SCHEDULE_EXPRESSION" \
+  --state "$SCHEDULE_STATE" \
+  --query 'RuleArn' \
+  --output text)
+
+WORKER_ARN=$(aws lambda get-function-configuration \
+  --function-name "$RECOVERY_FUNCTION" \
+  --query 'FunctionArn' \
+  --output text)
+
+aws events put-targets \
+  --rule "$SCHEDULE_RULE" \
+  --targets "Id=recovery-worker,Arn=${WORKER_ARN},RetryPolicy={\"MaximumRetryAttempts\":${SCHEDULE_MAX_RETRY},\"MaximumEventAgeInSeconds\":${SCHEDULE_MAX_AGE}}"
+
+if ! PERMISSION_OUTPUT=$(aws lambda add-permission \
+  --function-name "$RECOVERY_FUNCTION" \
+  --statement-id "$SCHEDULE_RULE" \
+  --action lambda:InvokeFunction \
+  --principal events.amazonaws.com \
+  --source-arn "$RULE_ARN" 2>&1); then
+  # add-permission is not idempotent. A statement from an earlier run is fine.
+  if [[ "$PERMISSION_OUTPUT" != *ResourceConflictException* ]]; then
+    echo "$PERMISSION_OUTPUT" >&2
+    exit 1
+  fi
 fi
 
 echo

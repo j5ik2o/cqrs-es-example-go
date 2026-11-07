@@ -31,5 +31,12 @@
       "ReportBatchItemFailures"
     ],
     "maximumRetryAttempts": 3
+  },
+  "recoveryWorkerSchedule": {
+    "ruleName": "cqrs-es-example-go-rmu-recovery-schedule",
+    "scheduleExpression": "rate(5 minutes)",
+    "state": "ENABLED",
+    "maximumRetryAttempts": 2,
+    "maximumEventAgeSeconds": 3600
   }
 }

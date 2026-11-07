@@ -24,6 +24,8 @@ func newRecoveryPass(ctx context.Context) (*rmu.RecoveryPass, func(), error) {
 	journalTableName := env.String("journal", "PERSISTENCE_JOURNAL_TABLE_NAME")
 	headTableName := env.String("head", "PERSISTENCE_HEAD_TABLE_NAME")
 	maxEventsPerTransaction := env.Int(1, "PERSISTENCE_MAX_EVENTS_PER_TRANSACTION")
+	taskLimit := rmu.NormalizeRecoveryTaskLimit(
+		env.Int(rmu.DefaultRecoveryTaskLimit, "RECOVERY_MAX_TASKS_PER_PASS"))
 
 	awsCfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
@@ -46,7 +48,8 @@ func newRecoveryPass(ctx context.Context) (*rmu.RecoveryPass, func(), error) {
 	headScanner := rmu.NewDynamoDBHeadScanner(dynamodbClient, headTableName)
 	applier := rmu.NewApplier(dao, journalReader, maxEventsPerTransaction)
 	recoveryService := rmu.NewRecoveryService(
-		rmu.NewMySQLRecoveryTaskStore(db), headScanner, applier)
+		rmu.NewMySQLRecoveryTaskStore(db), headScanner, applier,
+		rmu.WithRecoveryTaskLimit(taskLimit))
 	resyncer := rmu.NewResyncer(applier, headScanner, recoveryService)
 	return rmu.NewRecoveryPass(resyncer, recoveryService), closeDB, nil
 }

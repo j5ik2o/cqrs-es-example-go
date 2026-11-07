@@ -4,7 +4,41 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 )
+
+const (
+	// DefaultRecoveryTaskLimit bounds one recovery pass so it fits inside the
+	// Lambda timeout. Tasks beyond the bound are deferred to the next run.
+	DefaultRecoveryTaskLimit = 100
+	// MaxRecoveryTaskLimit is the largest accepted bound. A bigger value is
+	// clamped, not rejected, so a bad environment variable cannot stall the
+	// worker forever.
+	MaxRecoveryTaskLimit = 1000
+)
+
+// NormalizeRecoveryTaskLimit keeps the configured bound inside the range one
+// pass can finish. Zero, negative, and oversized values fall back to the
+// nearest bound.
+func NormalizeRecoveryTaskLimit(limit int) int {
+	if limit <= 0 {
+		return DefaultRecoveryTaskLimit
+	}
+	if limit > MaxRecoveryTaskLimit {
+		return MaxRecoveryTaskLimit
+	}
+	return limit
+}
+
+// RecoveryPendingResult summarises one pending-task replay. Pending is the
+// count left in the table after the pass, so it includes tasks that failed.
+type RecoveryPendingResult struct {
+	Completed int
+	Failed    int
+	Pending   int
+	Deferred  bool
+	Limit     int
+}
 
 // RecoveryService records failed events and replays them from the journal. It is
 // the DLQ half of the RMU contract: the task is durable, the replay is
@@ -17,6 +51,7 @@ type RecoveryService struct {
 	applier           *Applier
 	projectionName    string
 	projectionVersion string
+	taskLimit         int
 }
 
 type RecoveryOption func(*RecoveryService)
@@ -28,6 +63,14 @@ func WithProjection(name, version string) RecoveryOption {
 	}
 }
 
+// WithRecoveryTaskLimit bounds how many pending tasks one pass processes. The
+// value is normalised, so an invalid setting cannot remove the bound.
+func WithRecoveryTaskLimit(limit int) RecoveryOption {
+	return func(s *RecoveryService) {
+		s.taskLimit = NormalizeRecoveryTaskLimit(limit)
+	}
+}
+
 func NewRecoveryService(store RecoveryTaskStore, storeID StoreIDProvider, applier *Applier, opts ...RecoveryOption) *RecoveryService {
 	service := &RecoveryService{
 		store:             store,
@@ -35,6 +78,7 @@ func NewRecoveryService(store RecoveryTaskStore, storeID StoreIDProvider, applie
 		applier:           applier,
 		projectionName:    ProjectionName,
 		projectionVersion: ProjectionVersion,
+		taskLimit:         DefaultRecoveryTaskLimit,
 	}
 	for _, opt := range opts {
 		opt(service)
@@ -113,34 +157,54 @@ func (s *RecoveryService) Recover(ctx context.Context, task RecoveryTask) error 
 	return nil
 }
 
-// RecoverPending replays every pending task and returns the tasks that still
-// fail. One failing aggregate does not stop the others.
-func (s *RecoveryService) RecoverPending(ctx context.Context) (int, error) {
+// RecoverPending replays pending tasks in creation order and returns the tasks
+// that still fail. One failing aggregate does not stop the others. The pass
+// reads at most one task beyond the limit to detect leftovers; the extra task
+// and everything after it stay pending for the next run.
+func (s *RecoveryService) RecoverPending(ctx context.Context) (RecoveryPendingResult, error) {
 	if s == nil {
-		return 0, nil
-	}
-	tasks, err := s.store.ListPending(ctx)
-	if err != nil {
-		return 0, fmt.Errorf("list recovery tasks: %w", err)
+		return RecoveryPendingResult{}, nil
 	}
 	storeID, err := s.storeID.StoreID(ctx)
 	if err != nil {
-		return 0, fmt.Errorf("read store id for recovery tasks: %w", err)
+		return RecoveryPendingResult{}, fmt.Errorf("read store id for recovery tasks: %w", err)
 	}
-	completed := 0
+	limit := NormalizeRecoveryTaskLimit(s.taskLimit)
+	filter := RecoveryTaskFilter{
+		StoreID:           storeID,
+		ProjectionName:    s.projectionName,
+		ProjectionVersion: s.projectionVersion,
+	}
+	tasks, err := s.store.ListPending(ctx, RecoveryTaskFilter{
+		StoreID:           filter.StoreID,
+		ProjectionName:    filter.ProjectionName,
+		ProjectionVersion: filter.ProjectionVersion,
+		Limit:             limit + 1,
+	})
+	if err != nil {
+		return RecoveryPendingResult{}, fmt.Errorf("list recovery tasks: %w", err)
+	}
+	result := RecoveryPendingResult{Limit: limit, Deferred: len(tasks) > limit}
+	if result.Deferred {
+		tasks = tasks[:limit]
+	}
 	var errs []error
 	for _, task := range tasks {
-		// Tasks of another projection or store are not this worker's work.
-		// Skipping them keeps a shared table from blocking every run.
-		if task.ProjectionName != s.projectionName || task.ProjectionVersion != s.projectionVersion ||
-			task.StoreID != storeID {
-			continue
-		}
 		if err := s.Recover(ctx, task); err != nil {
+			result.Failed++
 			errs = append(errs, err)
 			continue
 		}
-		completed++
+		result.Completed++
 	}
-	return completed, errors.Join(errs...)
+	pending, countErr := s.store.CountPending(ctx, filter)
+	if countErr != nil {
+		errs = append(errs, fmt.Errorf("count pending recovery tasks: %w", countErr))
+	}
+	result.Pending = pending
+	if result.Deferred {
+		slog.Warn("recovery task limit reached; remaining tasks are deferred to the next run",
+			"limit", limit, "completed", result.Completed, "pending", pending)
+	}
+	return result, errors.Join(errs...)
 }

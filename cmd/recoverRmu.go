@@ -37,7 +37,14 @@ var recoverRmuCmd = &cobra.Command{
 			"advanced", result.Resync.Advanced,
 			"skipped", result.Resync.Skipped,
 			"failed", result.Resync.Failed,
-			"completed", result.Completed)
+			"completed", result.Recovery.Completed,
+			"pending", result.Recovery.Pending,
+			"task_failures", result.Recovery.Failed,
+			"deferred", result.Recovery.Deferred)
+		if result.Recovery.Deferred {
+			slog.Warn("recovery run reached the task limit; rerun to continue",
+				"limit", result.Recovery.Limit, "pending", result.Recovery.Pending)
+		}
 		if runErr != nil {
 			slog.Error("some heads or recovery tasks remain unresolved", "error", runErr)
 			os.Exit(1)
