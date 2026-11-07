@@ -164,11 +164,13 @@ aws lambda update-function-configuration \
   --function-name "$RMU_FUNCTION" \
   --timeout "$RMU_TIMEOUT" \
   --image-config "{\"Command\":[\"${RMU_COMMAND}\"]}"
+aws lambda wait function-updated-v2 --function-name "$RMU_FUNCTION"
 
 aws lambda update-function-configuration \
   --function-name "$RECOVERY_FUNCTION" \
   --timeout "$WORKER_TIMEOUT" \
   --image-config "{\"Command\":[\"${WORKER_COMMAND}\"]}"
+aws lambda wait function-updated-v2 --function-name "$RECOVERY_FUNCTION"
 
 HEAD_MAPPING_UUID=$(aws lambda list-event-source-mappings \
   --function-name "$RMU_FUNCTION" \
