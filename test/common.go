@@ -3,6 +3,12 @@ package test
 import (
 	"context"
 	"fmt"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/mysql"
@@ -45,6 +51,97 @@ func CreateLocalStackContainer(ctx context.Context) (*localstack.LocalStackConta
 		}),
 	)
 	return container, err
+}
+
+func CreateDynamoDBClient(t *testing.T, ctx context.Context, l *localstack.LocalStackContainer) (*dynamodb.Client, error) {
+	endpoint, err := l.PortEndpoint(ctx, "4566/tcp", "http")
+	if err != nil {
+		return nil, err
+	}
+
+	awsCfg, err := config.LoadDefaultConfig(ctx,
+		config.WithRegion("us-east-1"),
+		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider("x", "x", "x")),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	client := dynamodb.NewFromConfig(awsCfg, func(options *dynamodb.Options) {
+		options.BaseEndpoint = aws.String(endpoint)
+	})
+	t.Log("created dynamodb client")
+	return client, nil
+}
+
+// CreateJournalTable creates the v5 journal table. Streams stay enabled while the
+// read model updater still consumes the journal; #668 moves it to the head table.
+func CreateJournalTable(t *testing.T, ctx context.Context, client *dynamodb.Client, tableName string) error {
+	t.Helper()
+	_, err := client.CreateTable(ctx, &dynamodb.CreateTableInput{
+		TableName: aws.String(tableName),
+		AttributeDefinitions: []types.AttributeDefinition{
+			{AttributeName: aws.String("aid"), AttributeType: types.ScalarAttributeTypeS},
+			{AttributeName: aws.String("seq_nr"), AttributeType: types.ScalarAttributeTypeN},
+		},
+		KeySchema: []types.KeySchemaElement{
+			{AttributeName: aws.String("aid"), KeyType: types.KeyTypeHash},
+			{AttributeName: aws.String("seq_nr"), KeyType: types.KeyTypeRange},
+		},
+		BillingMode: types.BillingModePayPerRequest,
+		StreamSpecification: &types.StreamSpecification{
+			StreamEnabled:  aws.Bool(true),
+			StreamViewType: types.StreamViewTypeNewImage,
+		},
+	})
+	return err
+}
+
+func CreateSnapshotTable(t *testing.T, ctx context.Context, client *dynamodb.Client, tableName string, historyIndexName string) error {
+	t.Helper()
+	_, err := client.CreateTable(ctx, &dynamodb.CreateTableInput{
+		TableName: aws.String(tableName),
+		AttributeDefinitions: []types.AttributeDefinition{
+			{AttributeName: aws.String("aid"), AttributeType: types.ScalarAttributeTypeS},
+			{AttributeName: aws.String("skey"), AttributeType: types.ScalarAttributeTypeN},
+			{AttributeName: aws.String("active_history_seq_nr"), AttributeType: types.ScalarAttributeTypeN},
+		},
+		KeySchema: []types.KeySchemaElement{
+			{AttributeName: aws.String("aid"), KeyType: types.KeyTypeHash},
+			{AttributeName: aws.String("skey"), KeyType: types.KeyTypeRange},
+		},
+		BillingMode: types.BillingModePayPerRequest,
+		GlobalSecondaryIndexes: []types.GlobalSecondaryIndex{
+			{
+				IndexName: aws.String(historyIndexName),
+				KeySchema: []types.KeySchemaElement{
+					{AttributeName: aws.String("aid"), KeyType: types.KeyTypeHash},
+					{AttributeName: aws.String("active_history_seq_nr"), KeyType: types.KeyTypeRange},
+				},
+				Projection: &types.Projection{ProjectionType: types.ProjectionTypeKeysOnly},
+			},
+		},
+	})
+	return err
+}
+
+func CreateHeadTable(t *testing.T, ctx context.Context, client *dynamodb.Client, tableName string) error {
+	t.Helper()
+	_, err := client.CreateTable(ctx, &dynamodb.CreateTableInput{
+		TableName: aws.String(tableName),
+		AttributeDefinitions: []types.AttributeDefinition{
+			{AttributeName: aws.String("aid"), AttributeType: types.ScalarAttributeTypeS},
+		},
+		KeySchema: []types.KeySchemaElement{
+			{AttributeName: aws.String("aid"), KeyType: types.KeyTypeHash},
+		},
+		BillingMode: types.BillingModePayPerRequest,
+		StreamSpecification: &types.StreamSpecification{
+			StreamEnabled:  aws.Bool(true),
+			StreamViewType: types.StreamViewTypeNewImage,
+		},
+	})
+	return err
 }
 
 func GetDataSourceName(port network.Port) string {

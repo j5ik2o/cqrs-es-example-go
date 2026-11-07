@@ -6,7 +6,6 @@ import (
 	"cqrs-es-example-go/pkg/command/domain/models"
 	"fmt"
 	gt "github.com/barweiss/go-tuple"
-	esa "github.com/j5ik2o/event-store-adapter-go/pkg"
 	"github.com/samber/mo"
 )
 
@@ -27,7 +26,7 @@ func (g *GroupChat) Equals(other *GroupChat) bool {
 }
 
 // ReplayGroupChat replays the events to the aggregate.
-func ReplayGroupChat(events []esa.Event, snapshot GroupChat) GroupChat {
+func ReplayGroupChat(events []events.GroupChatEvent, snapshot GroupChat) GroupChat {
 	result := snapshot
 	for _, event := range events {
 		result = result.ApplyEvent(event)
@@ -36,7 +35,7 @@ func ReplayGroupChat(events []esa.Event, snapshot GroupChat) GroupChat {
 }
 
 // ApplyEvent applies the event to the aggregate.
-func (g *GroupChat) ApplyEvent(event esa.Event) GroupChat {
+func (g *GroupChat) ApplyEvent(event events.GroupChatEvent) GroupChat {
 	switch e := event.(type) {
 	case *events.GroupChatCreated:
 		id := e.GetAggregateId().(*models.GroupChatId)
@@ -111,7 +110,7 @@ func (g *GroupChat) ToJSON() map[string]interface{} {
 }
 
 // GetId returns the aggregate GetId.
-func (g *GroupChat) GetId() esa.AggregateId {
+func (g *GroupChat) GetId() events.AggregateId {
 	return &g.id
 }
 
@@ -183,7 +182,7 @@ func (g *GroupChat) WithMessages(messages models.Messages) GroupChat {
 //
 // # Returns:
 // - The new aggregate
-func (g *GroupChat) WithVersion(version uint64) esa.Aggregate {
+func (g *GroupChat) WithVersion(version uint64) *GroupChat {
 	instance := NewGroupChatFrom(g.id, g.name, g.members, g.messages, g.seqNr, version, g.deleted)
 	return &instance
 }

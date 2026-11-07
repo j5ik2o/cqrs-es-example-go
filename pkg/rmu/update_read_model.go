@@ -9,7 +9,6 @@ import (
 	"fmt"
 	dynamodbevents "github.com/aws/aws-lambda-go/events"
 	_ "github.com/go-sql-driver/mysql"
-	esa "github.com/j5ik2o/event-store-adapter-go/pkg"
 	"github.com/samber/mo"
 	"log/slog"
 	"strings"
@@ -243,15 +242,15 @@ func getTypeString(bytes []byte) mo.Result[string] {
 	return mo.Ok(typeValue)
 }
 
-func convertGroupChatEvent(payloadBytes []byte) mo.Result[esa.Event] {
+func convertGroupChatEvent(payloadBytes []byte) mo.Result[events.GroupChatEvent] {
 	var parsed map[string]interface{}
 	err := json.Unmarshal(payloadBytes, &parsed)
 	if err != nil {
-		mo.Err[esa.Event](err)
+		return mo.Err[events.GroupChatEvent](err)
 	}
 	event, err := repository.EventConverter(parsed)
 	if err != nil {
-		mo.Err[esa.Event](err)
+		return mo.Err[events.GroupChatEvent](err)
 	}
 	return mo.Ok(event)
 }
