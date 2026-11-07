@@ -1,68 +1,12 @@
 #!/usr/bin/env bash
 
-set -ue
+set -u
 
-ADMIN_ID=${ADMIN_ID:-UserAccount-01H42K4ABWQ5V2XQEP3A48VE0Z}
-USER_ACCOUNT_ID=${USER_ACCOUNT_ID:-UserAccount-01H7C6DWMK1BKS1JYH1XZE529M}
-WRITE_API_SERVER_BASE_URL=${WRITE_API_SERVER_BASE_URL:-http://localhost:28080}
-READ_API_SERVER_BASE_URL=${READ_API_SERVER_BASE_URL:-http://localhost:28082}
-POLL_ATTEMPTS=${POLL_ATTEMPTS:-90}
-POLL_INTERVAL_SECONDS=${POLL_INTERVAL_SECONDS:-2}
+source "$(dirname "$0")/common.sh"
 
-MUTATION_RESULT=""
-
-post_graphql() {
-	local base_url="$1"
-	local body="$2"
-	curl -s -X POST -H "Content-Type: application/json" "${base_url}/query" -d "${body}"
-}
-
-# run_mutation <label> <body>. Stores the raw response in MUTATION_RESULT.
-run_mutation() {
-	local label="$1"
-	local body="$2"
-	echo -e "\n${label}:"
-	local result
-	result=$(post_graphql "${WRITE_API_SERVER_BASE_URL}" "${body}")
-	if echo "${result}" | jq -e .errors > /dev/null; then
-		echo "Error: ${result}"
-		exit 1
-	fi
-	echo "Result: ${result}"
-	MUTATION_RESULT="${result}"
-}
-
-# wait_for_read <label> <body> <jq-filter>. Polls the read model so a fixed sleep
-# is not the only thing separating a write from its projection.
-wait_for_read() {
-	local label="$1"
-	local body="$2"
-	local filter="$3"
-	echo -e "\n${label}:"
-	local result=""
-	local attempt=0
-	while [ "${attempt}" -lt "${POLL_ATTEMPTS}" ]; do
-		result=$(post_graphql "${READ_API_SERVER_BASE_URL}" "${body}")
-		if echo "${result}" | jq -e .errors > /dev/null; then
-			# A 404 means the RMU has not projected the event yet; keep polling.
-			if echo "${result}" | jq -e '.errors | all(.extensions.code == "404")' > /dev/null; then
-				attempt=$((attempt + 1))
-				sleep "${POLL_INTERVAL_SECONDS}"
-				continue
-			fi
-			echo "Error: ${result}"
-			exit 1
-		fi
-		if echo "${result}" | jq -e "${filter}" > /dev/null; then
-			echo "Result: ${result}"
-			return 0
-		fi
-		attempt=$((attempt + 1))
-		sleep "${POLL_INTERVAL_SECONDS}"
-	done
-	echo "Error: timed out after ${POLL_ATTEMPTS} attempts waiting for ${label}: ${result}"
-	exit 1
-}
+echo "Waiting for the write and read APIs to accept requests"
+wait_for_api "write api" "${WRITE_API_SERVER_BASE_URL}" || exit 1
+wait_for_api "read api" "${READ_API_SERVER_BASE_URL}" || exit 1
 
 # グループチャット作成
 run_mutation "Create GroupChat(${ADMIN_ID})" "$(cat <<EOS
@@ -78,6 +22,10 @@ run_mutation "Create GroupChat(${ADMIN_ID})" "$(cat <<EOS
 EOS
 )"
 GROUP_CHAT_ID=$(echo "${MUTATION_RESULT}" | jq -r .data.createGroupChat.groupChatId)
+if [ -z "${GROUP_CHAT_ID}" ] || [ "${GROUP_CHAT_ID}" = "null" ]; then
+	echo "Error: createGroupChat returned no groupChatId: ${MUTATION_RESULT}"
+	exit 1
+fi
 
 # メンバー追加
 run_mutation "Add Member(${GROUP_CHAT_ID}, ${USER_ACCOUNT_ID}, ${ADMIN_ID})" "$(cat <<EOS
@@ -110,6 +58,10 @@ run_mutation "Post Message(${GROUP_CHAT_ID}, ${USER_ACCOUNT_ID})" "$(cat <<EOS
 EOS
 )"
 MESSAGE_ID=$(echo "${MUTATION_RESULT}" | jq -r .data.postMessage.messageId)
+if [ -z "${MESSAGE_ID}" ] || [ "${MESSAGE_ID}" = "null" ]; then
+	echo "Error: postMessage returned no messageId: ${MUTATION_RESULT}"
+	exit 1
+fi
 
 # グループチャット取得
 wait_for_read "Get GroupChat(${GROUP_CHAT_ID}, ${ADMIN_ID})" \
