@@ -1,17 +1,28 @@
 package processor
 
 import (
+	"cqrs-es-example-go/pkg/command/domain"
 	"cqrs-es-example-go/pkg/command/domain/events"
 	"cqrs-es-example-go/pkg/command/domain/models"
 	"cqrs-es-example-go/pkg/command/interfaceAdaptor/repository"
-	event_store_adapter_go "github.com/j5ik2o/event-store-adapter-go/pkg"
+	esa "github.com/j5ik2o/event-store-adapter-go/v5"
+	"github.com/j5ik2o/event-store-adapter-go/v5/memory"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
 
+func newMemoryEventStore(t *testing.T) esa.EventStore[events.GroupChatEvent, domain.GroupChat] {
+	t.Helper()
+	store, err := memory.NewStore()
+	require.NoError(t, err)
+	eventStore, err := memory.New(store, repository.NewEventSerializer(), repository.NewSnapshotSerializer())
+	require.NoError(t, err)
+	return eventStore
+}
+
 func Test_CreateGroupChat(t *testing.T) {
 	// Given
-	groupChatRepository, err := repository.NewGroupChatRepository(event_store_adapter_go.NewEventStoreOnMemory())
+	groupChatRepository, err := repository.NewGroupChatRepository(newMemoryEventStore(t))
 	require.NoError(t, err)
 	commandProcessor := NewGroupChatCommandProcessor(&groupChatRepository)
 	groupName := models.NewGroupChatName("test").MustGet()
@@ -30,7 +41,7 @@ func Test_CreateGroupChat(t *testing.T) {
 
 func Test_DeleteGroupChat(t *testing.T) {
 	// Given
-	groupChatRepository, err := repository.NewGroupChatRepository(event_store_adapter_go.NewEventStoreOnMemory())
+	groupChatRepository, err := repository.NewGroupChatRepository(newMemoryEventStore(t))
 	require.NoError(t, err)
 	commandProcessor := NewGroupChatCommandProcessor(&groupChatRepository)
 	groupName := models.NewGroupChatName("test").MustGet()
@@ -50,7 +61,7 @@ func Test_DeleteGroupChat(t *testing.T) {
 
 func Test_RenameGroupChat(t *testing.T) {
 	// Given
-	groupChatRepository, err := repository.NewGroupChatRepository(event_store_adapter_go.NewEventStoreOnMemory())
+	groupChatRepository, err := repository.NewGroupChatRepository(newMemoryEventStore(t))
 	require.NoError(t, err)
 	commandProcessor := NewGroupChatCommandProcessor(&groupChatRepository)
 	groupName := models.NewGroupChatName("test").MustGet()
@@ -72,7 +83,7 @@ func Test_RenameGroupChat(t *testing.T) {
 
 func Test_AddMember(t *testing.T) {
 	// Given
-	groupChatRepository, err := repository.NewGroupChatRepository(event_store_adapter_go.NewEventStoreOnMemory())
+	groupChatRepository, err := repository.NewGroupChatRepository(newMemoryEventStore(t))
 	require.NoError(t, err)
 	commandProcessor := NewGroupChatCommandProcessor(&groupChatRepository)
 	groupName := models.NewGroupChatName("test").MustGet()
@@ -96,7 +107,7 @@ func Test_AddMember(t *testing.T) {
 
 func Test_RemoveMember(t *testing.T) {
 	// Given
-	groupChatRepository, err := repository.NewGroupChatRepository(event_store_adapter_go.NewEventStoreOnMemory())
+	groupChatRepository, err := repository.NewGroupChatRepository(newMemoryEventStore(t))
 	require.NoError(t, err)
 	commandProcessor := NewGroupChatCommandProcessor(&groupChatRepository)
 	groupName := models.NewGroupChatName("test").MustGet()
@@ -120,7 +131,7 @@ func Test_RemoveMember(t *testing.T) {
 
 func Test_PostMessage(t *testing.T) {
 	// Given
-	groupChatRepository, err := repository.NewGroupChatRepository(event_store_adapter_go.NewEventStoreOnMemory())
+	groupChatRepository, err := repository.NewGroupChatRepository(newMemoryEventStore(t))
 	require.NoError(t, err)
 	commandProcessor := NewGroupChatCommandProcessor(&groupChatRepository)
 	groupName := models.NewGroupChatName("test").MustGet()
@@ -146,7 +157,7 @@ func Test_PostMessage(t *testing.T) {
 
 func Test_EditMessage(t *testing.T) {
 	// Give
-	groupChatRepository, err := repository.NewGroupChatRepository(event_store_adapter_go.NewEventStoreOnMemory())
+	groupChatRepository, err := repository.NewGroupChatRepository(newMemoryEventStore(t))
 	require.NoError(t, err)
 	commandProcessor := NewGroupChatCommandProcessor(&groupChatRepository)
 	groupName := models.NewGroupChatName("test").MustGet()
@@ -173,7 +184,7 @@ func Test_EditMessage(t *testing.T) {
 
 func Test_DeleteMessage(t *testing.T) {
 	// Given
-	groupChatRepository, err := repository.NewGroupChatRepository(event_store_adapter_go.NewEventStoreOnMemory())
+	groupChatRepository, err := repository.NewGroupChatRepository(newMemoryEventStore(t))
 	require.NoError(t, err)
 	commandProcessor := NewGroupChatCommandProcessor(&groupChatRepository)
 	groupName := models.NewGroupChatName("test").MustGet()

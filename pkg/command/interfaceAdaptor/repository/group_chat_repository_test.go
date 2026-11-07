@@ -7,8 +7,8 @@ import (
 	"cqrs-es-example-go/test"
 	"encoding/json"
 	"fmt"
-	esa "github.com/j5ik2o/event-store-adapter-go/pkg"
-	"github.com/j5ik2o/event-store-adapter-go/pkg/common"
+	eventstoredynamodb "github.com/j5ik2o/event-store-adapter-go/v5/dynamodb"
+	"github.com/j5ik2o/event-store-adapter-go/v5/memory"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"log/slog"
@@ -16,10 +16,10 @@ import (
 )
 
 var (
-	journalTableName     = "journal"
-	journalAidIndexName  = "journal-aid-index"
-	snapshotTableName    = "snapshot"
-	snapshotAidIndexName = "snapshot-aid-index"
+	journalTableName         = "journal"
+	snapshotTableName        = "snapshot"
+	headTableName            = "head"
+	snapshotHistoryIndexName = "snapshot-history"
 )
 
 func Test_GroupChatRepository_OnDynamoDB_FindById(t *testing.T) {
@@ -30,27 +30,30 @@ func Test_GroupChatRepository_OnDynamoDB_FindById(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotNil(t, container)
 
-	dynamodbClient, err := common.CreateDynamoDBClient(t, ctx, container)
+	dynamodbClient, err := test.CreateDynamoDBClient(t, ctx, container)
 	require.NoError(t, err)
 	assert.NotNil(t, dynamodbClient)
 
-	err = common.CreateJournalTable(t, ctx, dynamodbClient, journalTableName, journalAidIndexName)
+	err = test.CreateJournalTable(t, ctx, dynamodbClient, journalTableName)
 	require.NoError(t, err)
 
-	err = common.CreateSnapshotTable(t, ctx, dynamodbClient, snapshotTableName, snapshotAidIndexName)
+	err = test.CreateSnapshotTable(t, ctx, dynamodbClient, snapshotTableName, snapshotHistoryIndexName)
 	require.NoError(t, err)
 
-	// time.Sleep(5 * time.Second)
+	err = test.CreateHeadTable(t, ctx, dynamodbClient, headTableName)
+	require.NoError(t, err)
 
-	eventStore, err := esa.NewEventStoreOnDynamoDB(
+	eventStore, err := eventstoredynamodb.New(
+		ctx,
 		dynamodbClient,
-		journalTableName, snapshotTableName, journalAidIndexName, snapshotAidIndexName,
-		32,
-		EventConverter,
-		SnapshotConverter,
-		esa.WithEventSerializer(NewEventSerializer()),
-		esa.WithSnapshotSerializer(NewSnapshotSerializer()))
-
+		eventstoredynamodb.Config{
+			JournalTableName:         journalTableName,
+			SnapshotTableName:        snapshotTableName,
+			HeadTableName:            headTableName,
+			SnapshotHistoryIndexName: snapshotHistoryIndexName,
+		},
+		NewEventSerializer(),
+		NewSnapshotSerializer())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -110,7 +113,10 @@ func Test_GroupChatRepository_OnDynamoDB_FindById(t *testing.T) {
 }
 
 func Test_GroupChatRepository_OnMemory_FindById(t *testing.T) {
-	eventStore := esa.NewEventStoreOnMemory()
+	store, err := memory.NewStore()
+	require.NoError(t, err)
+	eventStore, err := memory.New(store, NewEventSerializer(), NewSnapshotSerializer())
+	require.NoError(t, err)
 
 	repository, err := NewGroupChatRepository(eventStore)
 	require.NoError(t, err)

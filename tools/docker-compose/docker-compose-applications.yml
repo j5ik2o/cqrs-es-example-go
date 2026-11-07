@@ -12,19 +12,21 @@ services:
       API_PORT: 8080
       API_ALLOW_ORIGINS: "http://localhost:28080,http://localhost:28082,http://localhost:8888"
       PERSISTENCE_JOURNAL_TABLE_NAME: journal
-      PERSISTENCE_JOURNAL_AID_INDEX_NAME: journal-aid-index
       PERSISTENCE_SNAPSHOT_TABLE_NAME: snapshot
-      PERSISTENCE_SNAPSHOT_AID_INDEX_NAME: snapshot-aid-index
-      PERSISTENCE_SHARD_COUNT: 64
+      PERSISTENCE_HEAD_TABLE_NAME: head
+      PERSISTENCE_SNAPSHOT_HISTORY_INDEX_NAME: snapshot-history
       PERSISTENCE_SNAPSHOT_INTERVAL: 10
       AWS_REGION_NAME: ${AWS_REGION}
       AWS_DYNAMODB_ENDPOINT_URL: http://localstack:4566
       AWS_DYNAMODB_ACCESS_KEY_ID: x
       AWS_DYNAMODB_SECRET_ACCESS_KEY: x
     depends_on:
-      - localstack
-      - dynamodb-admin
-      - dynamodb-setup
+      localstack:
+        condition: service_started
+      dynamodb-admin:
+        condition: service_started
+      dynamodb-setup:
+        condition: service_completed_successfully
   read-model-updater-1:
     command: [ "localRmu" ]
     image: cqrs-es-example-go:latest
@@ -43,9 +45,12 @@ services:
       STREAM_MAX_ITEM_COUNT: 32
       DATABASE_URL: ceer:ceer@tcp(mysql-local:3306)/ceer
     depends_on:
-      - localstack
-      - dynamodb-admin
-      - dynamodb-setup
+      localstack:
+        condition: service_started
+      dynamodb-admin:
+        condition: service_started
+      dynamodb-setup:
+        condition: service_completed_successfully
     restart: on-failure
   read-api-server-1:
     command: [ "readApi" ]

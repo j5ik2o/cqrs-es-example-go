@@ -3,7 +3,6 @@ package events
 import (
 	"cqrs-es-example-go/pkg/command/domain/models"
 	"fmt"
-	esa "github.com/j5ik2o/event-store-adapter-go/pkg"
 	"github.com/oklog/ulid/v2"
 	"time"
 )
@@ -51,7 +50,7 @@ func (g *GroupChatRenamed) GetTypeName() string {
 	return "GroupChatRenamed"
 }
 
-func (g *GroupChatRenamed) GetAggregateId() esa.AggregateId {
+func (g *GroupChatRenamed) GetAggregateId() AggregateId {
 	return &g.aggregateId
 }
 

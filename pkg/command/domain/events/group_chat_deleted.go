@@ -3,7 +3,6 @@ package events
 import (
 	"cqrs-es-example-go/pkg/command/domain/models"
 	"fmt"
-	esa "github.com/j5ik2o/event-store-adapter-go/pkg"
 	"github.com/oklog/ulid/v2"
 	"time"
 )
@@ -49,7 +48,7 @@ func (g *GroupChatDeleted) GetTypeName() string {
 	return "GroupChatDeleted"
 }
 
-func (g *GroupChatDeleted) GetAggregateId() esa.AggregateId {
+func (g *GroupChatDeleted) GetAggregateId() AggregateId {
 	return &g.aggregateId
 }
 

@@ -7,18 +7,17 @@ import (
 	"cqrs-es-example-go/pkg/command/interfaceAdaptor/repository"
 	"cqrs-es-example-go/pkg/command/processor"
 	"cqrs-es-example-go/test"
-	esa "github.com/j5ik2o/event-store-adapter-go/pkg"
-	"github.com/j5ik2o/event-store-adapter-go/pkg/common"
+	eventstoredynamodb "github.com/j5ik2o/event-store-adapter-go/v5/dynamodb"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go/modules/localstack"
 	"testing"
 )
 
 var (
-	journalTableName     = "journal"
-	journalAidIndexName  = "journal-aid-index"
-	snapshotTableName    = "snapshot"
-	snapshotAidIndexName = "snapshot-aid-index"
+	journalTableName         = "journal"
+	snapshotTableName        = "snapshot"
+	headTableName            = "head"
+	snapshotHistoryIndexName = "snapshot-history"
 )
 
 func Test_CreateGroupChat(t *testing.T) {
@@ -352,29 +351,37 @@ func Test_DeleteMessage(t *testing.T) {
 }
 
 func createResolver(t *testing.T, ctx context.Context, container *localstack.LocalStackContainer) (*repository.GroupChatRepositoryImpl, *Resolver, error) {
-	dynamodbClient, err := common.CreateDynamoDBClient(t, ctx, container)
+	dynamodbClient, err := test.CreateDynamoDBClient(t, ctx, container)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	err = common.CreateJournalTable(t, ctx, dynamodbClient, journalTableName, journalAidIndexName)
+	err = test.CreateJournalTable(t, ctx, dynamodbClient, journalTableName)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	err = common.CreateSnapshotTable(t, ctx, dynamodbClient, snapshotTableName, snapshotAidIndexName)
+	err = test.CreateSnapshotTable(t, ctx, dynamodbClient, snapshotTableName, snapshotHistoryIndexName)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	eventStore, err := esa.NewEventStoreOnDynamoDB(
+	err = test.CreateHeadTable(t, ctx, dynamodbClient, headTableName)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	eventStore, err := eventstoredynamodb.New(
+		ctx,
 		dynamodbClient,
-		journalTableName, snapshotTableName, journalAidIndexName, snapshotAidIndexName,
-		32,
-		repository.EventConverter,
-		repository.SnapshotConverter,
-		esa.WithEventSerializer(repository.NewEventSerializer()),
-		esa.WithSnapshotSerializer(repository.NewSnapshotSerializer()))
+		eventstoredynamodb.Config{
+			JournalTableName:         journalTableName,
+			SnapshotTableName:        snapshotTableName,
+			HeadTableName:            headTableName,
+			SnapshotHistoryIndexName: snapshotHistoryIndexName,
+		},
+		repository.NewEventSerializer(),
+		repository.NewSnapshotSerializer())
 	if err != nil {
 		return nil, nil, err
 	}

@@ -4,11 +4,10 @@ import (
 	"cqrs-es-example-go/pkg/command/domain/events"
 	"cqrs-es-example-go/pkg/command/domain/models"
 	"fmt"
-	esa "github.com/j5ik2o/event-store-adapter-go/pkg"
 	"log/slog"
 )
 
-func EventConverter(m map[string]interface{}) (esa.Event, error) {
+func EventConverter(m map[string]interface{}) (events.GroupChatEvent, error) {
 	slog.Info(fmt.Sprintf("EventConverter: %v", m))
 	eventId := m["id"].(string)
 	groupChatId, err := models.ConvertGroupChatIdFromJSON(m["aggregate_id"].(map[string]interface{})).Get()

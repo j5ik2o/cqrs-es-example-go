@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
-	esa "github.com/j5ik2o/event-store-adapter-go/pkg"
+	eventstoredynamodb "github.com/j5ik2o/event-store-adapter-go/v5/dynamodb"
 	"github.com/olivere/env"
 	"github.com/spf13/cobra"
 	"log/slog"
@@ -36,9 +36,8 @@ var writeApiCmd = &cobra.Command{
 		apiPort := env.Int(writeApiDefaultPort, "API_PORT")
 		journalTableName := env.String("journal", "PERSISTENCE_JOURNAL_TABLE_NAME")
 		snapshotTableName := env.String("snapshot", "PERSISTENCE_SNAPSHOT_TABLE_NAME")
-		journalAidIndexName := env.String("journal-aid-index", "PERSISTENCE_JOURNAL_AID_INDEX_NAME")
-		snapshotAidIndexName := env.String("snapshot-aid-index", "PERSISTENCE_SNAPSHOT_AID_INDEX_NAME")
-		shardCount := env.Int64(10, "PERSISTENCE_SHARD_COUNT")
+		headTableName := env.String("head", "PERSISTENCE_HEAD_TABLE_NAME")
+		snapshotHistoryIndexName := env.String("snapshot-history", "PERSISTENCE_SNAPSHOT_HISTORY_INDEX_NAME")
 		awsDynamoDBEndpointUrl := env.String("", "AWS_DYNAMODB_ENDPOINT_URL")
 		awsDynamoDBAccessKeyId := env.String("", "AWS_DYNAMODB_ACCESS_KEY_ID")
 		awsDynamoDBSecretKey := env.String("", "AWS_DYNAMODB_SECRET_ACCESS_KEY")
@@ -48,9 +47,8 @@ var writeApiCmd = &cobra.Command{
 		slog.Info(fmt.Sprintf("API_PORT = %v", apiPort))
 		slog.Info(fmt.Sprintf("PERSISTENCE_JOURNAL_TABLE_NAME = %v", journalTableName))
 		slog.Info(fmt.Sprintf("PERSISTENCE_SNAPSHOT_TABLE_NAME = %v", snapshotTableName))
-		slog.Info(fmt.Sprintf("PERSISTENCE_JOURNAL_AID_INDEX_NAME = %v", journalAidIndexName))
-		slog.Info(fmt.Sprintf("PERSISTENCE_SNAPSHOT_AID_INDEX_NAME = %v", snapshotAidIndexName))
-		slog.Info(fmt.Sprintf("PERSISTENCE_SHARD_COUNT = %v", shardCount))
+		slog.Info(fmt.Sprintf("PERSISTENCE_HEAD_TABLE_NAME = %v", headTableName))
+		slog.Info(fmt.Sprintf("PERSISTENCE_SNAPSHOT_HISTORY_INDEX_NAME = %v", snapshotHistoryIndexName))
 		slog.Info(fmt.Sprintf("AWS_DYNAMODB_ENDPOINT_URL = %v", awsDynamoDBEndpointUrl))
 		slog.Info(fmt.Sprintf("AWS_DYNAMODB_ACCESS_KEY_ID = %v", awsDynamoDBAccessKeyId))
 		slog.Info(fmt.Sprintf("AWS_DYNAMODB_SECRET_ACCESS_KEY = %v", awsDynamoDBSecretKey))
@@ -92,17 +90,17 @@ var writeApiCmd = &cobra.Command{
 
 		dynamodbClient := dynamodb.NewFromConfig(awsCfg)
 
-		eventStore, err := esa.NewEventStoreOnDynamoDB(
+		eventStore, err := eventstoredynamodb.New(
+			context.Background(),
 			dynamodbClient,
-			journalTableName,
-			snapshotTableName,
-			journalAidIndexName,
-			snapshotAidIndexName,
-			uint64(shardCount),
-			repository.EventConverter,
-			repository.SnapshotConverter,
-			esa.WithEventSerializer(repository.NewEventSerializer()),
-			esa.WithSnapshotSerializer(repository.NewSnapshotSerializer()))
+			eventstoredynamodb.Config{
+				JournalTableName:         journalTableName,
+				SnapshotTableName:        snapshotTableName,
+				HeadTableName:            headTableName,
+				SnapshotHistoryIndexName: snapshotHistoryIndexName,
+			},
+			repository.NewEventSerializer(),
+			repository.NewSnapshotSerializer())
 		if err != nil {
 			panic(err)
 		}

@@ -49,6 +49,16 @@ func (g *GroupChatId) GetTypeName() string {
 	return GroupChatIdPrefix
 }
 
+// TypeName returns the type name used by the event store adapter to build the aid.
+func (g *GroupChatId) TypeName() string {
+	return g.GetTypeName()
+}
+
+// Value returns the value used by the event store adapter to build the aid.
+func (g *GroupChatId) Value() string {
+	return g.GetValue()
+}
+
 func (g *GroupChatId) AsString() string {
 	return fmt.Sprintf("%s-%s", g.GetTypeName(), g.GetValue())
 }
