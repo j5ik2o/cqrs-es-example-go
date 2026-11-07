@@ -2,36 +2,33 @@ package events
 
 import (
 	"cqrs-es-example-go/pkg/command/domain/models"
-	esa "github.com/j5ik2o/event-store-adapter-go/v5"
+	"fmt"
 )
 
 const (
+	// SchemaVersion is the payload schema version carried in the envelope manifest.
+	SchemaVersion = 1
+
 	EventTypeGroupChatCreated        = "GroupChatCreated"
 	EventTypeGroupChatDeleted        = "GroupChatDeleted"
 	EventTypeGroupChatRenamed        = "GroupChatRenamed"
 	EventTypeGroupChatMemberAdded    = "GroupChatMemberAdded"
 	EventTypeGroupChatMemberRemoved  = "GroupChatMemberRemoved"
 	EventTypeGroupChatMessagePosted  = "GroupChatMessagePosted"
+	EventTypeGroupChatMessageEdited  = "GroupChatMessageEdited"
 	EventTypeGroupChatMessageDeleted = "GroupChatMessageDeleted"
 )
 
-// AggregateId is the aggregate identifier carried by a domain event.
-// It also satisfies esa.AggregateID so it can be placed in an event envelope.
-type AggregateId interface {
-	esa.AggregateID
-	GetTypeName() string
-	GetValue() string
-	AsString() string
-}
-
-// GroupChatEvent is a domain event for group chat.
+// GroupChatEvent is the payload of a domain event. Envelope metadata such as
+// the aggregate id, sequence number and occurrence time is not part of the payload.
 type GroupChatEvent interface {
 	GetId() string
 	GetTypeName() string
-	GetAggregateId() AggregateId
-	GetSeqNr() uint64
-	GetOccurredAt() uint64
-	IsCreated() bool
 	GetExecutorId() *models.UserAccountId
 	ToJSON() map[string]interface{}
+}
+
+// Manifest returns the envelope manifest for the event type.
+func Manifest(eventType string) string {
+	return fmt.Sprintf("%s@%d", eventType, SchemaVersion)
 }

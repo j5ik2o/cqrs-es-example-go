@@ -16,63 +16,68 @@ type GroupChat struct {
 	members  models.Members
 	messages models.Messages
 	seqNr    uint64
-	version  uint64
 	deleted  bool
 }
 
+// EventRecord pairs a domain event payload with the sequence number held by its envelope.
+type EventRecord struct {
+	Event events.GroupChatEvent
+	SeqNr uint64
+}
+
 func (g *GroupChat) Equals(other *GroupChat) bool {
-	return g.id.Equals(&other.id) && g.name.Equals(&other.name) && g.members.Equals(&other.members) && g.messages.Equals(&other.messages) && g.seqNr == other.seqNr && g.version == other.version && g.deleted == other.deleted
+	return g.id.Equals(&other.id) && g.name.Equals(&other.name) && g.members.Equals(&other.members) && g.messages.Equals(&other.messages) && g.seqNr == other.seqNr && g.deleted == other.deleted
 
 }
 
-// ReplayGroupChat replays the events to the aggregate.
-func ReplayGroupChat(events []events.GroupChatEvent, snapshot GroupChat) GroupChat {
+// ReplayGroupChat replays the event records onto the snapshot.
+func ReplayGroupChat(id models.GroupChatId, records []EventRecord, snapshot GroupChat) GroupChat {
 	result := snapshot
-	for _, event := range events {
-		result = result.ApplyEvent(event)
+	for _, record := range records {
+		result = result.ApplyEvent(id, record.Event, record.SeqNr)
 	}
 	return result
 }
 
-// ApplyEvent applies the event to the aggregate.
-func (g *GroupChat) ApplyEvent(event events.GroupChatEvent) GroupChat {
+// ApplyEvent applies the event to the aggregate. The aggregate id and sequence
+// number come from the event envelope, not from the event payload.
+func (g *GroupChat) ApplyEvent(id models.GroupChatId, event events.GroupChatEvent, seqNr uint64) GroupChat {
 	switch e := event.(type) {
 	case *events.GroupChatCreated:
-		id := e.GetAggregateId().(*models.GroupChatId)
-		return NewGroupChatFrom(*id, *e.GetName(), *e.GetMembers(), models.NewMessages(), e.GetSeqNr(), 1, false)
+		return NewGroupChatFrom(id, *e.GetName(), *e.GetMembers(), models.NewMessages(), seqNr, false)
 	case *events.GroupChatDeleted:
 		newState := g.WithDeleted()
-		newState.seqNr = e.GetSeqNr()
+		newState.seqNr = seqNr
 		return newState
 	case *events.GroupChatMemberAdded:
 		newState := g.WithMembers(g.members.AddMember(*e.GetMember().GetUserAccountId()))
-		newState.seqNr = e.GetSeqNr()
+		newState.seqNr = seqNr
 		return newState
 	case *events.GroupChatMemberRemoved:
 		newState := g.WithMembers(g.members.RemoveMemberByUserAccountId(e.GetUserAccountId()))
-		newState.seqNr = e.GetSeqNr()
+		newState.seqNr = seqNr
 		return newState
 	case *events.GroupChatRenamed:
 		newState := g.WithName(*e.GetName())
-		newState.seqNr = e.GetSeqNr()
+		newState.seqNr = seqNr
 		return newState
 	case *events.GroupChatMessagePosted:
 		messagesMap := g.messages.ToMap()
 		messagesMap[e.GetMessage().GetId().GetValue()] = *e.GetMessage()
 		newState := g.WithMessages(models.NewMessagesFromMap(messagesMap))
-		newState.seqNr = e.GetSeqNr()
+		newState.seqNr = seqNr
 		return newState
 	case *events.GroupChatMessageEdited:
 		messagesMap := g.messages.ToMap()
 		messagesMap[e.GetMessage().GetId().GetValue()] = *e.GetMessage()
 		newState := g.WithMessages(models.NewMessagesFromMap(messagesMap))
-		newState.seqNr = e.GetSeqNr()
+		newState.seqNr = seqNr
 		return newState
 	case *events.GroupChatMessageDeleted:
 		messagesMap := g.messages.ToMap()
 		delete(messagesMap, e.GetMessageId().GetValue())
 		newState := g.WithMessages(models.NewMessagesFromMap(messagesMap))
-		newState.seqNr = e.GetSeqNr()
+		newState.seqNr = seqNr
 		return newState
 	default:
 		return *g
@@ -84,14 +89,13 @@ func NewGroupChat(name models.GroupChatName, executorId models.UserAccountId) (G
 	id := models.NewGroupChatId()
 	members := models.NewMembers(executorId)
 	seqNr := uint64(1)
-	version := uint64(1)
-	event := events.NewGroupChatCreated(id, name, members, seqNr, executorId)
-	return GroupChat{id, name, members, models.NewMessages(), seqNr, version, false}, &event
+	event := events.NewGroupChatCreated(name, members, executorId)
+	return GroupChat{id, name, members, models.NewMessages(), seqNr, false}, &event
 }
 
 // NewGroupChatFrom creates a new group chat from the specified parameters.
-func NewGroupChatFrom(id models.GroupChatId, name models.GroupChatName, members models.Members, messages models.Messages, seqNr uint64, version uint64, deleted bool) GroupChat {
-	return GroupChat{id, name, members, messages, seqNr, version, deleted}
+func NewGroupChatFrom(id models.GroupChatId, name models.GroupChatName, members models.Members, messages models.Messages, seqNr uint64, deleted bool) GroupChat {
+	return GroupChat{id, name, members, messages, seqNr, deleted}
 }
 
 // ToJSON converts the aggregate to JSON.
@@ -104,13 +108,12 @@ func (g *GroupChat) ToJSON() map[string]interface{} {
 		"members":  g.members.ToJSON(),
 		"messages": g.messages.ToJSON(),
 		"seq_nr":   g.seqNr,
-		"version":  g.version,
 		"deleted":  g.deleted,
 	}
 }
 
 // GetId returns the aggregate GetId.
-func (g *GroupChat) GetId() events.AggregateId {
+func (g *GroupChat) GetId() *models.GroupChatId {
 	return &g.id
 }
 
@@ -138,12 +141,8 @@ func (g *GroupChat) GetSeqNr() uint64 {
 	return g.seqNr
 }
 
-func (g *GroupChat) GetVersion() uint64 {
-	return g.version
-}
-
 func (g *GroupChat) String() string {
-	return fmt.Sprintf("id: %s, seqNr: %d, version: %d", g.id, g.seqNr, g.version)
+	return fmt.Sprintf("id: %s, seqNr: %d", g.id, g.seqNr)
 }
 
 // IsDeleted returns whether the aggregate is deleted.
@@ -159,7 +158,7 @@ func (g *GroupChat) IsDeleted() bool {
 // # Returns:
 // - The new aggregate
 func (g *GroupChat) WithName(name models.GroupChatName) GroupChat {
-	return NewGroupChatFrom(g.id, name, g.members, g.messages, g.seqNr, g.version, g.deleted)
+	return NewGroupChatFrom(g.id, name, g.members, g.messages, g.seqNr, g.deleted)
 }
 
 // WithMembers returns a new aggregate with the specified members.
@@ -167,7 +166,7 @@ func (g *GroupChat) WithName(name models.GroupChatName) GroupChat {
 // # Returns:
 // - The new aggregate
 func (g *GroupChat) WithMembers(members models.Members) GroupChat {
-	return NewGroupChatFrom(g.id, g.name, members, g.messages, g.seqNr, g.version, g.deleted)
+	return NewGroupChatFrom(g.id, g.name, members, g.messages, g.seqNr, g.deleted)
 }
 
 // WithMessages returns a new aggregate with the specified messages.
@@ -175,16 +174,7 @@ func (g *GroupChat) WithMembers(members models.Members) GroupChat {
 // # Returns:
 // - The new aggregate
 func (g *GroupChat) WithMessages(messages models.Messages) GroupChat {
-	return NewGroupChatFrom(g.id, g.name, g.members, messages, g.seqNr, g.version, g.deleted)
-}
-
-// WithVersion returns a new aggregate with the specified version.
-//
-// # Returns:
-// - The new aggregate
-func (g *GroupChat) WithVersion(version uint64) *GroupChat {
-	instance := NewGroupChatFrom(g.id, g.name, g.members, g.messages, g.seqNr, version, g.deleted)
-	return &instance
+	return NewGroupChatFrom(g.id, g.name, g.members, messages, g.seqNr, g.deleted)
 }
 
 // WithDeleted returns a new aggregate with the deleted flag.
@@ -192,7 +182,7 @@ func (g *GroupChat) WithVersion(version uint64) *GroupChat {
 // # Returns:
 // - The new aggregate
 func (g *GroupChat) WithDeleted() GroupChat {
-	return NewGroupChatFrom(g.id, g.name, g.members, g.messages, g.seqNr, g.version, true)
+	return NewGroupChatFrom(g.id, g.name, g.members, g.messages, g.seqNr, true)
 }
 
 // AddMember adds a new member to the aggregate.
@@ -227,7 +217,7 @@ func (g *GroupChat) AddMember(
 	newMember := models.NewMember(memberId, userAccountId, role)
 	newState := g.WithMembers(g.members.AddMember(userAccountId))
 	newState.seqNr += 1
-	memberAdded := events.NewGroupChatMemberAdded(newState.id, newMember, newState.seqNr, executorId)
+	memberAdded := events.NewGroupChatMemberAdded(newMember, executorId)
 	pair := gt.New2[GroupChat, events.GroupChatEvent](newState, &memberAdded)
 	return mo.Ok(GroupChatWithEventPair(pair))
 }
@@ -257,7 +247,7 @@ func (g *GroupChat) RemoveMemberByUserAccountId(userAccountId models.UserAccount
 	}
 	newState := g.WithMembers(g.members.RemoveMemberByUserAccountId(&userAccountId))
 	newState.seqNr += 1
-	memberRemoved := events.NewGroupChatMemberRemoved(newState.id, userAccountId, newState.seqNr, executorId)
+	memberRemoved := events.NewGroupChatMemberRemoved(userAccountId, executorId)
 	pair := gt.New2[GroupChat, events.GroupChatEvent](newState, &memberRemoved)
 	return mo.Ok(GroupChatWithEventPair(pair))
 }
@@ -290,7 +280,7 @@ func (g *GroupChat) Rename(name models.GroupChatName, executorId models.UserAcco
 	}
 	newState := g.WithName(name)
 	newState.seqNr += 1
-	renamed := events.NewGroupChatRenamed(newState.id, name, newState.seqNr, executorId)
+	renamed := events.NewGroupChatRenamed(name, executorId)
 	pair := gt.New2[GroupChat, events.GroupChatEvent](newState, &renamed)
 	return mo.Ok(GroupChatWithEventPair(pair))
 }
@@ -318,7 +308,7 @@ func (g *GroupChat) Delete(executorId models.UserAccountId) mo.Result[GroupChatW
 	}
 	newState := g.WithDeleted()
 	newState.seqNr += 1
-	deleted := events.NewGroupChatDeleted(newState.id, newState.seqNr, executorId)
+	deleted := events.NewGroupChatDeleted(executorId)
 	pair := gt.New2[GroupChat, events.GroupChatEvent](newState, &deleted)
 	return mo.Ok(GroupChatWithEventPair(pair))
 }
@@ -356,7 +346,7 @@ func (g *GroupChat) PostMessage(message models.Message, executorId models.UserAc
 	}
 	newState := g.WithMessages(newMessages)
 	newState.seqNr += 1
-	messagePosted := events.NewGroupChatMessagePosted(newState.id, message, newState.seqNr, executorId)
+	messagePosted := events.NewGroupChatMessagePosted(message, executorId)
 	pair := gt.New2[GroupChat, events.GroupChatEvent](newState, &messagePosted)
 	return mo.Ok(GroupChatWithEventPair(pair))
 }
@@ -380,7 +370,7 @@ func (g *GroupChat) EditMessage(message models.Message, executorId models.UserAc
 	}
 	newState := g.WithMessages(newMessages)
 	newState.seqNr += 1
-	messageEdited := events.NewGroupChatMessageEdited(newState.id, message, newState.seqNr, executorId)
+	messageEdited := events.NewGroupChatMessageEdited(message, executorId)
 	pair := gt.New2[GroupChat, events.GroupChatEvent](newState, &messageEdited)
 	return mo.Ok(GroupChatWithEventPair(pair))
 }
@@ -407,7 +397,7 @@ func (g *GroupChat) DeleteMessage(messageId models.MessageId, executorId models.
 	}
 	newState := g.WithMessages(g.messages.Remove(&messageId, executorId).MustGet())
 	newState.seqNr += 1
-	messageDeleted := events.NewGroupChatMessageDeleted(newState.id, messageId, newState.seqNr, executorId)
+	messageDeleted := events.NewGroupChatMessageDeleted(messageId, executorId)
 	pair := gt.New2[GroupChat, events.GroupChatEvent](newState, &messageDeleted)
 	return mo.Ok(GroupChatWithEventPair(pair))
 }

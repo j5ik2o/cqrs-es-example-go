@@ -5,6 +5,7 @@ import (
 	"cqrs-es-example-go/pkg/command/domain/events"
 	"cqrs-es-example-go/pkg/command/domain/models"
 	"cqrs-es-example-go/pkg/command/interfaceAdaptor/repository"
+	gt "github.com/barweiss/go-tuple"
 	"github.com/samber/mo"
 )
 
@@ -68,177 +69,178 @@ func NewGroupChatCommandProcessor(repository repository.GroupChatRepository) Gro
 }
 
 // CreateGroupChat is the command handler for CreateGroupChat.
-func (g *GroupChatCommandProcessor) CreateGroupChat(name models.GroupChatName, executorId models.UserAccountId) mo.Result[events.GroupChatEvent] {
+func (g *GroupChatCommandProcessor) CreateGroupChat(name models.GroupChatName, executorId models.UserAccountId) mo.Result[domain.GroupChatWithEventPair] {
 	groupChat, event := domain.NewGroupChat(name, executorId)
 	if err, b := g.repository.Store(event, &groupChat).Get(); b {
-		return mo.Err[events.GroupChatEvent](NewRepositoryError("Failed to store the group chat", err))
+		return mo.Err[domain.GroupChatWithEventPair](NewRepositoryError("Failed to store the group chat", err))
 	}
-	return mo.Ok(event)
+	pair := gt.New2[domain.GroupChat, events.GroupChatEvent](groupChat, event)
+	return mo.Ok(domain.GroupChatWithEventPair(pair))
 }
 
 // DeleteGroupChat is the command handler for DeleteGroupChat.
-func (g *GroupChatCommandProcessor) DeleteGroupChat(groupChatId *models.GroupChatId, executorId models.UserAccountId) mo.Result[events.GroupChatEvent] {
+func (g *GroupChatCommandProcessor) DeleteGroupChat(groupChatId *models.GroupChatId, executorId models.UserAccountId) mo.Result[domain.GroupChatWithEventPair] {
 	groupChatOpt, err := g.repository.FindById(groupChatId).Get()
 	if err != nil {
-		return mo.Err[events.GroupChatEvent](NewRepositoryError("Failed to find the group chat", err))
+		return mo.Err[domain.GroupChatWithEventPair](NewRepositoryError("Failed to find the group chat", err))
 	}
 
 	groupChat, b := groupChatOpt.Get()
 	if !b {
-		return mo.Err[events.GroupChatEvent](NewNotFoundError("The group chat is not found"))
+		return mo.Err[domain.GroupChatWithEventPair](NewNotFoundError("The group chat is not found"))
 	}
 
 	pair, err := groupChat.Delete(executorId).Get()
 	if err != nil {
-		return mo.Err[events.GroupChatEvent](NewDomainLogicError("Failed to delete the group chat", err))
+		return mo.Err[domain.GroupChatWithEventPair](NewDomainLogicError("Failed to delete the group chat", err))
 	}
 
 	if err, b := g.repository.Store(pair.V2, &pair.V1).Get(); b {
-		return mo.Err[events.GroupChatEvent](NewRepositoryError("Failed to store the group chat", err))
+		return mo.Err[domain.GroupChatWithEventPair](NewRepositoryError("Failed to store the group chat", err))
 	}
 
-	return mo.Ok(pair.V2)
+	return mo.Ok(pair)
 }
 
 // RenameGroupChat is the command handler for RenameGroupChat.
-func (g *GroupChatCommandProcessor) RenameGroupChat(groupChatId *models.GroupChatId, name models.GroupChatName, executorId models.UserAccountId) mo.Result[events.GroupChatEvent] {
+func (g *GroupChatCommandProcessor) RenameGroupChat(groupChatId *models.GroupChatId, name models.GroupChatName, executorId models.UserAccountId) mo.Result[domain.GroupChatWithEventPair] {
 	groupChatOpt, err := g.repository.FindById(groupChatId).Get()
 	if err != nil {
-		return mo.Err[events.GroupChatEvent](NewRepositoryError("Failed to find the group chat", err))
+		return mo.Err[domain.GroupChatWithEventPair](NewRepositoryError("Failed to find the group chat", err))
 	}
 
 	groupChat, b := groupChatOpt.Get()
 	if !b {
-		return mo.Err[events.GroupChatEvent](NewNotFoundError("The group chat is not found"))
+		return mo.Err[domain.GroupChatWithEventPair](NewNotFoundError("The group chat is not found"))
 	}
 
 	pair, err := groupChat.Rename(name, executorId).Get()
 	if err != nil {
-		return mo.Err[events.GroupChatEvent](NewDomainLogicError("Failed to rename the group chat", err))
+		return mo.Err[domain.GroupChatWithEventPair](NewDomainLogicError("Failed to rename the group chat", err))
 	}
 
 	if err, b := g.repository.Store(pair.V2, &pair.V1).Get(); b {
-		return mo.Err[events.GroupChatEvent](NewRepositoryError("Failed to store the group chat", err))
+		return mo.Err[domain.GroupChatWithEventPair](NewRepositoryError("Failed to store the group chat", err))
 	}
-	return mo.Ok(pair.V2)
+	return mo.Ok(pair)
 }
 
 // AddMember is the command handler for AddMember.
-func (g *GroupChatCommandProcessor) AddMember(groupChatId *models.GroupChatId, userAccountId models.UserAccountId, role models.Role, executorId models.UserAccountId) mo.Result[events.GroupChatEvent] {
+func (g *GroupChatCommandProcessor) AddMember(groupChatId *models.GroupChatId, userAccountId models.UserAccountId, role models.Role, executorId models.UserAccountId) mo.Result[domain.GroupChatWithEventPair] {
 	groupChatOpt, err := g.repository.FindById(groupChatId).Get()
 	if err != nil {
-		return mo.Err[events.GroupChatEvent](NewRepositoryError("Failed to find the group chat", err))
+		return mo.Err[domain.GroupChatWithEventPair](NewRepositoryError("Failed to find the group chat", err))
 	}
 
 	groupChat, b := groupChatOpt.Get()
 	if !b {
-		return mo.Err[events.GroupChatEvent](NewNotFoundError("The group chat is not found"))
+		return mo.Err[domain.GroupChatWithEventPair](NewNotFoundError("The group chat is not found"))
 	}
 
 	memberId := models.NewMemberId()
 	pair, err := groupChat.AddMember(memberId, userAccountId, role, executorId).Get()
 	if err != nil {
-		return mo.Err[events.GroupChatEvent](NewDomainLogicError("Failed to add the member to the group chat", err))
+		return mo.Err[domain.GroupChatWithEventPair](NewDomainLogicError("Failed to add the member to the group chat", err))
 	}
 
 	if err, b := g.repository.Store(pair.V2, &pair.V1).Get(); b {
-		return mo.Err[events.GroupChatEvent](NewRepositoryError("Failed to store the group chat", err))
+		return mo.Err[domain.GroupChatWithEventPair](NewRepositoryError("Failed to store the group chat", err))
 	}
 
-	return mo.Ok(pair.V2)
+	return mo.Ok(pair)
 }
 
 // RemoveMember is the command handler for RemoveMember.
-func (g *GroupChatCommandProcessor) RemoveMember(groupChatId *models.GroupChatId, userAccountId models.UserAccountId, executorId models.UserAccountId) mo.Result[events.GroupChatEvent] {
+func (g *GroupChatCommandProcessor) RemoveMember(groupChatId *models.GroupChatId, userAccountId models.UserAccountId, executorId models.UserAccountId) mo.Result[domain.GroupChatWithEventPair] {
 	groupChatOpt, err := g.repository.FindById(groupChatId).Get()
 	if err != nil {
-		return mo.Err[events.GroupChatEvent](NewRepositoryError("Failed to find the group chat", err))
+		return mo.Err[domain.GroupChatWithEventPair](NewRepositoryError("Failed to find the group chat", err))
 	}
 
 	groupChat, b := groupChatOpt.Get()
 	if !b {
-		return mo.Err[events.GroupChatEvent](NewNotFoundError("The group chat is not found"))
+		return mo.Err[domain.GroupChatWithEventPair](NewNotFoundError("The group chat is not found"))
 	}
 
 	pair, err := groupChat.RemoveMemberByUserAccountId(userAccountId, executorId).Get()
 	if err != nil {
-		return mo.Err[events.GroupChatEvent](NewDomainLogicError("Failed to remove the member from the group chat", err))
+		return mo.Err[domain.GroupChatWithEventPair](NewDomainLogicError("Failed to remove the member from the group chat", err))
 	}
 
 	if err, b := g.repository.Store(pair.V2, &pair.V1).Get(); b {
-		return mo.Err[events.GroupChatEvent](NewRepositoryError("Failed to store the group chat", err))
+		return mo.Err[domain.GroupChatWithEventPair](NewRepositoryError("Failed to store the group chat", err))
 	}
 
-	return mo.Ok(pair.V2)
+	return mo.Ok(pair)
 }
 
 // PostMessage is the command handler for PostMessage.
-func (g *GroupChatCommandProcessor) PostMessage(groupChatId *models.GroupChatId, message models.Message, executorId models.UserAccountId) mo.Result[events.GroupChatEvent] {
+func (g *GroupChatCommandProcessor) PostMessage(groupChatId *models.GroupChatId, message models.Message, executorId models.UserAccountId) mo.Result[domain.GroupChatWithEventPair] {
 	groupChatOpt, err := g.repository.FindById(groupChatId).Get()
 	if err != nil {
-		return mo.Err[events.GroupChatEvent](NewRepositoryError("Failed to find the group chat", err))
+		return mo.Err[domain.GroupChatWithEventPair](NewRepositoryError("Failed to find the group chat", err))
 	}
 
 	groupChat, b := groupChatOpt.Get()
 	if !b {
-		return mo.Err[events.GroupChatEvent](NewNotFoundError("The group chat is not found"))
+		return mo.Err[domain.GroupChatWithEventPair](NewNotFoundError("The group chat is not found"))
 	}
 
 	pair, err := groupChat.PostMessage(message, executorId).Get()
 	if err != nil {
-		return mo.Err[events.GroupChatEvent](NewDomainLogicError("Failed to post the message to the group chat", err))
+		return mo.Err[domain.GroupChatWithEventPair](NewDomainLogicError("Failed to post the message to the group chat", err))
 	}
 
 	if err, b := g.repository.Store(pair.V2, &pair.V1).Get(); b {
-		return mo.Err[events.GroupChatEvent](NewRepositoryError("Failed to store the group chat", err))
+		return mo.Err[domain.GroupChatWithEventPair](NewRepositoryError("Failed to store the group chat", err))
 	}
 
-	return mo.Ok(pair.V2)
+	return mo.Ok(pair)
 }
 
-func (g *GroupChatCommandProcessor) EditMessage(groupChatId *models.GroupChatId, message models.Message, executorId models.UserAccountId) mo.Result[events.GroupChatEvent] {
+func (g *GroupChatCommandProcessor) EditMessage(groupChatId *models.GroupChatId, message models.Message, executorId models.UserAccountId) mo.Result[domain.GroupChatWithEventPair] {
 	groupChatOpt, err := g.repository.FindById(groupChatId).Get()
 	if err != nil {
-		return mo.Err[events.GroupChatEvent](NewRepositoryError("Failed to find the group chat", err))
+		return mo.Err[domain.GroupChatWithEventPair](NewRepositoryError("Failed to find the group chat", err))
 	}
 
 	groupChat, b := groupChatOpt.Get()
 	if !b {
-		return mo.Err[events.GroupChatEvent](NewNotFoundError("The group chat is not found"))
+		return mo.Err[domain.GroupChatWithEventPair](NewNotFoundError("The group chat is not found"))
 	}
 
 	pair, err := groupChat.EditMessage(message, executorId).Get()
 	if err != nil {
-		return mo.Err[events.GroupChatEvent](NewDomainLogicError("Failed to post the message to the group chat", err))
+		return mo.Err[domain.GroupChatWithEventPair](NewDomainLogicError("Failed to post the message to the group chat", err))
 	}
 
 	if err, b := g.repository.Store(pair.V2, &pair.V1).Get(); b {
-		return mo.Err[events.GroupChatEvent](NewRepositoryError("Failed to store the group chat", err))
+		return mo.Err[domain.GroupChatWithEventPair](NewRepositoryError("Failed to store the group chat", err))
 	}
 
-	return mo.Ok(pair.V2)
+	return mo.Ok(pair)
 }
 
 // DeleteMessage is the command handler for DeleteMessage.
-func (g *GroupChatCommandProcessor) DeleteMessage(groupChatId *models.GroupChatId, messageId models.MessageId, executorId models.UserAccountId) mo.Result[events.GroupChatEvent] {
+func (g *GroupChatCommandProcessor) DeleteMessage(groupChatId *models.GroupChatId, messageId models.MessageId, executorId models.UserAccountId) mo.Result[domain.GroupChatWithEventPair] {
 	groupChatOpt, err := g.repository.FindById(groupChatId).Get()
 	if err != nil {
-		return mo.Err[events.GroupChatEvent](NewRepositoryError("Failed to find the group chat", err))
+		return mo.Err[domain.GroupChatWithEventPair](NewRepositoryError("Failed to find the group chat", err))
 	}
 
 	groupChat, b := groupChatOpt.Get()
 	if !b {
-		return mo.Err[events.GroupChatEvent](NewNotFoundError("The group chat is not found"))
+		return mo.Err[domain.GroupChatWithEventPair](NewNotFoundError("The group chat is not found"))
 	}
 
 	pair, err := groupChat.DeleteMessage(messageId, executorId).Get()
 	if err != nil {
-		return mo.Err[events.GroupChatEvent](NewDomainLogicError("Failed to delete the message from the group chat", err))
+		return mo.Err[domain.GroupChatWithEventPair](NewDomainLogicError("Failed to delete the message from the group chat", err))
 	}
 
 	if err, b := g.repository.Store(pair.V2, &pair.V1).Get(); b {
-		return mo.Err[events.GroupChatEvent](NewRepositoryError("Failed to store the group chat", err))
+		return mo.Err[domain.GroupChatWithEventPair](NewRepositoryError("Failed to store the group chat", err))
 	}
 
-	return mo.Ok(pair.V2)
+	return mo.Ok(pair)
 }

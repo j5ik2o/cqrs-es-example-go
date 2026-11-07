@@ -10,7 +10,6 @@ import (
 	"cqrs-es-example-go/pkg/command/domain/models"
 	commandgraphql "cqrs-es-example-go/pkg/command/interfaceAdaptor/graphql/model"
 	"cqrs-es-example-go/pkg/command/interfaceAdaptor/validators"
-	"fmt"
 )
 
 // CreateGroupChat is the resolver for the createGroupChat field.
@@ -32,13 +31,13 @@ func (r *mutationRootResolver) CreateGroupChat(ctx context.Context, input comman
 		return nil, nil
 	}
 
-	event, err := r.groupChatCommandProcessor.CreateGroupChat(groupChatName, executorId).Get()
+	pair, err := r.groupChatCommandProcessor.CreateGroupChat(groupChatName, executorId).Get()
 	if err != nil {
 		errorHandling(ctx, err)
 		return nil, nil
 	}
 
-	return &commandgraphql.GroupChatResult{GroupChatID: event.GetAggregateId().AsString()}, nil
+	return &commandgraphql.GroupChatResult{GroupChatID: pair.V1.GetGroupChatId().AsString()}, nil
 }
 
 // DeleteGroupChat is the resolver for the deleteGroupChat field.
@@ -60,13 +59,13 @@ func (r *mutationRootResolver) DeleteGroupChat(ctx context.Context, input comman
 		return nil, nil
 	}
 
-	event, err := r.groupChatCommandProcessor.DeleteGroupChat(&groupChatId, executorId).Get()
+	pair, err := r.groupChatCommandProcessor.DeleteGroupChat(&groupChatId, executorId).Get()
 	if err != nil {
 		errorHandling(ctx, err)
 		return nil, nil
 	}
 
-	return &commandgraphql.GroupChatResult{GroupChatID: event.GetAggregateId().AsString()}, nil
+	return &commandgraphql.GroupChatResult{GroupChatID: pair.V1.GetGroupChatId().AsString()}, nil
 }
 
 // RenameGroupChat is the resolver for the renameGroupChat field.
@@ -93,13 +92,13 @@ func (r *mutationRootResolver) RenameGroupChat(ctx context.Context, input comman
 		return nil, nil
 	}
 
-	event, err := r.groupChatCommandProcessor.RenameGroupChat(&groupChatId, groupChatName, executorId).Get()
+	pair, err := r.groupChatCommandProcessor.RenameGroupChat(&groupChatId, groupChatName, executorId).Get()
 	if err != nil {
 		errorHandling(ctx, err)
 		return nil, nil
 	}
 
-	return &commandgraphql.GroupChatResult{GroupChatID: event.GetAggregateId().AsString()}, nil
+	return &commandgraphql.GroupChatResult{GroupChatID: pair.V1.GetGroupChatId().AsString()}, nil
 }
 
 // AddMember is the resolver for the addMember field.
@@ -131,13 +130,13 @@ func (r *mutationRootResolver) AddMember(ctx context.Context, input commandgraph
 		return nil, nil
 	}
 
-	event, err := r.groupChatCommandProcessor.AddMember(&groupChatId, accountId, role, executorId).Get()
+	pair, err := r.groupChatCommandProcessor.AddMember(&groupChatId, accountId, role, executorId).Get()
 	if err != nil {
 		errorHandling(ctx, err)
 		return nil, nil
 	}
 
-	return &commandgraphql.GroupChatResult{GroupChatID: event.GetAggregateId().AsString()}, nil
+	return &commandgraphql.GroupChatResult{GroupChatID: pair.V1.GetGroupChatId().AsString()}, nil
 }
 
 // RemoveMember is the resolver for the removeMember field.
@@ -164,13 +163,13 @@ func (r *mutationRootResolver) RemoveMember(ctx context.Context, input commandgr
 		return nil, nil
 	}
 
-	event, err := r.groupChatCommandProcessor.RemoveMember(&groupChatId, userAccountId, executorId).Get()
+	pair, err := r.groupChatCommandProcessor.RemoveMember(&groupChatId, userAccountId, executorId).Get()
 	if err != nil {
 		errorHandling(ctx, err)
 		return nil, nil
 	}
 
-	return &commandgraphql.GroupChatResult{GroupChatID: event.GetAggregateId().AsString()}, nil
+	return &commandgraphql.GroupChatResult{GroupChatID: pair.V1.GetGroupChatId().AsString()}, nil
 }
 
 // PostMessage is the resolver for the postMessage field.
@@ -199,13 +198,13 @@ func (r *mutationRootResolver) PostMessage(ctx context.Context, input commandgra
 		return nil, nil
 	}
 
-	event, err := r.groupChatCommandProcessor.PostMessage(&groupChatId, message, executorId).Get()
+	pair, err := r.groupChatCommandProcessor.PostMessage(&groupChatId, message, executorId).Get()
 	if err != nil {
 		errorHandling(ctx, err)
 		return nil, nil
 	}
 
-	return &commandgraphql.MessageResult{GroupChatID: event.GetAggregateId().AsString(), MessageID: messageId.String()}, nil
+	return &commandgraphql.MessageResult{GroupChatID: pair.V1.GetGroupChatId().AsString(), MessageID: messageId.String()}, nil
 }
 
 // EditMessage is the resolver for the editMessage field.
@@ -237,13 +236,13 @@ func (r *mutationRootResolver) EditMessage(ctx context.Context, input commandgra
 		return nil, nil
 	}
 
-	event, err := r.groupChatCommandProcessor.EditMessage(&groupChatId, message, executorId).Get()
+	pair, err := r.groupChatCommandProcessor.EditMessage(&groupChatId, message, executorId).Get()
 	if err != nil {
 		errorHandling(ctx, err)
 		return nil, nil
 	}
 
-	return &commandgraphql.GroupChatResult{GroupChatID: event.GetAggregateId().AsString()}, nil
+	return &commandgraphql.GroupChatResult{GroupChatID: pair.V1.GetGroupChatId().AsString()}, nil
 }
 
 // DeleteMessage is the resolver for the deleteMessage field.
@@ -270,18 +269,18 @@ func (r *mutationRootResolver) DeleteMessage(ctx context.Context, input commandg
 		return nil, nil
 	}
 
-	event, err := r.groupChatCommandProcessor.DeleteMessage(&groupChatId, messageId, executorId).Get()
+	pair, err := r.groupChatCommandProcessor.DeleteMessage(&groupChatId, messageId, executorId).Get()
 	if err != nil {
 		errorHandling(ctx, err)
 		return nil, nil
 	}
 
-	return &commandgraphql.GroupChatResult{GroupChatID: event.GetAggregateId().AsString()}, nil
+	return &commandgraphql.GroupChatResult{GroupChatID: pair.V1.GetGroupChatId().AsString()}, nil
 }
 
 // HealthCheck is the resolver for the healthCheck field.
 func (r *queryRootResolver) HealthCheck(ctx context.Context) (string, error) {
-	panic(fmt.Errorf("not implemented: HealthCheck - healthCheck"))
+	return "OK", nil
 }
 
 // MutationRoot returns MutationRootResolver implementation.

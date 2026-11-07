@@ -11,9 +11,12 @@ import (
 	"github.com/samber/mo"
 )
 
+// SnapshotManifest is the envelope manifest for the GroupChat aggregate state.
+const SnapshotManifest = "GroupChat@1"
+
 type GroupChatRepository interface {
 	Store(event events.GroupChatEvent, snapshot *domain.GroupChat) mo.Option[error]
-	StoreEvent(event events.GroupChatEvent, version uint64) mo.Option[error]
+	StoreEvent(event events.GroupChatEvent, snapshot *domain.GroupChat) mo.Option[error]
 	StoreEventWithSnapshot(event events.GroupChatEvent, snapshot *domain.GroupChat) mo.Option[error]
 	FindById(id *models.GroupChatId) mo.Result[mo.Option[domain.GroupChat]]
 }
@@ -44,25 +47,24 @@ func WithSnapshotDecider(snapshotDecider SnapshotDecider) GroupChatRepositoryOpt
 
 func WithRetention(numberOfEvens uint64) GroupChatRepositoryOption {
 	return func(es *GroupChatRepositoryImpl) error {
-		es.snapshotDecider = func(event events.GroupChatEvent, _ *domain.GroupChat) bool {
-			return event.GetSeqNr()%numberOfEvens == 0
+		es.snapshotDecider = func(_ events.GroupChatEvent, snapshot *domain.GroupChat) bool {
+			return snapshot.GetSeqNr()%numberOfEvens == 0
 		}
 		return nil
 	}
 }
 
 func (g *GroupChatRepositoryImpl) Store(event events.GroupChatEvent, snapshot *domain.GroupChat) mo.Option[error] {
-	if event.IsCreated() || g.snapshotDecider != nil && g.snapshotDecider(event, snapshot) {
+	if snapshot.GetSeqNr() == 1 || g.snapshotDecider != nil && g.snapshotDecider(event, snapshot) {
 		return g.StoreEventWithSnapshot(event, snapshot)
-	} else {
-		return g.StoreEvent(event, snapshot.GetVersion())
 	}
+	return g.StoreEvent(event, snapshot)
 }
 
 // StoreEvent appends only the event. The expected previous head is derived from
-// the event's sequence number, so version is no longer used by the store.
-func (g *GroupChatRepositoryImpl) StoreEvent(event events.GroupChatEvent, _ uint64) mo.Option[error] {
-	envelope, err := newEventEnvelope(event)
+// the event's sequence number, so the store needs no version argument.
+func (g *GroupChatRepositoryImpl) StoreEvent(event events.GroupChatEvent, snapshot *domain.GroupChat) mo.Option[error] {
+	envelope, err := newEventEnvelope(event, snapshot)
 	if err != nil {
 		return mo.Some(err)
 	}
@@ -74,11 +76,11 @@ func (g *GroupChatRepositoryImpl) StoreEvent(event events.GroupChatEvent, _ uint
 }
 
 func (g *GroupChatRepositoryImpl) StoreEventWithSnapshot(event events.GroupChatEvent, snapshot *domain.GroupChat) mo.Option[error] {
-	envelope, err := newEventEnvelope(event)
+	envelope, err := newEventEnvelope(event, snapshot)
 	if err != nil {
 		return mo.Some(err)
 	}
-	snapshotEnvelope, err := esa.NewSnapshotEnvelope(*snapshot, esa.SeqNr(event.GetSeqNr()))
+	snapshotEnvelope, err := newSnapshotEnvelope(snapshot)
 	if err != nil {
 		return mo.Some(err)
 	}
@@ -109,21 +111,34 @@ func (g *GroupChatRepositoryImpl) FindById(id *models.GroupChatId) mo.Result[mo.
 	if err != nil {
 		return mo.Err[mo.Option[domain.GroupChat]](err)
 	}
-	payloads := make([]events.GroupChatEvent, 0, len(eventsByIdSinceSeqNr))
+	records := make([]domain.EventRecord, 0, len(eventsByIdSinceSeqNr))
 	for _, envelope := range eventsByIdSinceSeqNr {
-		payloads = append(payloads, envelope.Payload())
+		records = append(records, domain.EventRecord{
+			Event: envelope.Payload(),
+			SeqNr: uint64(envelope.SeqNr()),
+		})
 	}
-	return mo.Ok[mo.Option[domain.GroupChat]](mo.Some(domain.ReplayGroupChat(payloads, snapshot)))
+	return mo.Ok[mo.Option[domain.GroupChat]](mo.Some(domain.ReplayGroupChat(*id, records, snapshot)))
 }
 
-// newEventEnvelope bridges the domain event to the v5 envelope API. Metadata
-// still lives in the payload until the envelope migration in #667-#670.
-func newEventEnvelope(event events.GroupChatEvent) (esa.EventEnvelope[events.GroupChatEvent], error) {
-	occurredAt := time.Unix(0, int64(event.GetOccurredAt())*int64(time.Millisecond))
-	return esa.NewEventEnvelope[events.GroupChatEvent](
-		event.GetAggregateId(),
-		esa.SeqNr(event.GetSeqNr()),
-		occurredAt,
+// newEventEnvelope puts the event metadata in the envelope. The payload stays
+// pure domain data and the manifest names the event type and schema version.
+func newEventEnvelope(event events.GroupChatEvent, snapshot *domain.GroupChat) (esa.EventEnvelope[events.GroupChatEvent], error) {
+	return esa.NewEventEnvelope(
+		snapshot.GetGroupChatId(),
+		esa.SeqNr(snapshot.GetSeqNr()),
+		time.Now(),
 		event,
+		esa.WithManifest(events.Manifest(event.GetTypeName())),
+	)
+}
+
+// newSnapshotEnvelope puts the snapshot metadata in the envelope. The seq_nr
+// is held by the envelope as well as by the aggregate state payload.
+func newSnapshotEnvelope(snapshot *domain.GroupChat) (esa.SnapshotEnvelope[domain.GroupChat], error) {
+	return esa.NewSnapshotEnvelope(
+		*snapshot,
+		esa.SeqNr(snapshot.GetSeqNr()),
+		esa.WithManifest(SnapshotManifest),
 	)
 }

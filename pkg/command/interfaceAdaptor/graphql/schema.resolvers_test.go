@@ -396,3 +396,10 @@ func createResolver(t *testing.T, ctx context.Context, container *localstack.Loc
 	resolver := NewResolver(groupChatCommandProcessor)
 	return &groupChatRepository, resolver, err
 }
+
+func Test_HealthCheck(t *testing.T) {
+	resolver := &Resolver{}
+	result, err := resolver.QueryRoot().HealthCheck(context.Background())
+	require.NoError(t, err)
+	require.Equal(t, "OK", result)
+}
