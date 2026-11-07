@@ -45,6 +45,8 @@ The applications read their settings from environment variables.
 |:--|:--|
 | Write API | `PERSISTENCE_JOURNAL_TABLE_NAME`, `PERSISTENCE_SNAPSHOT_TABLE_NAME`, `PERSISTENCE_HEAD_TABLE_NAME`, `PERSISTENCE_SNAPSHOT_HISTORY_INDEX_NAME`, `AWS_REGION`, `AWS_DYNAMODB_ENDPOINT_URL`, `AWS_DYNAMODB_ACCESS_KEY_ID`, `AWS_DYNAMODB_SECRET_ACCESS_KEY`, `API_HOST`, `API_PORT` |
 | Read Model Updater | `STREAM_HEAD_TABLE_NAME`, `STREAM_JOURNAL_TABLE_NAME`, `STREAM_MAX_ITEM_COUNT`, `DATABASE_URL`, `AWS_REGION`, `AWS_DYNAMODB_ENDPOINT_URL`, `AWS_DYNAMODB_ACCESS_KEY_ID`, `AWS_DYNAMODB_SECRET_ACCESS_KEY` |
+| Read Model Updater (Lambda) | `DATABASE_URL`, `PERSISTENCE_JOURNAL_TABLE_NAME`, `PERSISTENCE_HEAD_TABLE_NAME`, `PERSISTENCE_MAX_EVENTS_PER_TRANSACTION`, `RMU_RETRY_MAX_ATTEMPTS`, `RMU_RETRY_MAX_ELAPSED`, `RMU_RETRY_INITIAL_DELAY`, `RMU_RETRY_MAX_DELAY`, `AWS_REGION` |
+| RMU recovery worker | `DATABASE_URL`, `PERSISTENCE_JOURNAL_TABLE_NAME`, `PERSISTENCE_HEAD_TABLE_NAME`, `PERSISTENCE_MAX_EVENTS_PER_TRANSACTION`, `AWS_REGION` |
 | Read API | `DATABASE_URL`, `API_HOST`, `API_PORT` |
 
 The local Read Model Updater subscribes to the head table's Streams. When it finds
@@ -53,7 +55,9 @@ journal. It records the applied position in `read_model_positions` in the same
 transaction as the read model update.
 
 Retry, recovery tasks (DLQ), and resync behavior are described in
-[RMU recovery](docs/RMU_RECOVERY.ja.md) (Japanese).
+[RMU recovery](docs/RMU_RECOVERY.ja.md) (Japanese). The Lambda event source
+mapping and the SQS recovery worker are deployed with the assets in
+[deploy/rmu](deploy/rmu/README.md).
 
 ## Stack
 
