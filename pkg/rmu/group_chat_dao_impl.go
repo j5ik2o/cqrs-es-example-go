@@ -47,11 +47,17 @@ func (dao *GroupChatDaoImpl) Process(ctx context.Context, aggregateID string, fn
 		}
 	}()
 
+	// Make the position row exist before locking it. A SELECT ... FOR UPDATE on
+	// a missing key takes a gap lock, and two new aggregates in the same gap can
+	// deadlock when both insert. INSERT IGNORE is a no-op after the first event.
+	if _, err := tx.ExecContext(ctx,
+		`INSERT IGNORE INTO read_model_positions (aggregate_id, seq_nr, updated_at) VALUES (?, 0, ?)`,
+		aggregateID, time.Now()); err != nil {
+		return err
+	}
+
 	var currentSeqNr int64
-	err = tx.GetContext(ctx, &currentSeqNr, `SELECT seq_nr FROM read_model_positions WHERE aggregate_id = ? FOR UPDATE`, aggregateID)
-	if errors.Is(err, sql.ErrNoRows) {
-		currentSeqNr = 0
-	} else if err != nil {
+	if err := tx.GetContext(ctx, &currentSeqNr, `SELECT seq_nr FROM read_model_positions WHERE aggregate_id = ? FOR UPDATE`, aggregateID); err != nil {
 		return err
 	}
 
