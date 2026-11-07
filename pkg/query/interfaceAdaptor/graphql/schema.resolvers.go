@@ -8,290 +8,71 @@ package querygraphql
 import (
 	"context"
 	querygraphql "cqrs-es-example-go/pkg/query/interfaceAdaptor/graphql/model"
-	"database/sql"
 	"fmt"
-	"time"
 )
 
 // GetGroupChat is the resolver for the getGroupChat field.
 func (r *queryRootResolver) GetGroupChat(ctx context.Context, groupChatID string, userAccountID string) (*querygraphql.GroupChat, error) {
-	stmt, err := r.db.Prepare(
-		`SELECT gc.id, gc.name, gc.owner_id, gc.created_at, gc.updated_at
-					 FROM group_chats AS gc JOIN members AS m ON gc.id = m.group_chat_id
-					 WHERE gc.disabled = 'false' AND m.group_chat_id = ? AND m.user_account_id = ?`)
+	row, err := r.findGroupChat(ctx, groupChatID, userAccountID)
 	if err != nil {
-		errorHandling(ctx, err)
-		return nil, nil
+		return nil, readModelError(ctx, "GroupChat", err)
 	}
-	defer func(stmt *sql.Stmt) {
-		err := stmt.Close()
-		if err != nil {
-			panic(err.Error())
-		}
-	}(stmt)
-	row := stmt.QueryRow(groupChatID, userAccountID)
-	if row != nil {
-		var id string
-		var name string
-		var ownerID string
-		var createdAt time.Time
-		var updatedAt time.Time
-		err = row.Scan(&id, &name, &ownerID, &createdAt, &updatedAt)
-		if err != nil {
-			errorHandling(ctx, err)
-			return nil, nil
-		}
-		return &querygraphql.GroupChat{
-			ID:        id,
-			Name:      name,
-			OwnerID:   ownerID,
-			CreatedAt: createdAt.String(),
-			UpdatedAt: updatedAt.String(),
-		}, nil
-	}
-	return nil, nil
+	return row.toGraphQL(), nil
 }
 
 // GetGroupChats is the resolver for the getGroupChats field.
 func (r *queryRootResolver) GetGroupChats(ctx context.Context, userAccountID string) ([]*querygraphql.GroupChat, error) {
-	stmt, err := r.db.Prepare(
-		`SELECT gc.id, gc.name, gc.owner_id, gc.created_at, gc.updated_at
-					 FROM group_chats AS gc JOIN members AS m ON gc.id = m.group_chat_id
-           WHERE gc.disabled = 'false' AND m.user_account_id = ?`)
+	rows, err := r.findGroupChats(ctx, userAccountID)
 	if err != nil {
-		errorHandling(ctx, err)
-		return nil, nil
+		return nil, readModelError(ctx, "GroupChat", err)
 	}
-	defer func(stmt *sql.Stmt) {
-		err := stmt.Close()
-		if err != nil {
-			panic(err.Error())
-		}
-	}(stmt)
-	rows, err := stmt.Query(userAccountID)
-	if err != nil {
-		errorHandling(ctx, err)
-		return nil, nil
-	}
-	defer func(rows *sql.Rows) {
-		err := rows.Close()
-		if err != nil {
-			panic(err.Error())
-		}
-	}(rows)
-
-	results := make([]*querygraphql.GroupChat, 0)
-	for rows.Next() {
-		var id string
-		var name string
-		var ownerID string
-		var createdAt time.Time
-		var updatedAt time.Time
-		err = rows.Scan(&id, &name, &ownerID, &createdAt, &updatedAt)
-		if err != nil {
-			errorHandling(ctx, err)
-			return nil, nil
-		}
-		results = append(results, &querygraphql.GroupChat{
-			ID:        id,
-			Name:      name,
-			OwnerID:   ownerID,
-			CreatedAt: createdAt.String(),
-			UpdatedAt: updatedAt.String(),
-		})
-
+	results := make([]*querygraphql.GroupChat, 0, len(rows))
+	for _, row := range rows {
+		results = append(results, row.toGraphQL())
 	}
 	return results, nil
 }
 
 // GetMember is the resolver for the getMember field.
 func (r *queryRootResolver) GetMember(ctx context.Context, groupChatID string, userAccountID string) (*querygraphql.Member, error) {
-	stmt, err := r.db.Prepare(
-		`SELECT m.id, m.group_chat_id, m.user_account_id, m.role, m.created_at, m.updated_at
-					 FROM group_chats AS gc JOIN members AS m ON gc.id = m.group_chat_id
-					 WHERE gc.disabled = 'false' AND m.group_chat_id = ? AND m.user_account_id = ?`)
+	row, err := r.findMember(ctx, groupChatID, userAccountID)
 	if err != nil {
-		errorHandling(ctx, err)
-		return nil, nil
+		return nil, readModelError(ctx, "Member", err)
 	}
-	defer func(stmt *sql.Stmt) {
-		err := stmt.Close()
-		if err != nil {
-			panic(err.Error())
-		}
-	}(stmt)
-	row := stmt.QueryRow(groupChatID, userAccountID)
-	if row != nil {
-		var id string
-		var groupChatId string
-		var userAccountId string
-		var role string
-		var createdAt time.Time
-		var updatedAt time.Time
-		err = row.Scan(&id, &groupChatId, &userAccountId, &role, &createdAt, &updatedAt)
-		if err != nil {
-			errorHandling(ctx, err)
-			return nil, nil
-		}
-		return &querygraphql.Member{
-			ID:            id,
-			GroupChatID:   groupChatId,
-			UserAccountID: userAccountId,
-			Role:          role,
-			CreatedAt:     createdAt.String(),
-			UpdatedAt:     updatedAt.String(),
-		}, nil
-	}
-	return nil, nil
+	return row.toGraphQL(), nil
 }
 
 // GetMembers is the resolver for the getMembers field.
 func (r *queryRootResolver) GetMembers(ctx context.Context, groupChatID string, userAccountID string) ([]*querygraphql.Member, error) {
-	stmt, err := r.db.Prepare(
-		`SELECT m.id, m.group_chat_id, m.user_account_id, m.role, m.created_at, m.updated_at
-           FROM group_chats AS gc JOIN members AS m ON gc.id = m.group_chat_id
-           WHERE gc.disabled = 'false' AND m.group_chat_id = ?
-						AND EXISTS (SELECT 1 FROM members AS m2 WHERE m2.group_chat_id = m.group_chat_id AND m2.user_account_id = ?)`)
+	rows, err := r.findMembers(ctx, groupChatID, userAccountID)
 	if err != nil {
-		errorHandling(ctx, err)
-		return nil, nil
+		return nil, readModelError(ctx, "Member", err)
 	}
-	defer func(stmt *sql.Stmt) {
-		err := stmt.Close()
-		if err != nil {
-			panic(err.Error())
-		}
-	}(stmt)
-	rows, err := stmt.Query(groupChatID, userAccountID)
-	if err != nil {
-		return nil, err
-	}
-	defer func(rows *sql.Rows) {
-		err := rows.Close()
-		if err != nil {
-			panic(err.Error())
-		}
-	}(rows)
-
-	results := make([]*querygraphql.Member, 0)
-	for rows.Next() {
-		var id string
-		var groupChatId string
-		var userAccountId string
-		var role string
-		var createdAt time.Time
-		var updatedAt time.Time
-		err = rows.Scan(&id, &groupChatId, &userAccountId, &role, &createdAt, &updatedAt)
-		if err != nil {
-			errorHandling(ctx, err)
-			return nil, nil
-		}
-		results = append(results, &querygraphql.Member{
-			ID:            id,
-			GroupChatID:   groupChatId,
-			UserAccountID: userAccountId,
-			Role:          role,
-			CreatedAt:     createdAt.String(),
-			UpdatedAt:     updatedAt.String(),
-		})
-
+	results := make([]*querygraphql.Member, 0, len(rows))
+	for _, row := range rows {
+		results = append(results, row.toGraphQL())
 	}
 	return results, nil
 }
 
 // GetMessage is the resolver for the getMessage field.
 func (r *queryRootResolver) GetMessage(ctx context.Context, messageID string, userAccountID string) (*querygraphql.Message, error) {
-	stmt, err := r.db.Prepare(
-		`SELECT m.id, m.group_chat_id, m.user_account_id, m.text, m.created_at, m.updated_at
-					 FROM group_chats AS gc JOIN messages AS m ON gc.id = m.group_chat_id
-           WHERE gc.disabled = 'false' AND m.disabled = 'false' AND m.id = ?
-            AND EXISTS ( SELECT 1 FROM members AS mem WHERE mem.group_chat_id = m.group_chat_id AND mem.user_account_id = ? )`)
+	row, err := r.findMessage(ctx, messageID, userAccountID)
 	if err != nil {
-		errorHandling(ctx, err)
-		return nil, nil
+		return nil, readModelError(ctx, "Message", err)
 	}
-	defer func(stmt *sql.Stmt) {
-		err := stmt.Close()
-		if err != nil {
-			panic(err.Error())
-		}
-	}(stmt)
-	row := stmt.QueryRow(messageID, userAccountID)
-	if row != nil {
-		var id string
-		var groupChatId string
-		var userAccountId string
-		var text string
-		var createdAt time.Time
-		var updatedAt time.Time
-		err = row.Scan(&id, &groupChatId, &userAccountId, &text, &createdAt, &updatedAt)
-		if err != nil {
-			errorHandling(ctx, err)
-			return nil, nil
-		}
-		return &querygraphql.Message{
-			ID:            id,
-			GroupChatID:   groupChatId,
-			UserAccountID: userAccountId,
-			Text:          text,
-			CreatedAt:     createdAt.String(),
-			UpdatedAt:     updatedAt.String(),
-		}, nil
-	}
-	return nil, nil
+	return row.toGraphQL(), nil
 }
 
 // GetMessages is the resolver for the getMessages field.
 func (r *queryRootResolver) GetMessages(ctx context.Context, groupChatID string, userAccountID string) ([]*querygraphql.Message, error) {
-	stmt, err := r.db.Prepare(
-		`SELECT m.id, m.group_chat_id, m.user_account_id, m.text, m.created_at, m.updated_at
-					 FROM group_chats AS gc JOIN messages AS m ON gc.id = m.group_chat_id
-           WHERE gc.disabled = 'false' AND m.disabled = 'false' AND m.group_chat_id = ?
-            AND EXISTS (SELECT 1 FROM members AS mem WHERE mem.group_chat_id = m.group_chat_id AND mem.user_account_id = ?)`)
+	rows, err := r.findMessages(ctx, groupChatID, userAccountID)
 	if err != nil {
-		errorHandling(ctx, err)
-		return nil, nil
+		return nil, readModelError(ctx, "Message", err)
 	}
-	defer func(stmt *sql.Stmt) {
-		err := stmt.Close()
-		if err != nil {
-			panic(err.Error())
-		}
-	}(stmt)
-	rows, err := stmt.Query(groupChatID, userAccountID)
-	if err != nil {
-		errorHandling(ctx, err)
-		return nil, nil
-	}
-	defer func(rows *sql.Rows) {
-		err := rows.Close()
-		if err != nil {
-			panic(err.Error())
-		}
-	}(rows)
-
-	results := make([]*querygraphql.Message, 0)
-	for rows.Next() {
-		var id string
-		var groupChatId string
-		var userAccountId string
-		var text string
-		var createdAt time.Time
-		var updatedAt time.Time
-		err = rows.Scan(&id, &groupChatId, &userAccountId, &text, &createdAt, &updatedAt)
-		if err != nil {
-			errorHandling(ctx, err)
-			return nil, nil
-		}
-		results = append(results, &querygraphql.Message{
-			ID:            id,
-			GroupChatID:   groupChatId,
-			UserAccountID: userAccountId,
-			Text:          text,
-			CreatedAt:     createdAt.String(),
-			UpdatedAt:     updatedAt.String(),
-		})
-
+	results := make([]*querygraphql.Message, 0, len(rows))
+	for _, row := range rows {
+		results = append(results, row.toGraphQL())
 	}
 	return results, nil
 }
