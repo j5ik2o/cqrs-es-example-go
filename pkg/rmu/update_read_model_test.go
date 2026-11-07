@@ -215,6 +215,7 @@ func TestDynamoDBJournalReader_ReadEvents(t *testing.T) {
 
 	client, err := test.CreateDynamoDBClient(t, ctx, container)
 	require.NoError(t, err)
+	test.WaitForDynamoDB(t, ctx, client)
 	require.NoError(t, test.CreateJournalTable(t, ctx, client, "journal"))
 
 	aid := "GroupChat-01H42K4ABWQ5V2XQEP3A48VE0Z"
@@ -246,6 +247,7 @@ func TestDynamoDBJournalReader_ReadEvents(t *testing.T) {
 type fakeJournalReader struct {
 	events map[string][]JournalEvent
 	calls  []journalCall
+	errs   []error
 }
 
 type journalCall struct {
@@ -256,6 +258,11 @@ type journalCall struct {
 
 func (f *fakeJournalReader) ReadEvents(_ context.Context, aggregateID string, fromSeqNr, toSeqNr int64) ([]JournalEvent, error) {
 	f.calls = append(f.calls, journalCall{aggregateID: aggregateID, fromSeqNr: fromSeqNr, toSeqNr: toSeqNr})
+	if len(f.errs) > 0 {
+		err := f.errs[0]
+		f.errs = f.errs[1:]
+		return nil, err
+	}
 	var result []JournalEvent
 	for _, event := range f.events[aggregateID] {
 		if event.SeqNr >= fromSeqNr && event.SeqNr <= toSeqNr {

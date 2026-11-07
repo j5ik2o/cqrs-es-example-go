@@ -11,6 +11,7 @@ import (
 	"github.com/olivere/env"
 	"log/slog"
 	"os"
+	"time"
 
 	"github.com/spf13/cobra"
 )
@@ -29,6 +30,21 @@ var rmuCmd = &cobra.Command{
 			panic("DATABASE_URL is required")
 		}
 		journalTableName := env.String("journal", "PERSISTENCE_JOURNAL_TABLE_NAME")
+		headTableName := env.String("head", "PERSISTENCE_HEAD_TABLE_NAME")
+		maxEventsPerTransaction := env.Int(1, "PERSISTENCE_MAX_EVENTS_PER_TRANSACTION")
+
+		retryPolicy := rmu.DefaultRetryPolicy()
+		retryPolicy.MaxAttempts = env.Int(retryPolicy.MaxAttempts, "RMU_RETRY_MAX_ATTEMPTS")
+		retryPolicy.MaxElapsed = durationEnv("RMU_RETRY_MAX_ELAPSED", retryPolicy.MaxElapsed)
+		retryPolicy.InitialDelay = durationEnv("RMU_RETRY_INITIAL_DELAY", 200*time.Millisecond)
+		retryPolicy.MaxDelay = durationEnv("RMU_RETRY_MAX_DELAY", 5*time.Second)
+
+		slog.Info("rmu configuration",
+			"journal_table", journalTableName,
+			"head_table", headTableName,
+			"max_events_per_transaction", maxEventsPerTransaction,
+			"retry_max_attempts", retryPolicy.MaxAttempts,
+			"retry_max_elapsed", retryPolicy.MaxElapsed)
 
 		dataSourceName := fmt.Sprintf("%s?parseTime=true", dbUrl)
 		db, err := sqlx.Connect("mysql", dataSourceName)
@@ -52,8 +68,15 @@ var rmuCmd = &cobra.Command{
 
 		dao := rmu.NewGroupChatDaoImpl(db)
 		journalReader := rmu.NewDynamoDBJournalReader(dynamodbClient, journalTableName)
-		readModelUpdater := rmu.NewReadModelUpdater(dao, journalReader)
-		lambda.Start(readModelUpdater.UpdateReadModel)
+		headScanner := rmu.NewDynamoDBHeadScanner(dynamodbClient, headTableName)
+		applier := rmu.NewApplier(dao, journalReader, maxEventsPerTransaction)
+		recoveryService := rmu.NewRecoveryService(
+			rmu.NewMySQLRecoveryTaskStore(db), headScanner, applier)
+		readModelUpdater := rmu.NewReadModelUpdater(dao, journalReader,
+			rmu.WithApplier(applier),
+			rmu.WithRecoveryService(recoveryService),
+			rmu.WithRetryPolicy(retryPolicy))
+		lambda.Start(readModelUpdater.HandleDynamoDBEvent)
 	},
 }
 

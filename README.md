@@ -52,6 +52,9 @@ a gap in an aggregate's sequence numbers, it reads the missing events from the
 journal. It records the applied position in `read_model_positions` in the same
 transaction as the read model update.
 
+Retry, recovery tasks (DLQ), and resync behavior are described in
+[RMU recovery](docs/RMU_RECOVERY.ja.md) (Japanese).
+
 ## Stack
 
 This OSS repository mainly utilizes the following technology stack.

@@ -40,6 +40,8 @@
 
 ローカルのRead Model UpdaterはheadテーブルのStreamsを購読する。集約のseq_nrに欠番を見つけると、不足しているイベントをジャーナルから読む。処理済みの位置は、リードモデルの更新と同じトランザクションで`read_model_positions`に記録する。
 
+再試行、復旧タスク（DLQ）、再同期の動きは[Read Model Updaterの復旧](docs/RMU_RECOVERY.ja.md)にまとめている。
+
 ## スタック
 
 このOSSリポジトリは、主に以下の技術スタックを利用している。

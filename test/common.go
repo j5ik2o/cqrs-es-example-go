@@ -20,6 +20,7 @@ import (
 	"github.com/testcontainers/testcontainers-go/modules/localstack"
 	testcontainermysql "github.com/testcontainers/testcontainers-go/modules/mysql"
 	"testing"
+	"time"
 )
 
 func CreateMySQLContainer(ctx context.Context) (*testcontainermysql.MySQLContainer, error) {
@@ -140,6 +141,16 @@ func CreateHeadTable(t *testing.T, ctx context.Context, client *dynamodb.Client,
 	return err
 }
 
+// WaitForDynamoDB waits until LocalStack answers DynamoDB requests. The health
+// endpoint can report ready before the DynamoDB provider accepts calls.
+func WaitForDynamoDB(t *testing.T, ctx context.Context, client *dynamodb.Client) {
+	t.Helper()
+	require.Eventually(t, func() bool {
+		_, err := client.ListTables(ctx, &dynamodb.ListTablesInput{})
+		return err == nil
+	}, 60*time.Second, time.Second)
+}
+
 func GetDataSourceName(port network.Port) string {
 	dbUrl := fmt.Sprintf("ceer:ceer@tcp(localhost:%s)/ceer", port.Port())
 	dataSourceName := fmt.Sprintf("%s?parseTime=true", dbUrl)
@@ -155,7 +166,7 @@ func MigrateDB(t *testing.T, err error, db *sqlx.DB, position string) error {
 		driver,
 	)
 	require.NoError(t, err)
-	err = m.Steps(4)
+	err = m.Steps(5)
 	require.NoError(t, err)
 	return err
 }
