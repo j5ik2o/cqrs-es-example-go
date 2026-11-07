@@ -20,10 +20,21 @@ var rootCmd = &cobra.Command{
 // Execute adds all child prompts to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
+	rootCmd.SetArgs(resolveArgs(os.Args[1:], os.Getenv("_HANDLER")))
 	err := rootCmd.Execute()
 	if err != nil {
 		os.Exit(1)
 	}
+}
+
+// resolveArgs lets a Lambda container image select a subcommand. The base
+// image entrypoint starts the binary with no arguments and passes the image
+// command through _HANDLER; an explicit argument always wins.
+func resolveArgs(args []string, handler string) []string {
+	if len(args) > 0 || handler == "" {
+		return args
+	}
+	return append(args, handler)
 }
 
 func init() {

@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "rmuFunction": {
+    "imageCommand": "rmu",
+    "timeoutSeconds": 60
+  },
+  "headStreamEventSourceMapping": {
+    "batchSize": 100,
+    "bisectBatchOnFunctionError": true,
+    "functionResponseTypes": [
+      "ReportBatchItemFailures"
+    ],
+    "maximumRetryAttempts": 3,
+    "maximumRecordAgeInSeconds": 86400
+  },
+  "retry": {
+    "maxAttempts": 5,
+    "maxElapsedSeconds": 30
+  },
+  "failureQueue": {
+    "messageRetentionPeriodSeconds": 1209600,
+    "visibilityTimeoutSeconds": 960
+  },
+  "recoveryWorkerFunction": {
+    "imageCommand": "recoverRmuWorker",
+    "timeoutSeconds": 900
+  },
+  "recoveryWorkerEventSourceMapping": {
+    "batchSize": 10,
+    "functionResponseTypes": [
+      "ReportBatchItemFailures"
+    ],
+    "maximumRetryAttempts": 3
+  }
+}
