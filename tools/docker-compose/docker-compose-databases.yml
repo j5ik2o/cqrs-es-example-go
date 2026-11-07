@@ -5,7 +5,7 @@ services:
     hostname: mysql-local
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_general_ci --ngram_token_size=2
     healthcheck:
-      test: MYSQL_PWD=passwd mysql -h127.0.0.1 -P3306 -uroot -e "quit"
+      test: MYSQL_PWD=passwd mysql -h127.0.0.1 -P3306 -uroot -e "SELECT 1"
     ports:
       - 23306:3306
     environment:
