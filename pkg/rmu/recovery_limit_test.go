@@ -96,6 +96,45 @@ func TestRecoveryService_RecoverPendingCountsFailures(t *testing.T) {
 	require.Equal(t, 1, result.Pending)
 }
 
+func TestRecoveryService_FailedTasksDoNotStarveNewerTasks(t *testing.T) {
+	ctx := context.Background()
+	db := newReadModelTestDB(t)
+	first := newReadModelFixture(t)
+	second := newReadModelFixture(t)
+	third := newReadModelFixture(t)
+	healthy := newReadModelFixture(t)
+	journal := &fakeJournalReader{events: map[string][]JournalEvent{
+		first.aid():   journalEvents(first.aid(), corruptHeadEvent(1)),
+		second.aid():  journalEvents(second.aid(), corruptHeadEvent(1)),
+		third.aid():   journalEvents(third.aid(), corruptHeadEvent(1)),
+		healthy.aid(): journalEvents(healthy.aid(), healthy.create),
+	}}
+	store := &fakeRecoveryTaskStore{tasks: []RecoveryTask{
+		pendingRecoveryTask(first.aid()),
+		pendingRecoveryTask(second.aid()),
+		pendingRecoveryTask(third.aid()),
+		pendingRecoveryTask(healthy.aid()),
+	}}
+	applier := NewApplier(NewGroupChatDaoImpl(db), journal, 1)
+	recovery := NewRecoveryService(store, staticStoreID{"store-1"}, applier,
+		WithRecoveryTaskLimit(2))
+
+	// The first pass fills its limit with permanently failing tasks.
+	result, err := recovery.RecoverPending(ctx)
+	require.Error(t, err)
+	require.Zero(t, result.Completed)
+	require.Equal(t, 2, result.Failed)
+	require.True(t, result.Deferred)
+
+	// Those failures moved to the back, so the next pass reaches the healthy
+	// aggregate instead of retrying the same two tasks.
+	result, err = recovery.RecoverPending(ctx)
+	require.Error(t, err)
+	require.Equal(t, 1, result.Completed)
+	require.Equal(t, 1, result.Failed)
+	require.Equal(t, int64(1), readModelPosition(t, db, healthy.aid()))
+}
+
 func pendingRecoveryTask(aggregateID string) RecoveryTask {
 	return RecoveryTask{
 		StoreID:           "store-1",

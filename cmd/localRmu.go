@@ -132,12 +132,21 @@ var localRmuCmd = &cobra.Command{
 		// rather than left until the next trim event.
 		resyncBackoff := rmu.NewBackoff(500*time.Millisecond, 30*time.Second)
 		resyncUntilResolved(ctx, resyncer, retryPolicy, resyncBackoff, "initial reconciliation")
-		if result, err := recoveryService.RecoverPending(ctx); err != nil {
-			slog.Warn("some pending recovery tasks did not complete",
-				"completed", result.Completed, "pending", result.Pending, "error", err)
-		} else if result.Completed > 0 {
-			slog.Info("completed pending recovery tasks",
-				"count", result.Completed, "pending", result.Pending, "deferred", result.Deferred)
+		// The local reader has no schedule. Keep draining the tasks the limit
+		// deferred, but stop when a pass completes nothing so a set of
+		// permanently failing tasks cannot loop forever.
+		for {
+			result, err := recoveryService.RecoverPending(ctx)
+			if err != nil {
+				slog.Warn("some pending recovery tasks did not complete",
+					"completed", result.Completed, "pending", result.Pending, "error", err)
+			} else if result.Completed > 0 {
+				slog.Info("completed pending recovery tasks",
+					"count", result.Completed, "pending", result.Pending, "deferred", result.Deferred)
+			}
+			if !result.Deferred || result.Completed == 0 {
+				break
+			}
 		}
 
 		backoff := rmu.NewBackoff(500*time.Millisecond, 30*time.Second)

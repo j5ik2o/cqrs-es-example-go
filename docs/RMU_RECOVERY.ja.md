@@ -68,7 +68,11 @@ SQS は通知を届けるためだけに使う。メッセージにイベント�
 
 `recoverRmu` と `recoverRmuWorker` は、1 回の実行で処理する復旧タスクの件数を `RECOVERY_MAX_TASKS_PER_PASS` で制限する。既定は 100 件で、1000 件を上限とする。0 以下の値と 1000 を超える値は、この範囲に丸める。
 
-タスクは `created_at` の古い順に読む。上限に達したとき、残りのタスクは `pending` のまま次回に回す。その回の処理は失敗にしない。ログに `recovery task limit reached` を警告として出し、完了ログの `deferred` を 1 にする。次の定期実行か、次の SQS 通知が残りを処理する。
+タスクは試行回数の少ない順に読む。同じ試行回数の中では `created_at` の古い順である。再適用に失敗したタスクは `attempt_count` を増やし、未試行のタスクの後ろに回る。恒久的に失敗するタスクが上限件数に達しても、新しいタスクが後回しにされ続けることはない。
+
+上限に達したとき、残りのタスクは `pending` のまま次回に回す。その回の処理は失敗にしない。ログに `recovery task limit reached` を警告として出し、完了ログの `deferred` を 1 にする。次の定期実行か、次の SQS 通知が残りを処理する。
+
+`attempt_count` と走査用のインデックスは migration 6 で追加する。本番環境では、新しいイメージを配布する前に migration を適用する。
 
 SQS のバッチを失敗として返さないのは、恒久的に失敗するタスクが残っていると再配送が終わらないためである。タスクは MySQL に残るので、次回の実行で再度試せる。
 
@@ -117,6 +121,8 @@ journal に欠番があれば、位置を進めずに失敗とする。欠番を
 - 件数上限: 上限を超えるタスクがあるとき、上限までを処理し、残りを `pending` のまま次回に回すことを確かめる。
 - 上限内の処理: タスク数が上限以下のとき、`deferred` が偽で、実行後に `pending` が 0 になることを確かめる。
 - 失敗の計上: 再適用に失敗したタスクを `task_failures` に数え、`pending` に残すことを確かめる。
+- 失敗タスクの後回し: 恒久的に失敗するタスクが上限を埋めても、次の実行で未試行のタスクが処理されることを確かめる。
+- 試行回数による順序: 失敗したタスクの `attempt_count` が増え、未試行のタスクより後ろに並ぶことを確かめる。
 - 上限の設定値: 0 以下と 1000 を超える値が既定値と上限に丸まることを確かめる。
 - スケジュール実行: EventBridge のイベントと空のペイロードで 1 回の復旧を実行し、失敗を呼び出し元に返すことを確かめる。
 - スケジュール実行の範囲: スケジュール実行が head を Scan せず、`pending` タスクだけを再適用することを確かめる。
@@ -187,13 +193,20 @@ aws lambda wait function-updated-v2 --function-name <復旧ワーカーの関数
 
 ### 手順
 
-1. 障害通知用のキューを作る。
+1. データベースに migration 6 を適用する。`read_model_recovery_tasks` に `attempt_count` と走査用のインデックスが追加される。既存の migration 手順がなければ、migration のコンテナを使う。
+
+```sh
+docker run --rm -v "$PWD/tools/migrate/migrations:/migrations" migrate/migrate:v4.20.1 \
+  -path /migrations -database "mysql://<ユーザー>:<パスワード>@tcp(<ホスト>:3306)/<データベース>" up
+```
+
+2. 障害通知用のキューを作る。
 
 ```sh
 aws sqs create-queue --queue-name cqrs-es-example-go-rmu-failure
 ```
 
-2. イベントソースマッピング、キュー、スケジュールの計画を確認する。この段階では AWS を呼ばない。
+3. イベントソースマッピング、キュー、スケジュールの計画を確認する。この段階では AWS を呼ばない。
 
 ```sh
 ./deploy/rmu/apply.sh \
@@ -203,9 +216,9 @@ aws sqs create-queue --queue-name cqrs-es-example-go-rmu-failure
   --recovery-function <復旧ワーカーの関数名>
 ```
 
-3. `--apply` を付けて適用する。既存のイベントソースマッピングがあれば更新し、なければ作成する。EventBridge のルールも作成し、復旧ワーカーの呼び出し許可を追加する。
+4. `--apply` を付けて適用する。既存のイベントソースマッピングがあれば更新し、なければ作成する。EventBridge のルールも作成し、復旧ワーカーの呼び出し許可を追加する。
 
-4. アラームとメトリクスフィルタの計画を確認する。この段階では AWS を呼ばない。
+5. アラームとメトリクスフィルタの計画を確認する。この段階では AWS を呼ばない。
 
 ```sh
 ./deploy/rmu/apply-alarms.sh \
@@ -214,7 +227,7 @@ aws sqs create-queue --queue-name cqrs-es-example-go-rmu-failure
   --failure-queue-url <障害通知用キューの URL>
 ```
 
-5. `--apply` を付けてアラームを適用する。復旧ワーカーのロググループがなければ作り、完了ログから 4 つのメトリクスを作る。
+6. `--apply` を付けてアラームを適用する。復旧ワーカーのロググループがなければ作り、完了ログから 4 つのメトリクスを作る。
 
 ```sh
 ./deploy/rmu/apply-alarms.sh \
@@ -227,7 +240,7 @@ aws sqs create-queue --queue-name cqrs-es-example-go-rmu-failure
 
 `--alarm-actions` は任意である。指定しないと、アラームはコンソールの状態だけを変え、通知を送らない。SNS トピックのポリシーで CloudWatch からの発行を許可しておく。
 
-6. 設定を確認する。
+7. 設定を確認する。
 
 ```sh
 aws lambda get-event-source-mapping --uuid <UUID> --output json
@@ -237,7 +250,7 @@ aws cloudwatch describe-alarms --alarm-name-prefix rmu-
 
 `BisectBatchOnFunctionError` が `true`、`FunctionResponseTypes` に `ReportBatchItemFailures` が入り、`DestinationConfig.OnFailure.Destination` が障害通知用キューの ARN になっていることを確かめる。スケジュールのターゲットが復旧ワーカーの ARN を指し、アラームが `OK` または `INSUFFICIENT_DATA` で作られていることも確かめる。
 
-7. 復旧ワーカーを 1 回手動で呼び、完了ログとメトリクスを確認する。`pending`、`deferred`、`task_failures`、`resync_failed` のフィールドが出る。
+8. 復旧ワーカーを 1 回手動で呼び、完了ログとメトリクスを確認する。`pending`、`deferred`、`task_failures`、`resync_failed` のフィールドが出る。
 
 ### 注意
 

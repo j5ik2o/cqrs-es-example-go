@@ -410,6 +410,50 @@ func TestMySQLRecoveryTaskStore_ListPendingHonoursFilterAndLimit(t *testing.T) {
 	}
 }
 
+func TestMySQLRecoveryTaskStore_FailedTaskMovesBehindUntriedTasks(t *testing.T) {
+	ctx := context.Background()
+	db := newReadModelTestDB(t)
+	store := NewMySQLRecoveryTaskStore(db)
+	filter := RecoveryTaskFilter{
+		StoreID: "store-1", ProjectionName: ProjectionName, ProjectionVersion: ProjectionVersion,
+	}
+	aggregateIDs := []string{
+		"GroupChat-01H42K4ABWQ5V2XQEP3A48VE01",
+		"GroupChat-01H42K4ABWQ5V2XQEP3A48VE02",
+		"GroupChat-01H42K4ABWQ5V2XQEP3A48VE03",
+	}
+	for _, aid := range aggregateIDs {
+		require.NoError(t, store.Record(ctx, RecoveryTask{
+			StoreID: filter.StoreID, ProjectionName: filter.ProjectionName,
+			ProjectionVersion: filter.ProjectionVersion, AggregateID: aid, SeqNr: 1,
+			FailureType: FailureKindEventPayload, ErrorMessage: "invalid payload",
+		}))
+	}
+
+	pending, err := store.ListPending(ctx, filter)
+	require.NoError(t, err)
+	require.Equal(t, aggregateIDs, pendingAggregateIDs(pending))
+
+	require.NoError(t, store.MarkAttempted(ctx, filter.StoreID, filter.ProjectionName, aggregateIDs[0], 1))
+
+	pending, err = store.ListPending(ctx, filter)
+	require.NoError(t, err)
+	// The failed task stays pending but moves behind the untried ones, so the
+	// next pass cannot starve them behind a full limit of failures.
+	require.Equal(t, []string{aggregateIDs[1], aggregateIDs[2], aggregateIDs[0]}, pendingAggregateIDs(pending))
+	count, err := store.CountPending(ctx, filter)
+	require.NoError(t, err)
+	require.Equal(t, 3, count)
+}
+
+func pendingAggregateIDs(tasks []RecoveryTask) []string {
+	ids := make([]string, len(tasks))
+	for i, task := range tasks {
+		ids[i] = task.AggregateID
+	}
+	return ids
+}
+
 func TestHandleDynamoDBEvent_ReportsFailedAndBlockedRecords(t *testing.T) {
 	ctx := context.Background()
 	db := newReadModelTestDB(t)
@@ -635,6 +679,21 @@ func (s *fakeRecoveryTaskStore) CountPending(_ context.Context, filter RecoveryT
 		}
 	}
 	return pending, nil
+}
+
+func (s *fakeRecoveryTaskStore) MarkAttempted(_ context.Context, storeID, projectionName, aggregateID string, seqNr int64) error {
+	key := recoveryTaskKey(RecoveryTask{
+		StoreID: storeID, ProjectionName: projectionName, AggregateID: aggregateID, SeqNr: seqNr,
+	})
+	for i := range s.tasks {
+		if recoveryTaskKey(s.tasks[i]) == key {
+			task := s.tasks[i]
+			s.tasks = append(s.tasks[:i], s.tasks[i+1:]...)
+			s.tasks = append(s.tasks, task)
+			return nil
+		}
+	}
+	return nil
 }
 
 func (s *fakeRecoveryTaskStore) MarkCompleted(_ context.Context, storeID, projectionName, aggregateID string, seqNr int64) error {

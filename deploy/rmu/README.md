@@ -25,6 +25,9 @@ reasoning behind each value are in [RMU recovery](../../docs/RMU_RECOVERY.ja.md)
 ## Prerequisites
 
 - AWS CLI v2 and `jq`.
+- Migration 6 applied to the read model database. It adds `attempt_count` and
+  the scan index to `read_model_recovery_tasks`; a failed task is then moved
+  behind untried tasks so the task limit cannot starve newer work.
 - Two Lambda functions built from the container image in `Dockerfile.rmu`.
   The main function uses the image command `rmu`; the recovery worker uses
   `recoverRmuWorker`. The base image entrypoint passes the image command
@@ -110,8 +113,10 @@ outside Lambda.
 
 One pass processes at most `RECOVERY_MAX_TASKS_PER_PASS` tasks (default `100`,
 maximum `1000`). When more tasks are pending, the rest stay `pending` and the
-next run picks them up. The completion log records `deferred: 1` and the
-remaining `pending` count. The EventBridge rule runs the worker every five
+next run picks them up. A failed task increments `attempt_count` and moves
+behind untried tasks, so a full limit of permanently failing tasks does not
+starve newer work. The completion log records `deferred: 1` and the remaining
+`pending` count. The EventBridge rule runs the worker every five
 minutes even when no SQS notification arrives. The scheduled run replays
 pending tasks only; it does not scan the head table. The notification and the
 manual `recoverRmu` command keep the full reconciliation path.

@@ -157,10 +157,12 @@ func (s *RecoveryService) Recover(ctx context.Context, task RecoveryTask) error 
 	return nil
 }
 
-// RecoverPending replays pending tasks in creation order and returns the tasks
-// that still fail. One failing aggregate does not stop the others. The pass
-// reads at most one task beyond the limit to detect leftovers; the extra task
-// and everything after it stay pending for the next run.
+// RecoverPending replays pending tasks in attempt order and returns the tasks
+// that still fail. One failing aggregate does not stop the others. A failed
+// task is moved behind tasks that have been tried fewer times, so a full limit
+// of permanently failing tasks cannot starve newer work. The pass reads at
+// most one task beyond the limit to detect leftovers; the extra task and
+// everything after it stay pending for the next run.
 func (s *RecoveryService) RecoverPending(ctx context.Context) (RecoveryPendingResult, error) {
 	if s == nil {
 		return RecoveryPendingResult{}, nil
@@ -193,6 +195,11 @@ func (s *RecoveryService) RecoverPending(ctx context.Context) (RecoveryPendingRe
 		if err := s.Recover(ctx, task); err != nil {
 			result.Failed++
 			errs = append(errs, err)
+			if attemptErr := s.store.MarkAttempted(ctx, task.StoreID, task.ProjectionName,
+				task.AggregateID, task.SeqNr); attemptErr != nil {
+				errs = append(errs, fmt.Errorf("record recovery attempt for %s seq_nr %d: %w",
+					task.AggregateID, task.SeqNr, attemptErr))
+			}
 			continue
 		}
 		result.Completed++

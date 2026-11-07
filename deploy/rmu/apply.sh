@@ -241,9 +241,11 @@ WORKER_ARN=$(aws lambda get-function-configuration \
   --query 'FunctionArn' \
   --output text)
 
+# AWS CLI parses --targets as shorthand. The nested RetryPolicy must use the
+# shorthand form; quoted JSON keys fail with "Expected: '=', received: '\"'".
 aws events put-targets \
   --rule "$SCHEDULE_RULE" \
-  --targets "Id=recovery-worker,Arn=${WORKER_ARN},RetryPolicy={\"MaximumRetryAttempts\":${SCHEDULE_MAX_RETRY},\"MaximumEventAgeInSeconds\":${SCHEDULE_MAX_AGE}}"
+  --targets "Id=recovery-worker,Arn=${WORKER_ARN},RetryPolicy={MaximumRetryAttempts=${SCHEDULE_MAX_RETRY},MaximumEventAgeInSeconds=${SCHEDULE_MAX_AGE}}"
 
 if ! PERMISSION_OUTPUT=$(aws lambda add-permission \
   --function-name "$RECOVERY_FUNCTION" \
