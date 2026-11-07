@@ -277,8 +277,8 @@ func Test_EditMessage(t *testing.T) {
 		ExecutorID:  userAccountId.AsString(),
 	})
 	require.NoError(t, err)
-	require.NotNil(t, messageResult)
-	require.NotNil(t, messageResult.GroupChatID)
+	require.NotNil(t, groupResult)
+	require.Equal(t, groupChatID, groupResult.GroupChatID)
 
 	groupChatId := models.NewGroupChatIdFromString(messageResult.GroupChatID).MustGet()
 	messageId := models.NewMessageIdFromString(messageResult.MessageID).MustGet()

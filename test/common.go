@@ -25,8 +25,8 @@ import (
 )
 
 func CreateMySQLContainer(ctx context.Context) (*testcontainermysql.MySQLContainer, error) {
-	container, err := testcontainermysql.RunContainer(ctx,
-		testcontainers.WithImage("mysql:8.2"),
+	container, err := testcontainermysql.Run(ctx,
+		"mysql:8.2",
 		// mysql.WithConfigFile(filepath.Join("testdata", "my_8.cnf")),
 		testcontainermysql.WithDatabase("ceer"),
 		testcontainermysql.WithUsername("ceer"),
@@ -37,19 +37,15 @@ func CreateMySQLContainer(ctx context.Context) (*testcontainermysql.MySQLContain
 }
 
 func CreateLocalStackContainer(ctx context.Context) (*localstack.LocalStackContainer, error) {
-	container, err := localstack.RunContainer(
+	container, err := localstack.Run(
 		ctx,
-		testcontainers.CustomizeRequest(testcontainers.GenericContainerRequest{
-			ContainerRequest: testcontainers.ContainerRequest{
-				Image: "localstack/localstack:2.1.0",
-				Env: map[string]string{
-					"SERVICES":              "dynamodb,dynamodbstreams",
-					"DEFAULT_REGION":        "us-east-1",
-					"EAGER_SERVICE_LOADING": "1",
-					"DYNAMODB_SHARED_DB":    "1",
-					"DYNAMODB_IN_MEMORY":    "1",
-				},
-			},
+		"localstack/localstack:2.1.0",
+		testcontainers.WithEnv(map[string]string{
+			"SERVICES":              "dynamodb,dynamodbstreams",
+			"DEFAULT_REGION":        "us-east-1",
+			"EAGER_SERVICE_LOADING": "1",
+			"DYNAMODB_SHARED_DB":    "1",
+			"DYNAMODB_IN_MEMORY":    "1",
 		}),
 	)
 	return container, err
@@ -186,7 +182,7 @@ func GetDataSourceName(port network.Port) string {
 	return dataSourceName
 }
 
-func MigrateDB(t *testing.T, err error, db *sqlx.DB, position string) error {
+func MigrateDB(t *testing.T, db *sqlx.DB, position string) error {
 	driver, err := mysql.WithInstance(db.DB, &mysql.Config{})
 	require.NoError(t, err)
 	m, err := migrate.NewWithDatabaseInstance(

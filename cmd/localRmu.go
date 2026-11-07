@@ -239,19 +239,19 @@ func loadAWSConfig(awsRegion, endpointUrl, accessKeyId, secretKey string) (aws.C
 	if secretKey == "" {
 		return aws.Config{}, fmt.Errorf("AWS_DYNAMODB_SECRET_ACCESS_KEY is required")
 	}
-	customResolver := aws.EndpointResolverWithOptionsFunc(
-		func(service, region string, opts ...interface{}) (aws.Endpoint, error) {
-			return aws.Endpoint{
-				PartitionID:   "aws",
-				URL:           endpointUrl,
-				SigningRegion: region,
-			}, nil
-		})
-	return config.LoadDefaultConfig(context.Background(),
+	cfg, err := config.LoadDefaultConfig(context.Background(),
 		config.WithRegion(awsRegion),
-		config.WithEndpointResolverWithOptions(customResolver),
+		config.WithBaseEndpoint(endpointUrl),
 		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(accessKeyId, secretKey, "x")),
 	)
+	if err != nil {
+		return aws.Config{}, err
+	}
+	// AWS_IGNORE_CONFIGURED_ENDPOINT_URLS clears the endpoint resolved from
+	// config. The endpoint passed here is the app's explicit setting, so keep
+	// it for the DynamoDB and Streams clients.
+	cfg.BaseEndpoint = aws.String(endpointUrl)
+	return cfg, nil
 }
 
 // streamDriver polls every shard of the head table's stream. The first iterator

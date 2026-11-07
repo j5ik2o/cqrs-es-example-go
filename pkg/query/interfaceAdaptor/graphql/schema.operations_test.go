@@ -81,7 +81,7 @@ func newGraphQLTestServer(t *testing.T) (*handler.Server, *sqlx.DB) {
 	t.Cleanup(func() {
 		require.NoError(t, db.Close())
 	})
-	require.NoError(t, test.MigrateDB(t, nil, db, "../../../../"))
+	require.NoError(t, test.MigrateDB(t, db, "../../../../"))
 	return handler.NewDefaultServer(NewExecutableSchema(Config{Resolvers: NewResolver(db)})), db
 }
 
