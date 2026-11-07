@@ -13,13 +13,19 @@ import (
 )
 
 type fakeRecoveryRunner struct {
-	result RecoveryPassResult
-	err    error
-	calls  int
+	result         RecoveryPassResult
+	err            error
+	calls          int
+	scheduledCalls int
 }
 
 func (f *fakeRecoveryRunner) Run(context.Context) (RecoveryPassResult, error) {
 	f.calls++
+	return f.result, f.err
+}
+
+func (f *fakeRecoveryRunner) RunScheduled(context.Context) (RecoveryPassResult, error) {
+	f.scheduledCalls++
 	return f.result, f.err
 }
 
@@ -103,7 +109,8 @@ func TestRecoveryWorker_ScheduledPassReturnsRetryableError(t *testing.T) {
 	err := worker.HandleScheduledEvent(context.Background())
 
 	require.Error(t, err)
-	require.Equal(t, 1, runner.calls)
+	require.Equal(t, 1, runner.scheduledCalls)
+	require.Zero(t, runner.calls)
 }
 
 func TestRecoveryWorker_ScheduledPassSucceeds(t *testing.T) {
@@ -111,7 +118,8 @@ func TestRecoveryWorker_ScheduledPassSucceeds(t *testing.T) {
 	worker := NewRecoveryWorker(runner)
 
 	require.NoError(t, worker.HandleScheduledEvent(context.Background()))
-	require.Equal(t, 1, runner.calls)
+	require.Equal(t, 1, runner.scheduledCalls)
+	require.Zero(t, runner.calls)
 }
 
 func TestRecoveryWorker_HandleEventDispatchesSQSAndSchedule(t *testing.T) {
@@ -132,13 +140,15 @@ func TestRecoveryWorker_HandleEventDispatchesSQSAndSchedule(t *testing.T) {
 	_, err = NewRecoveryWorker(scheduledRunner).HandleEvent(ctx,
 		json.RawMessage(`{"source":"aws.events","detail-type":"Scheduled Event"}`))
 	require.Error(t, err)
-	require.Equal(t, 1, scheduledRunner.calls)
+	require.Equal(t, 1, scheduledRunner.scheduledCalls)
+	require.Zero(t, scheduledRunner.calls)
 
 	// The operations guide invokes the function with an empty payload.
 	emptyRunner := &fakeRecoveryRunner{}
 	_, err = NewRecoveryWorker(emptyRunner).HandleEvent(ctx, json.RawMessage(`{}`))
 	require.NoError(t, err)
-	require.Equal(t, 1, emptyRunner.calls)
+	require.Equal(t, 1, emptyRunner.scheduledCalls)
+	require.Zero(t, emptyRunner.calls)
 }
 
 func TestRecoveryWorker_HandleEventRejectsMalformedPayload(t *testing.T) {

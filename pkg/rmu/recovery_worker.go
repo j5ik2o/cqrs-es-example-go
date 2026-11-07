@@ -15,9 +15,12 @@ import (
 // line, so keep the message and field names stable.
 const recoveryPassFinishedMessage = "recovery pass finished"
 
-// RecoveryRunner is the part of RecoveryPass the worker needs.
+// RecoveryRunner is the part of RecoveryPass the worker needs. The SQS path
+// uses Run (resync plus pending replay); the schedule uses RunScheduled (pending
+// replay only) so a frequent tick does not scan the whole head table.
 type RecoveryRunner interface {
 	Run(ctx context.Context) (RecoveryPassResult, error)
+	RunScheduled(ctx context.Context) (RecoveryPassResult, error)
 }
 
 // RecoveryWorker turns an SQS notification or a scheduled invocation into one
@@ -87,7 +90,7 @@ func (w *RecoveryWorker) HandleSQSEvent(ctx context.Context, event events.SQSEve
 // see the invocation failure; a permanent data problem stays visible instead
 // of being silently deferred.
 func (w *RecoveryWorker) HandleScheduledEvent(ctx context.Context) error {
-	result, err := w.runner.Run(ctx)
+	result, err := w.runner.RunScheduled(ctx)
 	logRecoveryPass(result, err)
 	if err != nil {
 		slog.Error("scheduled recovery pass failed", "error", err)

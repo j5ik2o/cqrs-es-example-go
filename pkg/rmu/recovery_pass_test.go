@@ -22,3 +22,19 @@ func TestRecoveryPass_RunsRecoveryEvenWhenResyncFails(t *testing.T) {
 	require.ErrorContains(t, err, "resync scan failed")
 	require.ErrorContains(t, err, "list recovery tasks")
 }
+
+func TestRecoveryPass_ScheduledRunSkipsHeadScan(t *testing.T) {
+	// The schedule only replays pending tasks. A head scan on every tick would
+	// read the whole table for no reason.
+	scanner := &fakeHeadScanner{err: errors.New("head scan must not run")}
+	resyncer := NewResyncer(nil, scanner, nil)
+	recovery := NewRecoveryService(&fakeRecoveryTaskStore{}, staticStoreID{"store-1"}, nil)
+	pass := NewRecoveryPass(resyncer, recovery)
+
+	result, err := pass.RunScheduled(context.Background())
+
+	require.NoError(t, err)
+	require.False(t, result.ResyncFailed)
+	require.Zero(t, result.Resync.Heads)
+	require.Zero(t, result.Recovery.Completed)
+}

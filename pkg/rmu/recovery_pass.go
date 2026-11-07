@@ -35,3 +35,13 @@ func (p *RecoveryPass) Run(ctx context.Context) (RecoveryPassResult, error) {
 		ResyncFailed: resyncErr != nil,
 	}, errors.Join(resyncErr, recoveryErr)
 }
+
+// RunScheduled replays pending tasks without scanning the head table. The
+// schedule is the safety net for a lost SQS notification, so the durable tasks
+// are the only work it needs. A full scan every few minutes would read the
+// whole head table for no reason; the notification and the manual recoverRmu
+// command keep the full reconciliation path.
+func (p *RecoveryPass) RunScheduled(ctx context.Context) (RecoveryPassResult, error) {
+	recoveryResult, err := p.recovery.RecoverPending(ctx)
+	return RecoveryPassResult{Recovery: recoveryResult}, err
+}

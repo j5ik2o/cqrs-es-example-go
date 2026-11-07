@@ -112,7 +112,9 @@ One pass processes at most `RECOVERY_MAX_TASKS_PER_PASS` tasks (default `100`,
 maximum `1000`). When more tasks are pending, the rest stay `pending` and the
 next run picks them up. The completion log records `deferred: 1` and the
 remaining `pending` count. The EventBridge rule runs the worker every five
-minutes even when no SQS notification arrives.
+minutes even when no SQS notification arrives. The scheduled run replays
+pending tasks only; it does not scan the head table. The notification and the
+manual `recoverRmu` command keep the full reconciliation path.
 
 ## Rollback
 
