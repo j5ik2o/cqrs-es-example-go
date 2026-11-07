@@ -44,6 +44,12 @@ wait_for_read() {
 	while [ "${attempt}" -lt "${POLL_ATTEMPTS}" ]; do
 		result=$(post_graphql "${READ_API_SERVER_BASE_URL}" "${body}")
 		if echo "${result}" | jq -e .errors > /dev/null; then
+			# A 404 means the RMU has not projected the event yet; keep polling.
+			if echo "${result}" | jq -e '.errors | all(.extensions.code == "404")' > /dev/null; then
+				attempt=$((attempt + 1))
+				sleep "${POLL_INTERVAL_SECONDS}"
+				continue
+			fi
 			echo "Error: ${result}"
 			exit 1
 		fi
