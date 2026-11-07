@@ -14,3 +14,13 @@ Be sure to start Docker before running the test.
 ```shell
 $ make test
 ```
+
+## How to lint
+
+`make vet` runs `go vet`, and `make lint` runs [staticcheck](https://staticcheck.dev/).
+The CI `lint` job runs both `make vet` and `make lint`.
+
+```shell
+$ make vet
+$ make lint
+```
