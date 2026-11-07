@@ -353,16 +353,105 @@ func TestMySQLRecoveryTaskStore_RecordIsIdempotentAndCompletes(t *testing.T) {
 	task.ErrorMessage = "still invalid"
 	require.NoError(t, store.Record(ctx, task))
 
-	pending, err := store.ListPending(ctx)
+	filter := RecoveryTaskFilter{
+		StoreID: task.StoreID, ProjectionName: task.ProjectionName, ProjectionVersion: task.ProjectionVersion,
+	}
+	pending, err := store.ListPending(ctx, filter)
 	require.NoError(t, err)
 	require.Len(t, pending, 1)
 	require.Equal(t, "still invalid", pending[0].ErrorMessage)
 	require.Equal(t, FailureKindEventPayload, pending[0].FailureType)
 
 	require.NoError(t, store.MarkCompleted(ctx, task.StoreID, task.ProjectionName, task.AggregateID, task.SeqNr))
-	pending, err = store.ListPending(ctx)
+	pending, err = store.ListPending(ctx, filter)
 	require.NoError(t, err)
 	require.Empty(t, pending)
+	count, err := store.CountPending(ctx, filter)
+	require.NoError(t, err)
+	require.Zero(t, count)
+}
+
+func TestMySQLRecoveryTaskStore_ListPendingHonoursFilterAndLimit(t *testing.T) {
+	ctx := context.Background()
+	db := newReadModelTestDB(t)
+	store := NewMySQLRecoveryTaskStore(db)
+	filter := RecoveryTaskFilter{
+		StoreID: "store-1", ProjectionName: ProjectionName, ProjectionVersion: ProjectionVersion,
+	}
+	for _, aid := range []string{
+		"GroupChat-01H42K4ABWQ5V2XQEP3A48VE01",
+		"GroupChat-01H42K4ABWQ5V2XQEP3A48VE02",
+		"GroupChat-01H42K4ABWQ5V2XQEP3A48VE03",
+	} {
+		require.NoError(t, store.Record(ctx, RecoveryTask{
+			StoreID: filter.StoreID, ProjectionName: filter.ProjectionName,
+			ProjectionVersion: filter.ProjectionVersion, AggregateID: aid, SeqNr: 1,
+			FailureType: FailureKindEventPayload, ErrorMessage: "invalid payload",
+		}))
+	}
+	require.NoError(t, store.Record(ctx, RecoveryTask{
+		StoreID: "another-store", ProjectionName: ProjectionName, ProjectionVersion: ProjectionVersion,
+		AggregateID: "GroupChat-01H42K4ABWQ5V2XQEP3A48VE04", SeqNr: 1,
+		FailureType: FailureKindEventPayload, ErrorMessage: "invalid payload",
+	}))
+
+	count, err := store.CountPending(ctx, filter)
+	require.NoError(t, err)
+	require.Equal(t, 3, count)
+
+	limited, err := store.ListPending(ctx, RecoveryTaskFilter{
+		StoreID: filter.StoreID, ProjectionName: filter.ProjectionName,
+		ProjectionVersion: filter.ProjectionVersion, Limit: 2,
+	})
+	require.NoError(t, err)
+	require.Len(t, limited, 2)
+	for _, task := range limited {
+		require.Equal(t, "store-1", task.StoreID)
+	}
+}
+
+func TestMySQLRecoveryTaskStore_FailedTaskMovesBehindUntriedTasks(t *testing.T) {
+	ctx := context.Background()
+	db := newReadModelTestDB(t)
+	store := NewMySQLRecoveryTaskStore(db)
+	filter := RecoveryTaskFilter{
+		StoreID: "store-1", ProjectionName: ProjectionName, ProjectionVersion: ProjectionVersion,
+	}
+	aggregateIDs := []string{
+		"GroupChat-01H42K4ABWQ5V2XQEP3A48VE01",
+		"GroupChat-01H42K4ABWQ5V2XQEP3A48VE02",
+		"GroupChat-01H42K4ABWQ5V2XQEP3A48VE03",
+	}
+	for _, aid := range aggregateIDs {
+		require.NoError(t, store.Record(ctx, RecoveryTask{
+			StoreID: filter.StoreID, ProjectionName: filter.ProjectionName,
+			ProjectionVersion: filter.ProjectionVersion, AggregateID: aid, SeqNr: 1,
+			FailureType: FailureKindEventPayload, ErrorMessage: "invalid payload",
+		}))
+	}
+
+	pending, err := store.ListPending(ctx, filter)
+	require.NoError(t, err)
+	require.Equal(t, aggregateIDs, pendingAggregateIDs(pending))
+
+	require.NoError(t, store.MarkAttempted(ctx, filter.StoreID, filter.ProjectionName, aggregateIDs[0], 1))
+
+	pending, err = store.ListPending(ctx, filter)
+	require.NoError(t, err)
+	// The failed task stays pending but moves behind the untried ones, so the
+	// next pass cannot starve them behind a full limit of failures.
+	require.Equal(t, []string{aggregateIDs[1], aggregateIDs[2], aggregateIDs[0]}, pendingAggregateIDs(pending))
+	count, err := store.CountPending(ctx, filter)
+	require.NoError(t, err)
+	require.Equal(t, 3, count)
+}
+
+func pendingAggregateIDs(tasks []RecoveryTask) []string {
+	ids := make([]string, len(tasks))
+	for i, task := range tasks {
+		ids[i] = task.AggregateID
+	}
+	return ids
 }
 
 func TestHandleDynamoDBEvent_ReportsFailedAndBlockedRecords(t *testing.T) {
@@ -478,9 +567,11 @@ func TestRecoveryService_RecoverPendingSkipsOtherProjectionsAndStores(t *testing
 	applier := NewApplier(NewGroupChatDaoImpl(db), journal, 1)
 	recovery := NewRecoveryService(store, staticStoreID{"store-1"}, applier)
 
-	completed, err := recovery.RecoverPending(ctx)
+	result, err := recovery.RecoverPending(ctx)
 	require.NoError(t, err)
-	require.Equal(t, 1, completed)
+	require.Equal(t, 1, result.Completed)
+	require.Equal(t, 0, result.Pending)
+	require.False(t, result.Deferred)
 	require.Equal(t, int64(2), readModelPosition(t, db, fixture.aid()))
 	require.Len(t, store.completed, 1)
 }
@@ -566,16 +657,81 @@ func (s *fakeRecoveryTaskStore) Record(_ context.Context, task RecoveryTask) err
 	return nil
 }
 
-func (s *fakeRecoveryTaskStore) ListPending(context.Context) ([]RecoveryTask, error) {
+func (s *fakeRecoveryTaskStore) ListPending(_ context.Context, filter RecoveryTaskFilter) ([]RecoveryTask, error) {
 	if s.listErr != nil {
 		return nil, s.listErr
 	}
-	return s.tasks, nil
+	matched := s.matching(filter)
+	if filter.Limit > 0 && len(matched) > filter.Limit {
+		matched = matched[:filter.Limit]
+	}
+	return matched, nil
+}
+
+func (s *fakeRecoveryTaskStore) CountPending(_ context.Context, filter RecoveryTaskFilter) (int, error) {
+	if s.listErr != nil {
+		return 0, s.listErr
+	}
+	pending := 0
+	for _, task := range s.matching(filter) {
+		if !s.isCompleted(task) {
+			pending++
+		}
+	}
+	return pending, nil
+}
+
+func (s *fakeRecoveryTaskStore) MarkAttempted(_ context.Context, storeID, projectionName, aggregateID string, seqNr int64) error {
+	key := recoveryTaskKey(RecoveryTask{
+		StoreID: storeID, ProjectionName: projectionName, AggregateID: aggregateID, SeqNr: seqNr,
+	})
+	for i := range s.tasks {
+		if recoveryTaskKey(s.tasks[i]) == key {
+			task := s.tasks[i]
+			s.tasks = append(s.tasks[:i], s.tasks[i+1:]...)
+			s.tasks = append(s.tasks, task)
+			return nil
+		}
+	}
+	return nil
 }
 
 func (s *fakeRecoveryTaskStore) MarkCompleted(_ context.Context, storeID, projectionName, aggregateID string, seqNr int64) error {
-	s.completed = append(s.completed, fmt.Sprintf("%s/%s/%s/%d", storeID, projectionName, aggregateID, seqNr))
+	s.completed = append(s.completed, recoveryTaskKey(RecoveryTask{
+		StoreID: storeID, ProjectionName: projectionName, AggregateID: aggregateID, SeqNr: seqNr,
+	}))
 	return nil
+}
+
+func (s *fakeRecoveryTaskStore) matching(filter RecoveryTaskFilter) []RecoveryTask {
+	var matched []RecoveryTask
+	for _, task := range s.tasks {
+		if filter.StoreID != "" && task.StoreID != filter.StoreID {
+			continue
+		}
+		if filter.ProjectionName != "" && task.ProjectionName != filter.ProjectionName {
+			continue
+		}
+		if filter.ProjectionVersion != "" && task.ProjectionVersion != filter.ProjectionVersion {
+			continue
+		}
+		matched = append(matched, task)
+	}
+	return matched
+}
+
+func (s *fakeRecoveryTaskStore) isCompleted(task RecoveryTask) bool {
+	key := recoveryTaskKey(task)
+	for _, completed := range s.completed {
+		if completed == key {
+			return true
+		}
+	}
+	return false
+}
+
+func recoveryTaskKey(task RecoveryTask) string {
+	return fmt.Sprintf("%s/%s/%s/%d", task.StoreID, task.ProjectionName, task.AggregateID, task.SeqNr)
 }
 
 type fakeHeadScanner struct {

@@ -34,12 +34,24 @@ type RecoveryTask struct {
 	UpdatedAt         time.Time
 }
 
+// RecoveryTaskFilter scopes a pending-task query to one store and projection.
+// Limit bounds the number of rows ListPending returns; zero or less means no
+// limit. CountPending ignores Limit.
+type RecoveryTaskFilter struct {
+	StoreID           string
+	ProjectionName    string
+	ProjectionVersion string
+	Limit             int
+}
+
 // RecoveryTaskStore persists recovery tasks. Recording is idempotent on the
 // (store, projection, aggregate, seq_nr) key so a redelivered record does not
 // create duplicates.
 type RecoveryTaskStore interface {
 	Record(ctx context.Context, task RecoveryTask) error
-	ListPending(ctx context.Context) ([]RecoveryTask, error)
+	ListPending(ctx context.Context, filter RecoveryTaskFilter) ([]RecoveryTask, error)
+	CountPending(ctx context.Context, filter RecoveryTaskFilter) (int, error)
+	MarkAttempted(ctx context.Context, storeID, projectionName, aggregateID string, seqNr int64) error
 	MarkCompleted(ctx context.Context, storeID, projectionName, aggregateID string, seqNr int64) error
 }
 
@@ -70,7 +82,14 @@ func (s *MySQLRecoveryTaskStore) Record(ctx context.Context, task RecoveryTask) 
 	return err
 }
 
-func (s *MySQLRecoveryTaskStore) ListPending(ctx context.Context) ([]RecoveryTask, error) {
+const pendingRecoveryTaskWhere = `
+	store_id = ? AND projection_name = ? AND projection_version = ? AND status = ?`
+
+func pendingRecoveryTaskArgs(filter RecoveryTaskFilter) []any {
+	return []any{filter.StoreID, filter.ProjectionName, filter.ProjectionVersion, RecoveryStatusPending}
+}
+
+func (s *MySQLRecoveryTaskStore) ListPending(ctx context.Context, filter RecoveryTaskFilter) ([]RecoveryTask, error) {
 	var rows []struct {
 		StoreID           string    `db:"store_id"`
 		ProjectionName    string    `db:"projection_name"`
@@ -83,12 +102,21 @@ func (s *MySQLRecoveryTaskStore) ListPending(ctx context.Context) ([]RecoveryTas
 		CreatedAt         time.Time `db:"created_at"`
 		UpdatedAt         time.Time `db:"updated_at"`
 	}
-	if err := s.db.SelectContext(ctx, &rows, `
+	// A failed replay increments attempt_count, so the task moves behind every
+	// task that has been tried fewer times. Ordering by created_at alone would
+	// let a full limit of permanently failing tasks starve newer work.
+	query := `
 		SELECT store_id, projection_name, projection_version, aggregate_id, seq_nr,
 		       failure_type, error_message, status, created_at, updated_at
 		FROM read_model_recovery_tasks
-		WHERE status = ?
-		ORDER BY created_at, aggregate_id, seq_nr`, RecoveryStatusPending); err != nil {
+		WHERE` + pendingRecoveryTaskWhere + `
+		ORDER BY attempt_count, created_at, aggregate_id, seq_nr`
+	args := pendingRecoveryTaskArgs(filter)
+	if filter.Limit > 0 {
+		query += " LIMIT ?"
+		args = append(args, filter.Limit)
+	}
+	if err := s.db.SelectContext(ctx, &rows, query, args...); err != nil {
 		return nil, err
 	}
 	tasks := make([]RecoveryTask, len(rows))
@@ -107,6 +135,28 @@ func (s *MySQLRecoveryTaskStore) ListPending(ctx context.Context) ([]RecoveryTas
 		}
 	}
 	return tasks, nil
+}
+
+func (s *MySQLRecoveryTaskStore) CountPending(ctx context.Context, filter RecoveryTaskFilter) (int, error) {
+	var count int
+	if err := s.db.GetContext(ctx, &count, `
+		SELECT COUNT(*)
+		FROM read_model_recovery_tasks
+		WHERE`+pendingRecoveryTaskWhere, pendingRecoveryTaskArgs(filter)...); err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+// MarkAttempted moves a failed task behind tasks that have been tried fewer
+// times. The task stays pending, so the next run still retries it.
+func (s *MySQLRecoveryTaskStore) MarkAttempted(ctx context.Context, storeID, projectionName, aggregateID string, seqNr int64) error {
+	_, err := s.db.ExecContext(ctx, `
+		UPDATE read_model_recovery_tasks
+		SET attempt_count = attempt_count + 1, updated_at = ?
+		WHERE store_id = ? AND projection_name = ? AND aggregate_id = ? AND seq_nr = ? AND status = ?`,
+		time.Now(), storeID, projectionName, aggregateID, seqNr, RecoveryStatusPending)
+	return err
 }
 
 func (s *MySQLRecoveryTaskStore) MarkCompleted(ctx context.Context, storeID, projectionName, aggregateID string, seqNr int64) error {

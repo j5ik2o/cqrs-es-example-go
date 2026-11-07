@@ -62,6 +62,8 @@ var localRmuCmd = &cobra.Command{
 		journalTableName := env.String("journal", "STREAM_JOURNAL_TABLE_NAME")
 		streamMaxItemCount := env.Int64(100, "STREAM_MAX_ITEM_COUNT")
 		maxEventsPerTransaction := env.Int(1, "STREAM_MAX_EVENTS_PER_TRANSACTION")
+		recoveryTaskLimit := rmu.NormalizeRecoveryTaskLimit(
+			env.Int(rmu.DefaultRecoveryTaskLimit, "RECOVERY_MAX_TASKS_PER_PASS"))
 
 		retryPolicy := rmu.DefaultRetryPolicy()
 		retryPolicy.MaxAttempts = env.Int(retryPolicy.MaxAttempts, "STREAM_RETRY_MAX_ATTEMPTS")
@@ -81,6 +83,7 @@ var localRmuCmd = &cobra.Command{
 		slog.Info(fmt.Sprintf("STREAM_MAX_EVENTS_PER_TRANSACTION = %v", maxEventsPerTransaction))
 		slog.Info(fmt.Sprintf("STREAM_RETRY_MAX_ATTEMPTS = %v", retryPolicy.MaxAttempts))
 		slog.Info(fmt.Sprintf("STREAM_RETRY_MAX_ELAPSED = %v", retryPolicy.MaxElapsed))
+		slog.Info(fmt.Sprintf("RECOVERY_MAX_TASKS_PER_PASS = %v", recoveryTaskLimit))
 
 		awsCfg, err := loadAWSConfig(awsRegion, awsDynamoDBEndpointUrl, awsDynamoDBAccessKeyId, awsDynamoDBSecretKey)
 		if err != nil {
@@ -113,7 +116,8 @@ var localRmuCmd = &cobra.Command{
 		headScanner := rmu.NewDynamoDBHeadScanner(dynamodbClient, headTableName)
 		applier := rmu.NewApplier(dao, journalReader, maxEventsPerTransaction)
 		recoveryService := rmu.NewRecoveryService(
-			rmu.NewMySQLRecoveryTaskStore(db), headScanner, applier)
+			rmu.NewMySQLRecoveryTaskStore(db), headScanner, applier,
+			rmu.WithRecoveryTaskLimit(recoveryTaskLimit))
 		readModelUpdater := rmu.NewReadModelUpdater(dao, journalReader,
 			rmu.WithApplier(applier),
 			rmu.WithRecoveryService(recoveryService),
@@ -128,10 +132,21 @@ var localRmuCmd = &cobra.Command{
 		// rather than left until the next trim event.
 		resyncBackoff := rmu.NewBackoff(500*time.Millisecond, 30*time.Second)
 		resyncUntilResolved(ctx, resyncer, retryPolicy, resyncBackoff, "initial reconciliation")
-		if completed, err := recoveryService.RecoverPending(ctx); err != nil {
-			slog.Warn("some pending recovery tasks did not complete", "completed", completed, "error", err)
-		} else if completed > 0 {
-			slog.Info("completed pending recovery tasks", "count", completed)
+		// The local reader has no schedule. Keep draining the tasks the limit
+		// deferred, but stop when a pass completes nothing so a set of
+		// permanently failing tasks cannot loop forever.
+		for {
+			result, err := recoveryService.RecoverPending(ctx)
+			if err != nil {
+				slog.Warn("some pending recovery tasks did not complete",
+					"completed", result.Completed, "pending", result.Pending, "error", err)
+			} else if result.Completed > 0 {
+				slog.Info("completed pending recovery tasks",
+					"count", result.Completed, "pending", result.Pending, "deferred", result.Deferred)
+			}
+			if !result.Deferred || result.Completed == 0 {
+				break
+			}
 		}
 
 		backoff := rmu.NewBackoff(500*time.Millisecond, 30*time.Second)

@@ -7,8 +7,9 @@ import (
 
 // RecoveryPassResult summarises one resync and pending-task replay.
 type RecoveryPassResult struct {
-	Resync    ResyncResult
-	Completed int
+	Resync       ResyncResult
+	Recovery     RecoveryPendingResult
+	ResyncFailed bool
 }
 
 // RecoveryPass is the recovery job behind both the one-shot recoverRmu command
@@ -26,10 +27,21 @@ func NewRecoveryPass(resyncer *Resyncer, recovery *RecoveryService) *RecoveryPas
 // Run executes both steps even when the resync fails. Pending tasks are
 // independent work, and a transient scan failure must not block them.
 func (p *RecoveryPass) Run(ctx context.Context) (RecoveryPassResult, error) {
-	var result RecoveryPassResult
 	resyncResult, resyncErr := p.resyncer.Resync(ctx)
-	result.Resync = resyncResult
-	completed, recoveryErr := p.recovery.RecoverPending(ctx)
-	result.Completed = completed
-	return result, errors.Join(resyncErr, recoveryErr)
+	recoveryResult, recoveryErr := p.recovery.RecoverPending(ctx)
+	return RecoveryPassResult{
+		Resync:       resyncResult,
+		Recovery:     recoveryResult,
+		ResyncFailed: resyncErr != nil,
+	}, errors.Join(resyncErr, recoveryErr)
+}
+
+// RunScheduled replays pending tasks without scanning the head table. The
+// schedule is the safety net for a lost SQS notification, so the durable tasks
+// are the only work it needs. A full scan every few minutes would read the
+// whole head table for no reason; the notification and the manual recoverRmu
+// command keep the full reconciliation path.
+func (p *RecoveryPass) RunScheduled(ctx context.Context) (RecoveryPassResult, error) {
+	recoveryResult, err := p.recovery.RecoverPending(ctx)
+	return RecoveryPassResult{Recovery: recoveryResult}, err
 }

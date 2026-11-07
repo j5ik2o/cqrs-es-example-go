@@ -195,7 +195,7 @@ func MigrateDB(t *testing.T, err error, db *sqlx.DB, position string) error {
 		driver,
 	)
 	require.NoError(t, err)
-	err = m.Steps(5)
+	err = m.Up()
 	require.NoError(t, err)
 	return err
 }

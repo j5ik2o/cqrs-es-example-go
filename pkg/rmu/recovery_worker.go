@@ -1,26 +1,60 @@
 package rmu
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	"fmt"
 	"log/slog"
 
 	"github.com/aws/aws-lambda-go/events"
 )
 
-// RecoveryRunner is the part of RecoveryPass the SQS worker needs.
+// recoveryPassFinishedMessage is a metrics contract. CloudWatch Logs metric
+// filters in deploy/rmu/cloudwatch-alarms.json read the JSON fields of this
+// line, so keep the message and field names stable.
+const recoveryPassFinishedMessage = "recovery pass finished"
+
+// RecoveryRunner is the part of RecoveryPass the worker needs. The SQS path
+// uses Run (resync plus pending replay); the schedule uses RunScheduled (pending
+// replay only) so a frequent tick does not scan the whole head table.
 type RecoveryRunner interface {
 	Run(ctx context.Context) (RecoveryPassResult, error)
+	RunScheduled(ctx context.Context) (RecoveryPassResult, error)
 }
 
-// RecoveryWorker turns an SQS notification into one recovery pass. The message
-// body is not read. The durable task in MySQL is the source of truth, and the
-// message only wakes the worker.
+// RecoveryWorker turns an SQS notification or a scheduled invocation into one
+// recovery pass. An SQS message body is not read. The durable task in MySQL is
+// the source of truth, and the message only wakes the worker.
 type RecoveryWorker struct {
 	runner RecoveryRunner
 }
 
 func NewRecoveryWorker(runner RecoveryRunner) *RecoveryWorker {
 	return &RecoveryWorker{runner: runner}
+}
+
+// HandleEvent dispatches the Lambda invocation shape. An SQS batch comes from
+// the OnFailure queue. An EventBridge schedule, or the empty payload in the
+// operations guide, runs one pass. A raw payload without Records is treated as
+// a scheduled run so both paths share one function.
+func (w *RecoveryWorker) HandleEvent(ctx context.Context, raw json.RawMessage) (any, error) {
+	var envelope struct {
+		Records []json.RawMessage `json:"Records"`
+	}
+	if len(bytes.TrimSpace(raw)) > 0 {
+		if err := json.Unmarshal(raw, &envelope); err != nil {
+			return nil, fmt.Errorf("decode Lambda event: %w", err)
+		}
+	}
+	if len(envelope.Records) == 0 {
+		return nil, w.HandleScheduledEvent(ctx)
+	}
+	var event events.SQSEvent
+	if err := json.Unmarshal(raw, &event); err != nil {
+		return nil, fmt.Errorf("decode SQS event: %w", err)
+	}
+	return w.HandleSQSEvent(ctx, event)
 }
 
 // HandleSQSEvent runs one recovery pass for the whole batch. A retryable
@@ -33,12 +67,7 @@ func NewRecoveryWorker(runner RecoveryRunner) *RecoveryWorker {
 // when this response lists failures.
 func (w *RecoveryWorker) HandleSQSEvent(ctx context.Context, event events.SQSEvent) (events.SQSEventResponse, error) {
 	result, err := w.runner.Run(ctx)
-	slog.Info("recovery pass finished",
-		"heads", result.Resync.Heads,
-		"advanced", result.Resync.Advanced,
-		"skipped", result.Resync.Skipped,
-		"failed", result.Resync.Failed,
-		"completed", result.Completed)
+	logRecoveryPass(result, err)
 	if err == nil {
 		return events.SQSEventResponse{}, nil
 	}
@@ -53,6 +82,48 @@ func (w *RecoveryWorker) HandleSQSEvent(ctx context.Context, event events.SQSEve
 	slog.Error("recovery pass failed; returning the batch for redelivery",
 		"error", err, "messages", len(failures))
 	return events.SQSEventResponse{BatchItemFailures: failures}, nil
+}
+
+// HandleScheduledEvent runs one pass from an EventBridge schedule or a manual
+// invocation. Unlike the SQS path there is no message to acknowledge, so the
+// error is returned. EventBridge retries a failed target and CloudWatch alarms
+// see the invocation failure; a permanent data problem stays visible instead
+// of being silently deferred.
+func (w *RecoveryWorker) HandleScheduledEvent(ctx context.Context) error {
+	result, err := w.runner.RunScheduled(ctx)
+	logRecoveryPass(result, err)
+	if err != nil {
+		slog.Error("scheduled recovery pass failed", "error", err)
+		return err
+	}
+	return nil
+}
+
+// logRecoveryPass writes the completion line that feeds the CloudWatch metric
+// filters. deferred and resync_failed are 1/0 so a metric filter can read them
+// as numbers.
+func logRecoveryPass(result RecoveryPassResult, err error) {
+	deferred := 0
+	if result.Recovery.Deferred {
+		deferred = 1
+	}
+	resyncFailed := 0
+	if result.ResyncFailed {
+		resyncFailed = 1
+	}
+	slog.Info(recoveryPassFinishedMessage,
+		"heads", result.Resync.Heads,
+		"advanced", result.Resync.Advanced,
+		"skipped", result.Resync.Skipped,
+		"failed", result.Resync.Failed,
+		"completed", result.Recovery.Completed,
+		"pending", result.Recovery.Pending,
+		"task_failures", result.Recovery.Failed,
+		"deferred", deferred,
+		"resync_failed", resyncFailed)
+	if err != nil {
+		slog.Error("recovery pass has errors", "error", err)
+	}
 }
 
 // isRetryableAny reports whether any error in a joined error is retryable.
