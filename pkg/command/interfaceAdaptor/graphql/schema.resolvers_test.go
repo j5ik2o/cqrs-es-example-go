@@ -278,7 +278,7 @@ func Test_EditMessage(t *testing.T) {
 	})
 	require.NoError(t, err)
 	require.NotNil(t, groupResult)
-	require.NotNil(t, groupResult.GroupChatID)
+	require.Equal(t, groupChatID, groupResult.GroupChatID)
 
 	groupChatId := models.NewGroupChatIdFromString(messageResult.GroupChatID).MustGet()
 	messageId := models.NewMessageIdFromString(messageResult.MessageID).MustGet()
