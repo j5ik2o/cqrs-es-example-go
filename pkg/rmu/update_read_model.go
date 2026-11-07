@@ -20,130 +20,177 @@ import (
 // configuration. It is not an aggregate and must be skipped.
 const configAggregateID = "__config__"
 
+// ReadModelUpdater applies head stream records to the read model.
 type ReadModelUpdater struct {
-	dao     GroupChatDao
-	journal JournalReader
+	applier  *Applier
+	recovery *RecoveryService
+	retry    RetryPolicy
+}
+
+type UpdaterOption func(*ReadModelUpdater)
+
+func WithApplier(applier *Applier) UpdaterOption {
+	return func(u *ReadModelUpdater) {
+		u.applier = applier
+	}
+}
+
+func WithRecoveryService(recovery *RecoveryService) UpdaterOption {
+	return func(u *ReadModelUpdater) {
+		u.recovery = recovery
+	}
+}
+
+func WithRetryPolicy(policy RetryPolicy) UpdaterOption {
+	return func(u *ReadModelUpdater) {
+		u.retry = policy
+	}
 }
 
 // NewReadModelUpdater is a constructor for ReadModelUpdater.
-func NewReadModelUpdater(dao GroupChatDao, journal JournalReader) ReadModelUpdater {
-	return ReadModelUpdater{dao: dao, journal: journal}
+func NewReadModelUpdater(dao GroupChatDao, journal JournalReader, opts ...UpdaterOption) ReadModelUpdater {
+	updater := ReadModelUpdater{
+		applier: NewApplier(dao, journal, 1),
+		retry:   NoRetryPolicy(),
+	}
+	for _, opt := range opts {
+		opt(&updater)
+	}
+	return updater
 }
 
-// UpdateReadModel applies the head stream records to the read model. Each record
-// carries the head item's new image, whose events list holds the events written
-// by one transaction. INSERT and MODIFY both carry events; a REMOVE never
-// happens because the store does not delete heads.
+// UpdateReadModel applies records in order and stops at the first failure.
+// Lambda uses HandleDynamoDBEvent instead so the successful records in a batch
+// are not replayed.
 func (r *ReadModelUpdater) UpdateReadModel(ctx context.Context, event dynamodbevents.DynamoDBEvent) error {
 	for _, record := range event.Records {
-		if err := r.applyRecord(ctx, record); err != nil {
+		if err := r.processRecord(ctx, record); err != nil {
 			return fmt.Errorf("process head stream record %s: %w", record.EventID, err)
 		}
 	}
 	return nil
 }
 
-func (r *ReadModelUpdater) applyRecord(ctx context.Context, record dynamodbevents.DynamoDBEventRecord) error {
-	switch record.EventName {
-	case "INSERT", "MODIFY":
-	case "REMOVE":
-		return nil
-	default:
-		return fmt.Errorf("unexpected stream event name %q", record.EventName)
-	}
-	image := record.Change.NewImage
-	if image == nil {
-		return fmt.Errorf("head stream record has no new image")
-	}
-	aggregateID, err := stringAttribute(image, "aid")
-	if err != nil {
-		return err
-	}
-	if aggregateID == configAggregateID {
-		return nil
-	}
-	if !strings.HasPrefix(aggregateID, models.GroupChatIdPrefix+"-") {
-		slog.Debug("skip head record of another aggregate type", "aid", aggregateID)
-		return nil
-	}
-	headEvents, err := parseHeadEvents(image)
-	if err != nil {
-		return err
-	}
-	for _, headEvent := range headEvents {
-		if err := r.applyHeadEvent(ctx, aggregateID, headEvent); err != nil {
-			return err
+// HandleDynamoDBEvent is the Lambda entry point. It returns the records that
+// must be redelivered as a partial batch response. Records of an aggregate whose
+// earlier event failed are also left for redelivery: the position rule forbids
+// advancing past an unapplied event, so applying them would only fail again.
+// The event source mapping must set FunctionResponseTypes to
+// ReportBatchItemFailures and BisectBatchOnFunctionError to true.
+func (r *ReadModelUpdater) HandleDynamoDBEvent(ctx context.Context, event dynamodbevents.DynamoDBEvent) (dynamodbevents.DynamoDBEventResponse, error) {
+	response := dynamodbevents.DynamoDBEventResponse{}
+	blocked := map[string]bool{}
+	for i, record := range event.Records {
+		aggregateID, ok := RecordAggregateID(record)
+		if ok && blocked[aggregateID] {
+			response.BatchItemFailures = append(response.BatchItemFailures, dynamodbevents.DynamoDBBatchItemFailure{
+				ItemIdentifier: record.EventID,
+			})
+			continue
 		}
+		if err := r.processRecord(ctx, record); err != nil {
+			response.BatchItemFailures = append(response.BatchItemFailures, dynamodbevents.DynamoDBBatchItemFailure{
+				ItemIdentifier: record.EventID,
+			})
+			if ok {
+				blocked[aggregateID] = true
+			}
+			if _, isPermanent := ClassifyFailure(err); !isPermanent {
+				// A storage outage has already consumed the retry budget. The
+				// remaining records would spend the same budget and risk the
+				// Lambda timeout, so hand them all back for redelivery.
+				for _, rest := range event.Records[i+1:] {
+					response.BatchItemFailures = append(response.BatchItemFailures, dynamodbevents.DynamoDBBatchItemFailure{
+						ItemIdentifier: rest.EventID,
+					})
+				}
+				break
+			}
+		}
+	}
+	return response, nil
+}
+
+func (r *ReadModelUpdater) processRecord(ctx context.Context, record dynamodbevents.DynamoDBEventRecord) error {
+	identity, err := parseHeadRecord(record)
+	if err != nil {
+		if _, isPermanent := ClassifyFailure(err); isPermanent && r.recovery != nil && identity.aggregateID != "" {
+			if recordErr := r.recovery.Record(ctx, identity.aggregateID, identity.seqNr, err); recordErr != nil {
+				return &RecoveryRecordError{ApplyErr: err, RecordErr: recordErr}
+			}
+		}
+		return err
+	}
+	if identity.skip {
+		return nil
+	}
+	for _, event := range identity.events {
+		applyErr := r.retry.Do(ctx, func() error {
+			return r.applier.applyHeadEvent(ctx, identity.aggregateID, event)
+		})
+		if applyErr == nil {
+			continue
+		}
+		if _, isPermanent := ClassifyFailure(applyErr); isPermanent && r.recovery != nil {
+			if recordErr := r.recovery.Record(ctx, identity.aggregateID, event.seqNr, applyErr); recordErr != nil {
+				return &RecoveryRecordError{ApplyErr: applyErr, RecordErr: recordErr}
+			}
+		}
+		return applyErr
 	}
 	return nil
 }
 
-// headEvent is one envelope entry in the head item's events list.
-type headEvent struct {
-	seqNr      int64
-	occurredAt time.Time
-	manifest   string
-	payload    []byte
+type recordIdentity struct {
+	skip        bool
+	aggregateID string
+	seqNr       int64
+	events      []headEvent
 }
 
-// applyHeadEvent applies the stream event and, when the aggregate's position is
-// behind, the journal events that fill the gap. Duplicate and stale sequence
-// numbers are dropped. The read model changes and the position advance commit
-// in one transaction.
-func (r *ReadModelUpdater) applyHeadEvent(ctx context.Context, aggregateID string, event headEvent) error {
-	groupChatID, err := models.NewGroupChatIdFromString(aggregateID).Get()
+func parseHeadRecord(record dynamodbevents.DynamoDBEventRecord) (recordIdentity, error) {
+	switch record.EventName {
+	case "INSERT", "MODIFY":
+	case "REMOVE":
+		return recordIdentity{skip: true}, nil
+	default:
+		return recordIdentity{}, permanent(FailureKindEventPayload,
+			fmt.Errorf("unexpected stream event name %q", record.EventName))
+	}
+	image := record.Change.NewImage
+	if image == nil {
+		return recordIdentity{}, permanent(FailureKindEventPayload, fmt.Errorf("head stream record has no new image"))
+	}
+	aggregateID, err := stringAttribute(image, "aid")
 	if err != nil {
-		return err
+		return recordIdentity{}, permanent(FailureKindEventPayload, err)
 	}
-
-	currentSeqNr, err := r.dao.GetPosition(ctx, aggregateID)
+	if aggregateID == configAggregateID {
+		return recordIdentity{skip: true}, nil
+	}
+	if !strings.HasPrefix(aggregateID, models.GroupChatIdPrefix+"-") {
+		slog.Debug("skip head record of another aggregate type", "aid", aggregateID)
+		return recordIdentity{skip: true}, nil
+	}
+	headSeqNr, _ := numberAttribute(image, "seq_nr")
+	headEvents, err := parseHeadEvents(image)
 	if err != nil {
-		return err
+		return recordIdentity{aggregateID: aggregateID, seqNr: headSeqNr},
+			permanent(FailureKindEventPayload, err)
 	}
-	if event.seqNr <= currentSeqNr {
-		slog.Debug("skip duplicate or stale event", "aid", aggregateID, "seq_nr", event.seqNr, "position", currentSeqNr)
-		return nil
-	}
+	return recordIdentity{aggregateID: aggregateID, seqNr: headSeqNr, events: headEvents}, nil
+}
 
-	pending := []headEvent{event}
-	if event.seqNr > currentSeqNr+1 {
-		if r.journal == nil {
-			return fmt.Errorf("aggregate %s: seq_nr %d follows position %d and no journal reader is configured", aggregateID, event.seqNr, currentSeqNr)
-		}
-		journalEvents, err := r.journal.ReadEvents(ctx, aggregateID, currentSeqNr+1, event.seqNr-1)
-		if err != nil {
-			return fmt.Errorf("aggregate %s: read journal seq_nr %d..%d: %w", aggregateID, currentSeqNr+1, event.seqNr-1, err)
-		}
-		if err := requireContiguous(currentSeqNr+1, event.seqNr-1, journalEvents); err != nil {
-			return fmt.Errorf("aggregate %s: %w", aggregateID, err)
-		}
-		gap := make([]headEvent, len(journalEvents))
-		for i, journalEvent := range journalEvents {
-			gap[i] = headEvent{
-				seqNr:      journalEvent.SeqNr,
-				occurredAt: journalEvent.OccurredAt,
-				manifest:   journalEvent.Manifest,
-				payload:    journalEvent.Payload,
-			}
-		}
-		pending = append(gap, event)
+func RecordAggregateID(record dynamodbevents.DynamoDBEventRecord) (string, bool) {
+	if record.Change.NewImage == nil {
+		return "", false
 	}
-
-	return r.dao.Process(ctx, aggregateID, func(w ReadModelWriter, position int64) (int64, error) {
-		for _, pendingEvent := range pending {
-			if pendingEvent.seqNr <= position {
-				continue
-			}
-			if pendingEvent.seqNr != position+1 {
-				return position, fmt.Errorf("expected seq_nr %d but got %d", position+1, pendingEvent.seqNr)
-			}
-			if err := applyGroupChatEvent(&groupChatID, pendingEvent, w); err != nil {
-				return position, fmt.Errorf("apply seq_nr %d: %w", pendingEvent.seqNr, err)
-			}
-			position = pendingEvent.seqNr
-		}
-		return position, nil
-	})
+	aggregateID, err := stringAttribute(record.Change.NewImage, "aid")
+	if err != nil || aggregateID == configAggregateID ||
+		!strings.HasPrefix(aggregateID, models.GroupChatIdPrefix+"-") {
+		return "", false
+	}
+	return aggregateID, true
 }
 
 func requireContiguous(fromSeqNr, toSeqNr int64, events []JournalEvent) error {
@@ -242,7 +289,7 @@ func bytesAttribute(attributes map[string]dynamodbevents.DynamoDBAttributeValue,
 func applyGroupChatEvent(groupChatId *models.GroupChatId, event headEvent, w ReadModelWriter) error {
 	groupChatEvent, err := convertGroupChatEvent(event.payload)
 	if err != nil {
-		return err
+		return permanent(FailureKindEventPayload, err)
 	}
 	switch ev := groupChatEvent.(type) {
 	case *events.GroupChatCreated:
@@ -262,7 +309,8 @@ func applyGroupChatEvent(groupChatId *models.GroupChatId, event headEvent, w Rea
 	case *events.GroupChatMessageDeleted:
 		return deleteMessage(ev, groupChatId, event.occurredAt, w)
 	default:
-		return fmt.Errorf("unsupported event type %s", groupChatEvent.GetTypeName())
+		return permanent(FailureKindUnsupportedEvent,
+			fmt.Errorf("unsupported event type %s", groupChatEvent.GetTypeName()))
 	}
 }
 

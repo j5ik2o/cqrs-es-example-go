@@ -215,6 +215,7 @@ func TestDynamoDBJournalReader_ReadEvents(t *testing.T) {
 
 	client, err := test.CreateDynamoDBClient(t, ctx, container)
 	require.NoError(t, err)
+	test.WaitForDynamoDB(t, ctx, client)
 	require.NoError(t, test.CreateJournalTable(t, ctx, client, "journal"))
 
 	aid := "GroupChat-01H42K4ABWQ5V2XQEP3A48VE0Z"
@@ -246,6 +247,7 @@ func TestDynamoDBJournalReader_ReadEvents(t *testing.T) {
 type fakeJournalReader struct {
 	events map[string][]JournalEvent
 	calls  []journalCall
+	errs   []error
 }
 
 type journalCall struct {
@@ -256,6 +258,11 @@ type journalCall struct {
 
 func (f *fakeJournalReader) ReadEvents(_ context.Context, aggregateID string, fromSeqNr, toSeqNr int64) ([]JournalEvent, error) {
 	f.calls = append(f.calls, journalCall{aggregateID: aggregateID, fromSeqNr: fromSeqNr, toSeqNr: toSeqNr})
+	if len(f.errs) > 0 {
+		err := f.errs[0]
+		f.errs = f.errs[1:]
+		return nil, err
+	}
 	var result []JournalEvent
 	for _, event := range f.events[aggregateID] {
 		if event.SeqNr >= fromSeqNr && event.SeqNr <= toSeqNr {
@@ -359,16 +366,33 @@ func journalEvents(aggregateID string, headEvents ...headEvent) []JournalEvent {
 func newReadModelTestDB(t *testing.T) *sqlx.DB {
 	t.Helper()
 	ctx := context.Background()
-	container, err := test.CreateMySQLContainer(ctx)
-	require.NoError(t, err)
-	t.Cleanup(func() { require.NoError(t, container.Terminate(ctx)) })
-	port, err := container.MappedPort(ctx, "3306")
-	require.NoError(t, err)
-	db, err := sqlx.Connect("mysql", test.GetDataSourceName(port))
-	require.NoError(t, err)
-	t.Cleanup(func() { require.NoError(t, db.Close()) })
-	require.NoError(t, test.MigrateDB(t, nil, db, "../../"))
-	return db
+	deadline := time.Now().Add(2 * time.Minute)
+	var lastErr error
+	for {
+		container, err := test.CreateMySQLContainer(ctx)
+		if err == nil {
+			port, portErr := container.MappedPort(ctx, "3306")
+			if portErr != nil {
+				lastErr = portErr
+			} else if db, dbErr := sqlx.Connect("mysql", test.GetDataSourceName(port)); dbErr != nil {
+				lastErr = dbErr
+			} else {
+				t.Cleanup(func() { require.NoError(t, container.Terminate(ctx)) })
+				t.Cleanup(func() { require.NoError(t, db.Close()) })
+				require.NoError(t, test.MigrateDB(t, nil, db, "../../"))
+				return db
+			}
+			_ = container.Terminate(ctx)
+		} else {
+			lastErr = err
+		}
+		if time.Now().After(deadline) {
+			require.NoError(t, lastErr)
+		}
+		// A shared Docker daemon can time out while starting a container.
+		// Retry so a resource spike does not fail the test body.
+		time.Sleep(2 * time.Second)
+	}
 }
 
 func readModelPosition(t *testing.T, db *sqlx.DB, aggregateID string) int64 {

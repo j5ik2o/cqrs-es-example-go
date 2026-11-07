@@ -1,9 +1,7 @@
 package rmu
 
 import (
-	"context"
 	"cqrs-es-example-go/pkg/command/domain/models"
-	"cqrs-es-example-go/test"
 	"database/sql"
 	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/require"
@@ -12,29 +10,9 @@ import (
 )
 
 func TestReadModelDao_InsertGroupChat(t *testing.T) {
-	ctx := context.Background()
-	container, err := test.CreateMySQLContainer(ctx)
-	require.NoError(t, err)
-	port, err := container.MappedPort(ctx, "3306")
-	require.NoError(t, err)
-	dataSourceName := test.GetDataSourceName(port)
-
-	db, err := sqlx.Connect("mysql", dataSourceName)
-	if err != nil {
-		panic(err.Error())
-	}
-	require.NoError(t, err)
-	defer func(db *sqlx.DB) {
-		if db != nil {
-			err := db.Close()
-			require.NoError(t, err)
-		}
-	}(db)
-
-	err = test.MigrateDB(t, err, db, "../../")
-	require.NoError(t, err)
-
+	db := newReadModelTestDB(t)
 	dao := NewGroupChatDaoImpl(db)
+	var err error
 	groupChatId := models.NewGroupChatId()
 	groupChatName := models.NewGroupChatName("test").MustGet()
 	adminId := models.NewUserAccountId()
@@ -52,29 +30,9 @@ func TestReadModelDao_InsertGroupChat(t *testing.T) {
 }
 
 func TestReadModelDao_DeleteGroupChat(t *testing.T) {
-	ctx := context.Background()
-	container, err := test.CreateMySQLContainer(ctx)
-	require.NoError(t, err)
-	port, err := container.MappedPort(ctx, "3306")
-	require.NoError(t, err)
-	dataSourceName := test.GetDataSourceName(port)
-
-	db, err := sqlx.Connect("mysql", dataSourceName)
-	if err != nil {
-		panic(err.Error())
-	}
-	require.NoError(t, err)
-	defer func(db *sqlx.DB) {
-		if db != nil {
-			err := db.Close()
-			require.NoError(t, err)
-		}
-	}(db)
-
-	err = test.MigrateDB(t, err, db, "../../")
-	require.NoError(t, err)
-
+	db := newReadModelTestDB(t)
 	dao := NewGroupChatDaoImpl(db)
+	var err error
 	groupChatId := models.NewGroupChatId()
 	groupChatName := models.NewGroupChatName("test").MustGet()
 	adminId := models.NewUserAccountId()
@@ -103,29 +61,9 @@ func TestReadModelDao_DeleteGroupChat(t *testing.T) {
 }
 
 func TestReadModelDao_RenameGroupChat(t *testing.T) {
-	ctx := context.Background()
-	container, err := test.CreateMySQLContainer(ctx)
-	require.NoError(t, err)
-	port, err := container.MappedPort(ctx, "3306")
-	require.NoError(t, err)
-	dataSourceName := test.GetDataSourceName(port)
-
-	db, err := sqlx.Connect("mysql", dataSourceName)
-	if err != nil {
-		panic(err.Error())
-	}
-	require.NoError(t, err)
-	defer func(db *sqlx.DB) {
-		if db != nil {
-			err := db.Close()
-			require.NoError(t, err)
-		}
-	}(db)
-
-	err = test.MigrateDB(t, err, db, "../../")
-	require.NoError(t, err)
-
+	db := newReadModelTestDB(t)
 	dao := NewGroupChatDaoImpl(db)
+	var err error
 	groupChatId := models.NewGroupChatId()
 	groupChatName := models.NewGroupChatName("test").MustGet()
 	adminId := models.NewUserAccountId()
@@ -146,29 +84,9 @@ func TestReadModelDao_RenameGroupChat(t *testing.T) {
 }
 
 func TestReadModelDao_InsertMember(t *testing.T) {
-	ctx := context.Background()
-	container, err := test.CreateMySQLContainer(ctx)
-	require.NoError(t, err)
-	port, err := container.MappedPort(ctx, "3306")
-	require.NoError(t, err)
-	dataSourceName := test.GetDataSourceName(port)
-
-	db, err := sqlx.Connect("mysql", dataSourceName)
-	if err != nil {
-		panic(err.Error())
-	}
-	require.NoError(t, err)
-	defer func(db *sqlx.DB) {
-		if db != nil {
-			err := db.Close()
-			require.NoError(t, err)
-		}
-	}(db)
-
-	err = test.MigrateDB(t, err, db, "../../")
-	require.NoError(t, err)
-
+	db := newReadModelTestDB(t)
 	dao := NewGroupChatDaoImpl(db)
+	var err error
 	groupChatId := models.NewGroupChatId()
 	groupChatName := models.NewGroupChatName("test").MustGet()
 	adminId := models.NewUserAccountId()
@@ -188,29 +106,9 @@ func TestReadModelDao_InsertMember(t *testing.T) {
 }
 
 func TestReadModelDao_RemoveMember(t *testing.T) {
-	ctx := context.Background()
-	container, err := test.CreateMySQLContainer(ctx)
-	require.NoError(t, err)
-	port, err := container.MappedPort(ctx, "3306")
-	require.NoError(t, err)
-	dataSourceName := test.GetDataSourceName(port)
-
-	db, err := sqlx.Connect("mysql", dataSourceName)
-	if err != nil {
-		panic(err.Error())
-	}
-	require.NoError(t, err)
-	defer func(db *sqlx.DB) {
-		if db != nil {
-			err := db.Close()
-			require.NoError(t, err)
-		}
-	}(db)
-
-	err = test.MigrateDB(t, err, db, "../../")
-	require.NoError(t, err)
-
+	db := newReadModelTestDB(t)
 	dao := NewGroupChatDaoImpl(db)
+	var err error
 	groupChatId := models.NewGroupChatId()
 	groupChatName := models.NewGroupChatName("test").MustGet()
 	adminId := models.NewUserAccountId()
@@ -236,26 +134,9 @@ func TestReadModelDao_RemoveMember(t *testing.T) {
 }
 
 func TestReadModelDao_InsertMessage(t *testing.T) {
-	ctx := context.Background()
-	container, err := test.CreateMySQLContainer(ctx)
-	require.NoError(t, err)
-	port, err := container.MappedPort(ctx, "3306")
-	require.NoError(t, err)
-	dataSourceName := test.GetDataSourceName(port)
-
-	db, err := sqlx.Connect("mysql", dataSourceName)
-	require.NoError(t, err)
-	defer func(db *sqlx.DB) {
-		if db != nil {
-			err := db.Close()
-			require.NoError(t, err)
-		}
-	}(db)
-
-	err = test.MigrateDB(t, err, db, "../../")
-	require.NoError(t, err)
-
+	db := newReadModelTestDB(t)
 	dao := NewGroupChatDaoImpl(db)
+	var err error
 	groupChatId := models.NewGroupChatId()
 	groupChatName := models.NewGroupChatName("test").MustGet()
 	adminId := models.NewUserAccountId()
@@ -281,26 +162,9 @@ func TestReadModelDao_InsertMessage(t *testing.T) {
 }
 
 func TestReadModelDao_DeleteMessage(t *testing.T) {
-	ctx := context.Background()
-	container, err := test.CreateMySQLContainer(ctx)
-	require.NoError(t, err)
-	port, err := container.MappedPort(ctx, "3306")
-	require.NoError(t, err)
-	dataSourceName := test.GetDataSourceName(port)
-
-	db, err := sqlx.Connect("mysql", dataSourceName)
-	require.NoError(t, err)
-	defer func(db *sqlx.DB) {
-		if db != nil {
-			err := db.Close()
-			require.NoError(t, err)
-		}
-	}(db)
-
-	err = test.MigrateDB(t, err, db, "../../")
-	require.NoError(t, err)
-
+	db := newReadModelTestDB(t)
 	dao := NewGroupChatDaoImpl(db)
+	var err error
 	groupChatId := models.NewGroupChatId()
 	groupChatName := models.NewGroupChatName("test").MustGet()
 	adminId := models.NewUserAccountId()
