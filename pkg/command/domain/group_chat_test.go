@@ -110,6 +110,7 @@ func Test_GroupChat_EditMessage(t *testing.T) {
 	message := models.NewMessage(messageId, "test", userAccountId).MustGet()
 
 	tuple1, err := groupChat.PostMessage(message, userAccountId).Get()
+	require.NoError(t, err)
 	groupChat = tuple1.V1
 
 	message = message.WithText("test2").MustGet()

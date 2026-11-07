@@ -239,17 +239,9 @@ func loadAWSConfig(awsRegion, endpointUrl, accessKeyId, secretKey string) (aws.C
 	if secretKey == "" {
 		return aws.Config{}, fmt.Errorf("AWS_DYNAMODB_SECRET_ACCESS_KEY is required")
 	}
-	customResolver := aws.EndpointResolverWithOptionsFunc(
-		func(service, region string, opts ...interface{}) (aws.Endpoint, error) {
-			return aws.Endpoint{
-				PartitionID:   "aws",
-				URL:           endpointUrl,
-				SigningRegion: region,
-			}, nil
-		})
 	return config.LoadDefaultConfig(context.Background(),
 		config.WithRegion(awsRegion),
-		config.WithEndpointResolverWithOptions(customResolver),
+		config.WithBaseEndpoint(endpointUrl),
 		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(accessKeyId, secretKey, "x")),
 	)
 }

@@ -70,17 +70,9 @@ var writeApiCmd = &cobra.Command{
 			if awsDynamoDBSecretKey == "" {
 				panic("AWS_DYNAMODB_SECRET_ACCESS_KEY is required")
 			}
-			customResolver := aws.EndpointResolverWithOptionsFunc(
-				func(service, region string, opts ...interface{}) (aws.Endpoint, error) {
-					return aws.Endpoint{
-						PartitionID:   "aws",
-						URL:           awsDynamoDBEndpointUrl,
-						SigningRegion: region,
-					}, nil
-				})
 			awsCfg, err = config.LoadDefaultConfig(context.Background(),
 				config.WithRegion(awsRegion),
-				config.WithEndpointResolverWithOptions(customResolver),
+				config.WithBaseEndpoint(awsDynamoDBEndpointUrl),
 				config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(awsDynamoDBAccessKeyId, awsDynamoDBSecretKey, "x")),
 			)
 		}

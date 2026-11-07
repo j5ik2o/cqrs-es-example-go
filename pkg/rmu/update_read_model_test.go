@@ -379,7 +379,7 @@ func newReadModelTestDB(t *testing.T) *sqlx.DB {
 			} else {
 				t.Cleanup(func() { require.NoError(t, container.Terminate(ctx)) })
 				t.Cleanup(func() { require.NoError(t, db.Close()) })
-				require.NoError(t, test.MigrateDB(t, nil, db, "../../"))
+				require.NoError(t, test.MigrateDB(t, db, "../../"))
 				return db
 			}
 			_ = container.Terminate(ctx)

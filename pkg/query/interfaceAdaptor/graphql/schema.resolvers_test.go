@@ -31,7 +31,7 @@ func Test_GetGroupChat(t *testing.T) {
 		}
 	}(db)
 
-	require.NoError(t, test.MigrateDB(t, err, db, "../../../../"))
+	require.NoError(t, test.MigrateDB(t, db, "../../../../"))
 
 	var resolver ResolverRoot = NewResolver(db)
 
@@ -71,7 +71,7 @@ func Test_GetGroupChats(t *testing.T) {
 		}
 	}(db)
 
-	require.NoError(t, test.MigrateDB(t, err, db, "../../../../"))
+	require.NoError(t, test.MigrateDB(t, db, "../../../../"))
 
 	var resolver ResolverRoot = NewResolver(db)
 
@@ -110,7 +110,7 @@ func Test_GetMember(t *testing.T) {
 		}
 	}(db)
 
-	require.NoError(t, test.MigrateDB(t, err, db, "../../../../"))
+	require.NoError(t, test.MigrateDB(t, db, "../../../../"))
 
 	var resolver ResolverRoot = NewResolver(db)
 
@@ -150,7 +150,7 @@ func Test_GetMembers(t *testing.T) {
 		}
 	}(db)
 
-	require.NoError(t, test.MigrateDB(t, err, db, "../../../../"))
+	require.NoError(t, test.MigrateDB(t, db, "../../../../"))
 
 	var resolver ResolverRoot = NewResolver(db)
 
@@ -190,7 +190,7 @@ func Test_GetMessage(t *testing.T) {
 		}
 	}(db)
 
-	require.NoError(t, test.MigrateDB(t, err, db, "../../../../"))
+	require.NoError(t, test.MigrateDB(t, db, "../../../../"))
 
 	var resolver ResolverRoot = NewResolver(db)
 
@@ -235,7 +235,7 @@ func Test_GetMessages(t *testing.T) {
 		}
 	}(db)
 
-	require.NoError(t, test.MigrateDB(t, err, db, "../../../../"))
+	require.NoError(t, test.MigrateDB(t, db, "../../../../"))
 
 	var resolver ResolverRoot = NewResolver(db)
 
