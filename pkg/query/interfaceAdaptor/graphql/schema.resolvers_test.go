@@ -31,7 +31,7 @@ func Test_GetGroupChat(t *testing.T) {
 		}
 	}(db)
 
-	err = test.MigrateDB(t, err, db, "../../../../")
+	require.NoError(t, test.MigrateDB(t, err, db, "../../../../"))
 
 	var resolver ResolverRoot = NewResolver(db)
 
@@ -46,6 +46,7 @@ func Test_GetGroupChat(t *testing.T) {
 	memberId := models.NewMemberId()
 	member := models.NewMember(memberId, adminId, models.AdminRole)
 	err = dao.InsertMember(&groupChatId, &member, now)
+	require.NoError(t, err)
 
 	result, err := resolver.QueryRoot().GetGroupChat(ctx, groupChatId.AsString(), adminId.AsString())
 	require.NoError(t, err)
@@ -70,7 +71,7 @@ func Test_GetGroupChats(t *testing.T) {
 		}
 	}(db)
 
-	err = test.MigrateDB(t, err, db, "../../../../")
+	require.NoError(t, test.MigrateDB(t, err, db, "../../../../"))
 
 	var resolver ResolverRoot = NewResolver(db)
 
@@ -85,6 +86,7 @@ func Test_GetGroupChats(t *testing.T) {
 	memberId := models.NewMemberId()
 	member := models.NewMember(memberId, adminId, models.AdminRole)
 	err = dao.InsertMember(&groupChatId, &member, now)
+	require.NoError(t, err)
 
 	result, err := resolver.QueryRoot().GetGroupChats(ctx, adminId.AsString())
 	require.NoError(t, err)
@@ -108,7 +110,7 @@ func Test_GetMember(t *testing.T) {
 		}
 	}(db)
 
-	err = test.MigrateDB(t, err, db, "../../../../")
+	require.NoError(t, test.MigrateDB(t, err, db, "../../../../"))
 
 	var resolver ResolverRoot = NewResolver(db)
 
@@ -123,6 +125,7 @@ func Test_GetMember(t *testing.T) {
 	memberId := models.NewMemberId()
 	member := models.NewMember(memberId, adminId, models.AdminRole)
 	err = dao.InsertMember(&groupChatId, &member, now)
+	require.NoError(t, err)
 
 	result, err := resolver.QueryRoot().GetMember(ctx, groupChatId.AsString(), adminId.AsString())
 	require.NoError(t, err)
@@ -147,7 +150,7 @@ func Test_GetMembers(t *testing.T) {
 		}
 	}(db)
 
-	err = test.MigrateDB(t, err, db, "../../../../")
+	require.NoError(t, test.MigrateDB(t, err, db, "../../../../"))
 
 	var resolver ResolverRoot = NewResolver(db)
 
@@ -162,6 +165,7 @@ func Test_GetMembers(t *testing.T) {
 	memberId := models.NewMemberId()
 	member := models.NewMember(memberId, adminId, models.AdminRole)
 	err = dao.InsertMember(&groupChatId, &member, now)
+	require.NoError(t, err)
 
 	results, err := resolver.QueryRoot().GetMembers(ctx, groupChatId.AsString(), adminId.AsString())
 	require.NoError(t, err)
@@ -186,7 +190,7 @@ func Test_GetMessage(t *testing.T) {
 		}
 	}(db)
 
-	err = test.MigrateDB(t, err, db, "../../../../")
+	require.NoError(t, test.MigrateDB(t, err, db, "../../../../"))
 
 	var resolver ResolverRoot = NewResolver(db)
 
@@ -201,8 +205,10 @@ func Test_GetMessage(t *testing.T) {
 	memberId := models.NewMemberId()
 	member := models.NewMember(memberId, adminId, models.AdminRole)
 	err = dao.InsertMember(&groupChatId, &member, now)
+	require.NoError(t, err)
 	messageId := models.NewMessageId()
 	err = dao.InsertMessage(&messageId, &groupChatId, &adminId, "test", now)
+	require.NoError(t, err)
 
 	result, err := resolver.QueryRoot().GetMessage(ctx, messageId.String(), adminId.AsString())
 	require.NoError(t, err)
@@ -229,7 +235,7 @@ func Test_GetMessages(t *testing.T) {
 		}
 	}(db)
 
-	err = test.MigrateDB(t, err, db, "../../../../")
+	require.NoError(t, test.MigrateDB(t, err, db, "../../../../"))
 
 	var resolver ResolverRoot = NewResolver(db)
 
@@ -244,8 +250,10 @@ func Test_GetMessages(t *testing.T) {
 	memberId := models.NewMemberId()
 	member := models.NewMember(memberId, adminId, models.AdminRole)
 	err = dao.InsertMember(&groupChatId, &member, now)
+	require.NoError(t, err)
 	messageId := models.NewMessageId()
 	err = dao.InsertMessage(&messageId, &groupChatId, &adminId, "test", now)
+	require.NoError(t, err)
 
 	results, err := resolver.QueryRoot().GetMessages(ctx, groupChatId.AsString(), adminId.AsString())
 	require.NoError(t, err)
