@@ -41,7 +41,7 @@ func CreateLocalStackContainer(ctx context.Context) (*localstack.LocalStackConta
 			ContainerRequest: testcontainers.ContainerRequest{
 				Image: "localstack/localstack:2.1.0",
 				Env: map[string]string{
-					"SERVICES":              "dynamodb",
+					"SERVICES":              "dynamodb,dynamodbstreams",
 					"DEFAULT_REGION":        "us-east-1",
 					"EAGER_SERVICE_LOADING": "1",
 					"DYNAMODB_SHARED_DB":    "1",
@@ -74,8 +74,8 @@ func CreateDynamoDBClient(t *testing.T, ctx context.Context, l *localstack.Local
 	return client, nil
 }
 
-// CreateJournalTable creates the v5 journal table. Streams stay enabled while the
-// read model updater still consumes the journal; #668 moves it to the head table.
+// CreateJournalTable creates the v5 journal table. The journal has no Streams:
+// the change feed comes from the head table (DY-3).
 func CreateJournalTable(t *testing.T, ctx context.Context, client *dynamodb.Client, tableName string) error {
 	t.Helper()
 	_, err := client.CreateTable(ctx, &dynamodb.CreateTableInput{
@@ -89,10 +89,6 @@ func CreateJournalTable(t *testing.T, ctx context.Context, client *dynamodb.Clie
 			{AttributeName: aws.String("seq_nr"), KeyType: types.KeyTypeRange},
 		},
 		BillingMode: types.BillingModePayPerRequest,
-		StreamSpecification: &types.StreamSpecification{
-			StreamEnabled:  aws.Bool(true),
-			StreamViewType: types.StreamViewTypeNewImage,
-		},
 	})
 	return err
 }
@@ -159,7 +155,7 @@ func MigrateDB(t *testing.T, err error, db *sqlx.DB, position string) error {
 		driver,
 	)
 	require.NoError(t, err)
-	err = m.Steps(3)
+	err = m.Steps(4)
 	require.NoError(t, err)
 	return err
 }

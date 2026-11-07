@@ -1,9 +1,12 @@
 package cmd
 
 import (
+	"context"
 	"cqrs-es-example-go/pkg/rmu"
 	"fmt"
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/jmoiron/sqlx"
 	"github.com/olivere/env"
 	"log/slog"
@@ -25,6 +28,7 @@ var rmuCmd = &cobra.Command{
 		if dbUrl == "" {
 			panic("DATABASE_URL is required")
 		}
+		journalTableName := env.String("journal", "PERSISTENCE_JOURNAL_TABLE_NAME")
 
 		dataSourceName := fmt.Sprintf("%s?parseTime=true", dbUrl)
 		db, err := sqlx.Connect("mysql", dataSourceName)
@@ -39,8 +43,16 @@ var rmuCmd = &cobra.Command{
 				}
 			}
 		}(db)
+
+		awsCfg, err := config.LoadDefaultConfig(context.Background())
+		if err != nil {
+			panic(err)
+		}
+		dynamodbClient := dynamodb.NewFromConfig(awsCfg)
+
 		dao := rmu.NewGroupChatDaoImpl(db)
-		readModelUpdater := rmu.NewReadModelUpdater(&dao)
+		journalReader := rmu.NewDynamoDBJournalReader(dynamodbClient, journalTableName)
+		readModelUpdater := rmu.NewReadModelUpdater(dao, journalReader)
 		lambda.Start(readModelUpdater.UpdateReadModel)
 	},
 }

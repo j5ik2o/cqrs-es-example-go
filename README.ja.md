@@ -23,10 +23,22 @@
   - GraphQLによって実装された書き込み専用API
   - イベントに基づく集約は[j5ik2o/event-store-adapter-go](https://github.com/j5ik2o/event-store-adapter-go)によって実装されている。
 - Read Model Updater
-  - ジャーナルに基づいて読み取りモデルを構築するLambda
+  - headテーブルのDynamoDB Streamsに基づいて読み取りモデルを構築するLambda
   - ローカルで、Lambdaの動作をエミュレートするコードを実行する（local-rmu）
 - Read API Server
   - GraphQLによって実装された読み取り専用API
+
+## 設定
+
+各アプリケーションは環境変数から設定を読み取る。
+
+| アプリケーション | 環境変数 |
+|:--|:--|
+| Write API | `PERSISTENCE_JOURNAL_TABLE_NAME`、`PERSISTENCE_SNAPSHOT_TABLE_NAME`、`PERSISTENCE_HEAD_TABLE_NAME`、`PERSISTENCE_SNAPSHOT_HISTORY_INDEX_NAME`、`AWS_REGION`、`AWS_DYNAMODB_ENDPOINT_URL`、`AWS_DYNAMODB_ACCESS_KEY_ID`、`AWS_DYNAMODB_SECRET_ACCESS_KEY`、`API_HOST`、`API_PORT` |
+| Read Model Updater | `STREAM_HEAD_TABLE_NAME`、`STREAM_JOURNAL_TABLE_NAME`、`STREAM_MAX_ITEM_COUNT`、`DATABASE_URL`、`AWS_REGION`、`AWS_DYNAMODB_ENDPOINT_URL`、`AWS_DYNAMODB_ACCESS_KEY_ID`、`AWS_DYNAMODB_SECRET_ACCESS_KEY` |
+| Read API | `DATABASE_URL`、`API_HOST`、`API_PORT` |
+
+ローカルのRead Model UpdaterはheadテーブルのStreamsを購読する。集約のseq_nrに欠番を見つけると、不足しているイベントをジャーナルから読む。処理済みの位置は、リードモデルの更新と同じトランザクションで`read_model_positions`に記録する。
 
 ## スタック
 

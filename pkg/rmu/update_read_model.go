@@ -7,85 +7,270 @@ import (
 	"cqrs-es-example-go/pkg/command/interfaceAdaptor/repository"
 	"encoding/json"
 	"fmt"
-	dynamodbevents "github.com/aws/aws-lambda-go/events"
-	_ "github.com/go-sql-driver/mysql"
 	"log/slog"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
+
+	dynamodbevents "github.com/aws/aws-lambda-go/events"
 )
 
+// configAggregateID is the reserved head item that carries the store
+// configuration. It is not an aggregate and must be skipped.
+const configAggregateID = "__config__"
+
 type ReadModelUpdater struct {
-	dao GroupChatDao
+	dao     GroupChatDao
+	journal JournalReader
 }
 
 // NewReadModelUpdater is a constructor for ReadModelUpdater.
-func NewReadModelUpdater(dao GroupChatDao) ReadModelUpdater {
-	return ReadModelUpdater{dao}
+func NewReadModelUpdater(dao GroupChatDao, journal JournalReader) ReadModelUpdater {
+	return ReadModelUpdater{dao: dao, journal: journal}
 }
 
-// UpdateReadModel processes events from DynamoDB stream and updates the read model.
+// UpdateReadModel applies the head stream records to the read model. Each record
+// carries the head item's new image, whose events list holds the events written
+// by one transaction. INSERT and MODIFY both carry events; a REMOVE never
+// happens because the store does not delete heads.
 func (r *ReadModelUpdater) UpdateReadModel(ctx context.Context, event dynamodbevents.DynamoDBEvent) error {
 	for _, record := range event.Records {
-		slog.Info("Processing request data for event GetId %s, type %s.", record.EventID, record.EventName)
-		attributeValues := record.Change.NewImage
-		payloadBytes := convertToBytes(attributeValues["payload"])
-		typeValueStr, err := getTypeString(payloadBytes)
-		if err != nil {
-			return err
-		}
-		slog.Debug(fmt.Sprintf("typeValueStr = %s", typeValueStr))
-		if !strings.HasPrefix(typeValueStr, "GroupChat") {
-			continue
-		}
-		groupChatEvent, err := convertGroupChatEvent(payloadBytes)
-		if err != nil {
-			return err
-		}
-		groupChatId, err := getGroupChatId(attributeValues)
-		if err != nil {
-			return err
-		}
-		occurredAt, err := getOccurredAt(attributeValues)
-		if err != nil {
-			return err
-		}
-
-		switch ev := groupChatEvent.(type) {
-		case *events.GroupChatCreated:
-			err = createGroupChat(ev, groupChatId, occurredAt, r)
-		case *events.GroupChatDeleted:
-			err = deleteGroupChat(ev, groupChatId, occurredAt, r)
-		case *events.GroupChatRenamed:
-			err = renameGroupChat(ev, groupChatId, occurredAt, r)
-		case *events.GroupChatMemberAdded:
-			err = addMember(ev, groupChatId, occurredAt, r)
-		case *events.GroupChatMemberRemoved:
-			err = removeMember(ev, groupChatId, occurredAt, r)
-		case *events.GroupChatMessagePosted:
-			err = postMessage(ev, groupChatId, occurredAt, r)
-		case *events.GroupChatMessageEdited:
-			err = editMessage(ev, groupChatId, occurredAt, r)
-		case *events.GroupChatMessageDeleted:
-			err = deleteMessage(ev, groupChatId, occurredAt, r)
-		}
-		if err != nil {
-			return err
-		}
-
-		// Print new values for attributes of type String
-		for name, value := range record.Change.NewImage {
-			slog.Debug(fmt.Sprintf("Attribute name: %s, value: %s", name, value.String()))
+		if err := r.applyRecord(ctx, record); err != nil {
+			return fmt.Errorf("process head stream record %s: %w", record.EventID, err)
 		}
 	}
 	return nil
 }
 
-func createGroupChat(ev *events.GroupChatCreated, groupChatId *models.GroupChatId, occurredAt time.Time, r *ReadModelUpdater) error {
+func (r *ReadModelUpdater) applyRecord(ctx context.Context, record dynamodbevents.DynamoDBEventRecord) error {
+	switch record.EventName {
+	case "INSERT", "MODIFY":
+	case "REMOVE":
+		return nil
+	default:
+		return fmt.Errorf("unexpected stream event name %q", record.EventName)
+	}
+	image := record.Change.NewImage
+	if image == nil {
+		return fmt.Errorf("head stream record has no new image")
+	}
+	aggregateID, err := stringAttribute(image, "aid")
+	if err != nil {
+		return err
+	}
+	if aggregateID == configAggregateID {
+		return nil
+	}
+	if !strings.HasPrefix(aggregateID, models.GroupChatIdPrefix+"-") {
+		slog.Debug("skip head record of another aggregate type", "aid", aggregateID)
+		return nil
+	}
+	headEvents, err := parseHeadEvents(image)
+	if err != nil {
+		return err
+	}
+	for _, headEvent := range headEvents {
+		if err := r.applyHeadEvent(ctx, aggregateID, headEvent); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// headEvent is one envelope entry in the head item's events list.
+type headEvent struct {
+	seqNr      int64
+	occurredAt time.Time
+	manifest   string
+	payload    []byte
+}
+
+// applyHeadEvent applies the stream event and, when the aggregate's position is
+// behind, the journal events that fill the gap. Duplicate and stale sequence
+// numbers are dropped. The read model changes and the position advance commit
+// in one transaction.
+func (r *ReadModelUpdater) applyHeadEvent(ctx context.Context, aggregateID string, event headEvent) error {
+	groupChatID, err := models.NewGroupChatIdFromString(aggregateID).Get()
+	if err != nil {
+		return err
+	}
+
+	currentSeqNr, err := r.dao.GetPosition(ctx, aggregateID)
+	if err != nil {
+		return err
+	}
+	if event.seqNr <= currentSeqNr {
+		slog.Debug("skip duplicate or stale event", "aid", aggregateID, "seq_nr", event.seqNr, "position", currentSeqNr)
+		return nil
+	}
+
+	pending := []headEvent{event}
+	if event.seqNr > currentSeqNr+1 {
+		if r.journal == nil {
+			return fmt.Errorf("aggregate %s: seq_nr %d follows position %d and no journal reader is configured", aggregateID, event.seqNr, currentSeqNr)
+		}
+		journalEvents, err := r.journal.ReadEvents(ctx, aggregateID, currentSeqNr+1, event.seqNr-1)
+		if err != nil {
+			return fmt.Errorf("aggregate %s: read journal seq_nr %d..%d: %w", aggregateID, currentSeqNr+1, event.seqNr-1, err)
+		}
+		if err := requireContiguous(currentSeqNr+1, event.seqNr-1, journalEvents); err != nil {
+			return fmt.Errorf("aggregate %s: %w", aggregateID, err)
+		}
+		gap := make([]headEvent, len(journalEvents))
+		for i, journalEvent := range journalEvents {
+			gap[i] = headEvent{
+				seqNr:      journalEvent.SeqNr,
+				occurredAt: journalEvent.OccurredAt,
+				manifest:   journalEvent.Manifest,
+				payload:    journalEvent.Payload,
+			}
+		}
+		pending = append(gap, event)
+	}
+
+	return r.dao.Process(ctx, aggregateID, func(w ReadModelWriter, position int64) (int64, error) {
+		for _, pendingEvent := range pending {
+			if pendingEvent.seqNr <= position {
+				continue
+			}
+			if pendingEvent.seqNr != position+1 {
+				return position, fmt.Errorf("expected seq_nr %d but got %d", position+1, pendingEvent.seqNr)
+			}
+			if err := applyGroupChatEvent(&groupChatID, pendingEvent, w); err != nil {
+				return position, fmt.Errorf("apply seq_nr %d: %w", pendingEvent.seqNr, err)
+			}
+			position = pendingEvent.seqNr
+		}
+		return position, nil
+	})
+}
+
+func requireContiguous(fromSeqNr, toSeqNr int64, events []JournalEvent) error {
+	expected := fromSeqNr
+	for _, event := range events {
+		if event.SeqNr != expected {
+			return fmt.Errorf("journal gap: expected seq_nr %d but got %d", expected, event.SeqNr)
+		}
+		expected++
+	}
+	if expected != toSeqNr+1 {
+		return fmt.Errorf("journal is missing seq_nr %d..%d", expected, toSeqNr)
+	}
+	return nil
+}
+
+func parseHeadEvents(image map[string]dynamodbevents.DynamoDBAttributeValue) ([]headEvent, error) {
+	rawEvents, ok := image["events"]
+	if !ok {
+		return nil, fmt.Errorf("head image has no events attribute")
+	}
+	if rawEvents.DataType() != dynamodbevents.DataTypeList {
+		return nil, fmt.Errorf("head events attribute is not a list")
+	}
+	list := rawEvents.List()
+	result := make([]headEvent, 0, len(list))
+	for i, item := range list {
+		if item.DataType() != dynamodbevents.DataTypeMap {
+			return nil, fmt.Errorf("head event at index %d is not a map", i)
+		}
+		fields := item.Map()
+		seqNr, err := numberAttribute(fields, "seq_nr")
+		if err != nil {
+			return nil, fmt.Errorf("head event at index %d: %w", i, err)
+		}
+		occurredAt, err := numberAttribute(fields, "occurred_at")
+		if err != nil {
+			return nil, fmt.Errorf("head event at index %d: %w", i, err)
+		}
+		manifest, err := stringAttribute(fields, "manifest")
+		if err != nil {
+			return nil, fmt.Errorf("head event at index %d: %w", i, err)
+		}
+		payload, err := bytesAttribute(fields, "payload")
+		if err != nil {
+			return nil, fmt.Errorf("head event at index %d: %w", i, err)
+		}
+		result = append(result, headEvent{
+			seqNr:      seqNr,
+			occurredAt: time.Unix(0, occurredAt),
+			manifest:   manifest,
+			payload:    payload,
+		})
+	}
+	sort.Slice(result, func(i, j int) bool { return result[i].seqNr < result[j].seqNr })
+	return result, nil
+}
+
+func stringAttribute(attributes map[string]dynamodbevents.DynamoDBAttributeValue, name string) (string, error) {
+	attribute, ok := attributes[name]
+	if !ok {
+		return "", fmt.Errorf("attribute %q is missing", name)
+	}
+	if attribute.DataType() != dynamodbevents.DataTypeString {
+		return "", fmt.Errorf("attribute %q is not a string", name)
+	}
+	return attribute.String(), nil
+}
+
+func numberAttribute(attributes map[string]dynamodbevents.DynamoDBAttributeValue, name string) (int64, error) {
+	attribute, ok := attributes[name]
+	if !ok {
+		return 0, fmt.Errorf("attribute %q is missing", name)
+	}
+	if attribute.DataType() != dynamodbevents.DataTypeNumber {
+		return 0, fmt.Errorf("attribute %q is not a number", name)
+	}
+	return strconv.ParseInt(attribute.Number(), 10, 64)
+}
+
+func bytesAttribute(attributes map[string]dynamodbevents.DynamoDBAttributeValue, name string) ([]byte, error) {
+	attribute, ok := attributes[name]
+	if !ok {
+		return nil, fmt.Errorf("attribute %q is missing", name)
+	}
+	switch attribute.DataType() {
+	case dynamodbevents.DataTypeBinary:
+		return attribute.Binary(), nil
+	case dynamodbevents.DataTypeString:
+		return []byte(attribute.String()), nil
+	default:
+		return nil, fmt.Errorf("attribute %q is neither binary nor string", name)
+	}
+}
+
+func applyGroupChatEvent(groupChatId *models.GroupChatId, event headEvent, w ReadModelWriter) error {
+	groupChatEvent, err := convertGroupChatEvent(event.payload)
+	if err != nil {
+		return err
+	}
+	switch ev := groupChatEvent.(type) {
+	case *events.GroupChatCreated:
+		return createGroupChat(ev, groupChatId, event.occurredAt, w)
+	case *events.GroupChatDeleted:
+		return deleteGroupChat(ev, groupChatId, event.occurredAt, w)
+	case *events.GroupChatRenamed:
+		return renameGroupChat(ev, groupChatId, event.occurredAt, w)
+	case *events.GroupChatMemberAdded:
+		return addMember(ev, groupChatId, event.occurredAt, w)
+	case *events.GroupChatMemberRemoved:
+		return removeMember(ev, groupChatId, event.occurredAt, w)
+	case *events.GroupChatMessagePosted:
+		return postMessage(ev, groupChatId, event.occurredAt, w)
+	case *events.GroupChatMessageEdited:
+		return editMessage(ev, groupChatId, event.occurredAt, w)
+	case *events.GroupChatMessageDeleted:
+		return deleteMessage(ev, groupChatId, event.occurredAt, w)
+	default:
+		return fmt.Errorf("unsupported event type %s", groupChatEvent.GetTypeName())
+	}
+}
+
+func createGroupChat(ev *events.GroupChatCreated, groupChatId *models.GroupChatId, occurredAt time.Time, w ReadModelWriter) error {
 	slog.Info(fmt.Sprintf("createGroupChat: start: ev = %v", ev))
 	name := ev.GetName()
 	executorId := ev.GetExecutorId()
-	err := r.dao.InsertGroupChat(groupChatId, name, executorId, occurredAt)
+	err := w.InsertGroupChat(groupChatId, name, executorId, occurredAt)
 	if err != nil {
 		return err
 	}
@@ -94,7 +279,7 @@ func createGroupChat(ev *events.GroupChatCreated, groupChatId *models.GroupChatI
 	memberId := administrator.GetId()
 	userAccountId := administrator.GetUserAccountId()
 	member := models.NewMember(*memberId, *userAccountId, models.AdminRole)
-	err = r.dao.InsertMember(groupChatId, &member, occurredAt)
+	err = w.InsertMember(groupChatId, &member, occurredAt)
 	if err != nil {
 		return err
 	}
@@ -102,9 +287,9 @@ func createGroupChat(ev *events.GroupChatCreated, groupChatId *models.GroupChatI
 	return nil
 }
 
-func deleteGroupChat(_ *events.GroupChatDeleted, groupChatId *models.GroupChatId, occurredAt time.Time, r *ReadModelUpdater) error {
+func deleteGroupChat(_ *events.GroupChatDeleted, groupChatId *models.GroupChatId, occurredAt time.Time, w ReadModelWriter) error {
 	slog.Info("deleteGroupChat: start")
-	err := r.dao.DeleteGroupChat(groupChatId, occurredAt)
+	err := w.DeleteGroupChat(groupChatId, occurredAt)
 	if err != nil {
 		return err
 	}
@@ -112,9 +297,9 @@ func deleteGroupChat(_ *events.GroupChatDeleted, groupChatId *models.GroupChatId
 	return nil
 }
 
-func renameGroupChat(ev *events.GroupChatRenamed, groupChatId *models.GroupChatId, occurredAt time.Time, r *ReadModelUpdater) error {
+func renameGroupChat(ev *events.GroupChatRenamed, groupChatId *models.GroupChatId, occurredAt time.Time, w ReadModelWriter) error {
 	slog.Info(fmt.Sprintf("renameGroupChat: start: ev = %v", ev))
-	err := r.dao.UpdateName(groupChatId, ev.GetName(), occurredAt)
+	err := w.UpdateName(groupChatId, ev.GetName(), occurredAt)
 	if err != nil {
 		return err
 	}
@@ -122,9 +307,9 @@ func renameGroupChat(ev *events.GroupChatRenamed, groupChatId *models.GroupChatI
 	return nil
 }
 
-func addMember(ev *events.GroupChatMemberAdded, groupChatId *models.GroupChatId, occurredAt time.Time, r *ReadModelUpdater) error {
+func addMember(ev *events.GroupChatMemberAdded, groupChatId *models.GroupChatId, occurredAt time.Time, w ReadModelWriter) error {
 	slog.Info(fmt.Sprintf("addMember: start: ev = %v", ev))
-	err := r.dao.InsertMember(groupChatId, ev.GetMember(), occurredAt)
+	err := w.InsertMember(groupChatId, ev.GetMember(), occurredAt)
 	if err != nil {
 		return err
 	}
@@ -132,9 +317,9 @@ func addMember(ev *events.GroupChatMemberAdded, groupChatId *models.GroupChatId,
 	return nil
 }
 
-func removeMember(ev *events.GroupChatMemberRemoved, groupChatId *models.GroupChatId, _ time.Time, r *ReadModelUpdater) error {
+func removeMember(ev *events.GroupChatMemberRemoved, groupChatId *models.GroupChatId, _ time.Time, w ReadModelWriter) error {
 	slog.Info(fmt.Sprintf("removeMember: start: ev = %v", ev))
-	err := r.dao.DeleteMember(groupChatId, ev.GetUserAccountId())
+	err := w.DeleteMember(groupChatId, ev.GetUserAccountId())
 	if err != nil {
 		return err
 	}
@@ -142,12 +327,12 @@ func removeMember(ev *events.GroupChatMemberRemoved, groupChatId *models.GroupCh
 	return nil
 }
 
-func postMessage(ev *events.GroupChatMessagePosted, groupChatId *models.GroupChatId, occurredAt time.Time, r *ReadModelUpdater) error {
+func postMessage(ev *events.GroupChatMessagePosted, groupChatId *models.GroupChatId, occurredAt time.Time, w ReadModelWriter) error {
 	slog.Info(fmt.Sprintf("postMessage: start: ev = %v", ev))
 	messageId := ev.GetMessage().GetId()
 	userAccountId := ev.GetMessage().GetSenderId()
 	text := ev.GetMessage().GetText()
-	err := r.dao.InsertMessage(messageId, groupChatId, userAccountId, text, occurredAt)
+	err := w.InsertMessage(messageId, groupChatId, userAccountId, text, occurredAt)
 	if err != nil {
 		return err
 	}
@@ -155,11 +340,11 @@ func postMessage(ev *events.GroupChatMessagePosted, groupChatId *models.GroupCha
 	return nil
 }
 
-func editMessage(ev *events.GroupChatMessageEdited, _ *models.GroupChatId, occurredAt time.Time, r *ReadModelUpdater) error {
+func editMessage(ev *events.GroupChatMessageEdited, _ *models.GroupChatId, occurredAt time.Time, w ReadModelWriter) error {
 	slog.Info(fmt.Sprintf("editMessage: start: ev = %v", ev))
 	messageId := ev.GetMessage().GetId()
 	text := ev.GetMessage().GetText()
-	err := r.dao.UpdateMessage(messageId, text, occurredAt)
+	err := w.UpdateMessage(messageId, text, occurredAt)
 	if err != nil {
 		return err
 	}
@@ -167,38 +352,15 @@ func editMessage(ev *events.GroupChatMessageEdited, _ *models.GroupChatId, occur
 	return nil
 }
 
-func deleteMessage(ev *events.GroupChatMessageDeleted, _ *models.GroupChatId, occurredAt time.Time, r *ReadModelUpdater) error {
+func deleteMessage(ev *events.GroupChatMessageDeleted, _ *models.GroupChatId, occurredAt time.Time, w ReadModelWriter) error {
 	slog.Info(fmt.Sprintf("deleteMessage: start: ev = %v", ev))
 	messageId := ev.GetMessageId()
-	err := r.dao.DeleteMessage(messageId, occurredAt)
+	err := w.DeleteMessage(messageId, occurredAt)
 	if err != nil {
 		return err
 	}
 	slog.Info("deleteMessage: finished")
 	return nil
-}
-
-func convertToBytes(payloadAttr dynamodbevents.DynamoDBAttributeValue) []byte {
-	var payloadBytes []byte
-	if payloadAttr.DataType() == dynamodbevents.DataTypeBinary {
-		payloadBytes = payloadAttr.Binary()
-	} else if payloadAttr.DataType() == dynamodbevents.DataTypeString {
-		payloadBytes = []byte(payloadAttr.String())
-	}
-	return payloadBytes
-}
-
-func getTypeString(data []byte) (string, error) {
-	var parsed map[string]interface{}
-	if err := json.Unmarshal(data, &parsed); err != nil {
-		slog.Info(fmt.Sprintf("getTypeString: err = %v, %s", err, string(data)))
-		return "", err
-	}
-	typeValue, ok := parsed["type"].(string)
-	if !ok {
-		return "", fmt.Errorf("event type is missing or not a string")
-	}
-	return typeValue, nil
 }
 
 func convertGroupChatEvent(payloadBytes []byte) (events.GroupChatEvent, error) {
@@ -207,28 +369,4 @@ func convertGroupChatEvent(payloadBytes []byte) (events.GroupChatEvent, error) {
 		return nil, err
 	}
 	return repository.EventConverter(parsed)
-}
-
-func getGroupChatId(attributes map[string]dynamodbevents.DynamoDBAttributeValue) (*models.GroupChatId, error) {
-	aidAttr, ok := attributes["aid"]
-	if !ok || aidAttr.DataType() != dynamodbevents.DataTypeString {
-		return nil, fmt.Errorf("aid is missing or not a string")
-	}
-	id, err := models.NewGroupChatIdFromString(aidAttr.String()).Get()
-	if err != nil {
-		return nil, err
-	}
-	return &id, nil
-}
-
-func getOccurredAt(attributes map[string]dynamodbevents.DynamoDBAttributeValue) (time.Time, error) {
-	occurredAtAttr, ok := attributes["occurred_at"]
-	if !ok || occurredAtAttr.DataType() != dynamodbevents.DataTypeNumber {
-		return time.Time{}, fmt.Errorf("occurred_at is missing or not a number")
-	}
-	nanos, err := strconv.ParseInt(occurredAtAttr.Number(), 10, 64)
-	if err != nil {
-		return time.Time{}, err
-	}
-	return time.Unix(0, nanos), nil
 }

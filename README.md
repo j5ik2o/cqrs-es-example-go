@@ -32,10 +32,25 @@ Please refer to [here](https://github.com/j5ik2o/cqrs-es-example) for implementa
   - API is implemented by GraphQL (Mutation)
   - Event Sourced Aggregate is implemented by [j5ik2o/event-store-adapter-go](https://github.com/j5ik2o/event-store-adapter-go)
 - Read Model Updater
-  - Lambda to build read models based on journals
+  - Builds read models from the head table's DynamoDB Streams
   - Locally, run code that emulates Lambda behavior (local-rmu)
 - Read API Server
   - API is implemented by GraphQL (Query)
+
+## Configuration
+
+The applications read their settings from environment variables.
+
+| Application | Variables |
+|:--|:--|
+| Write API | `PERSISTENCE_JOURNAL_TABLE_NAME`, `PERSISTENCE_SNAPSHOT_TABLE_NAME`, `PERSISTENCE_HEAD_TABLE_NAME`, `PERSISTENCE_SNAPSHOT_HISTORY_INDEX_NAME`, `AWS_REGION`, `AWS_DYNAMODB_ENDPOINT_URL`, `AWS_DYNAMODB_ACCESS_KEY_ID`, `AWS_DYNAMODB_SECRET_ACCESS_KEY`, `API_HOST`, `API_PORT` |
+| Read Model Updater | `STREAM_HEAD_TABLE_NAME`, `STREAM_JOURNAL_TABLE_NAME`, `STREAM_MAX_ITEM_COUNT`, `DATABASE_URL`, `AWS_REGION`, `AWS_DYNAMODB_ENDPOINT_URL`, `AWS_DYNAMODB_ACCESS_KEY_ID`, `AWS_DYNAMODB_SECRET_ACCESS_KEY` |
+| Read API | `DATABASE_URL`, `API_HOST`, `API_PORT` |
+
+The local Read Model Updater subscribes to the head table's Streams. When it finds
+a gap in an aggregate's sequence numbers, it reads the missing events from the
+journal. It records the applied position in `read_model_positions` in the same
+transaction as the read model update.
 
 ## Stack
 

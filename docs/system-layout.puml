@@ -10,7 +10,7 @@ node "Write API Server\n(HTTP/Web API)" as writeAPI {
 
 node "Read API Server\n(GraphQL Server)" as readAPI {
     [Query] as query
-    [Subscription(未実装)] as subscripton
+    [Subscription(Not implemented)] as subscripton
 }
 
 node "Read Model Updater\n(Lambda)" as updater {
@@ -19,26 +19,32 @@ node "Read Model Updater\n(Lambda)" as updater {
 database "DynamoDB" {
     [Journal(Events)] as journal
     [Snapshot] as snapshot
+    [Head(Aggregate Head)] as head
 }
 
 database "RDS(Aurora)" {
   [Group Chat Read Model] as groupChat
   [Member Read Model] as member
+  [Read Model Positions] as positions
 }
 
 journal -[hidden]- snapshot
+snapshot -[hidden]- head
 groupChat -[hidden]- member
+member -[hidden]- positions
 query -[hidden]- subscripton
 
 writeAPI -d-> groupChatAggregate
 
 groupChatAggregate -d-> journal: Put Item
 groupChatAggregate -d-> snapshot: Put/Update Item
+groupChatAggregate -d-> head: Put/Update Item
 
-journal -r-> updater: DynamoDB\nStreams
+head -r-> updater: DynamoDB\nStreams
 
 updater -r-> groupChat: SQL Insert/Update/Delete
 updater -r-> member: SQL Insert/Update/Delete
+updater -r-> positions: SQL Upsert
 
 groupChat --> query: SQL Select
 member --> query: SQL Select
