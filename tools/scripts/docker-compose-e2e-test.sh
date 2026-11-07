@@ -39,6 +39,10 @@ mysql_query() {
 positions_before=$(mysql_query "SELECT aggregate_id, seq_nr FROM read_model_positions ORDER BY aggregate_id")
 messages_before=$(mysql_query "SELECT COUNT(*) FROM messages")
 group_chats_before=$(mysql_query "SELECT COUNT(*) FROM group_chats")
+if [ -z "${positions_before}" ]; then
+  echo "Error: read_model_positions is empty before restart" >&2
+  exit 1
+fi
 
 echo "Restarting read-model-updater-1 to exercise replay from committed positions"
 compose restart read-model-updater-1
