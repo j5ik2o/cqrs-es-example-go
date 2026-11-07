@@ -14,3 +14,12 @@ $ make build
 ```shell
 $ make test
 ```
+
+## Lint方法
+
+`make vet` は `go vet` を、`make lint` は [staticcheck](https://staticcheck.dev/) を実行する。CI の `lint` ジョブでは `make vet` と `make lint` の両方を実行する。
+
+```shell
+$ make vet
+$ make lint
+```
