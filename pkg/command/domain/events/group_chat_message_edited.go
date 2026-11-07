@@ -4,41 +4,31 @@ import (
 	"cqrs-es-example-go/pkg/command/domain/models"
 	"fmt"
 	"github.com/oklog/ulid/v2"
-	"time"
 )
 
-// GroupChatMessageEdited is a domain event for group chat message posted.
+// GroupChatMessageEdited is a domain event for group chat message edited.
 type GroupChatMessageEdited struct {
-	id          string
-	aggregateId models.GroupChatId
-	message     models.Message
-	seqNr       uint64
-	executorId  models.UserAccountId
-	occurredAt  uint64
+	id         string
+	message    models.Message
+	executorId models.UserAccountId
 }
 
 // NewGroupChatMessageEdited is a constructor for GroupChatMessageEdited with generating id.
-func NewGroupChatMessageEdited(aggregateId models.GroupChatId, message models.Message, seqNr uint64, executorId models.UserAccountId) GroupChatMessageEdited {
-	id := ulid.Make().String()
-	now := time.Now()
-	occurredAt := uint64(now.UnixNano() / 1e6)
-	return GroupChatMessageEdited{id, aggregateId, message, seqNr, executorId, occurredAt}
+func NewGroupChatMessageEdited(message models.Message, executorId models.UserAccountId) GroupChatMessageEdited {
+	return GroupChatMessageEdited{ulid.Make().String(), message, executorId}
 }
 
 // NewGroupChatMessageEditedFrom is a constructor for GroupChatMessageEdited
-func NewGroupChatMessageEditedFrom(id string, aggregateId models.GroupChatId, message models.Message, seqNr uint64, executorId models.UserAccountId, occurredAt uint64) GroupChatMessageEdited {
-	return GroupChatMessageEdited{id, aggregateId, message, seqNr, executorId, occurredAt}
+func NewGroupChatMessageEditedFrom(id string, message models.Message, executorId models.UserAccountId) GroupChatMessageEdited {
+	return GroupChatMessageEdited{id, message, executorId}
 }
 
 func (g *GroupChatMessageEdited) ToJSON() map[string]interface{} {
 	return map[string]interface{}{
-		"type_name":    g.GetTypeName(),
-		"id":           g.id,
-		"aggregate_id": g.aggregateId.ToJSON(),
-		"message":      g.message.ToJSON(),
-		"executor_id":  g.executorId.ToJSON(),
-		"seq_nr":       g.seqNr,
-		"occurred_at":  g.occurredAt,
+		"type":        g.GetTypeName(),
+		"id":          g.id,
+		"message":     g.message.ToJSON(),
+		"executor_id": g.executorId.ToJSON(),
 	}
 }
 
@@ -47,15 +37,7 @@ func (g *GroupChatMessageEdited) GetId() string {
 }
 
 func (g *GroupChatMessageEdited) GetTypeName() string {
-	return "GroupChatMessageEdited"
-}
-
-func (g *GroupChatMessageEdited) GetAggregateId() AggregateId {
-	return &g.aggregateId
-}
-
-func (g *GroupChatMessageEdited) GetSeqNr() uint64 {
-	return g.seqNr
+	return EventTypeGroupChatMessageEdited
 }
 
 func (g *GroupChatMessageEdited) GetMessage() *models.Message {
@@ -66,15 +48,6 @@ func (g *GroupChatMessageEdited) GetExecutorId() *models.UserAccountId {
 	return &g.executorId
 }
 
-func (g *GroupChatMessageEdited) IsCreated() bool {
-	return false
-}
-
-func (g *GroupChatMessageEdited) GetOccurredAt() uint64 {
-	return g.occurredAt
-}
-
 func (g *GroupChatMessageEdited) String() string {
-	return fmt.Sprintf("%s{ id: %s, aggregateId: %s, message: %s , executorId: %s, seqNr: %d, occurredAt: %d}",
-		g.GetTypeName(), g.id, g.aggregateId, g.message, g.executorId, g.seqNr, g.occurredAt)
+	return fmt.Sprintf("%s{ id: %s, message: %v }", g.GetTypeName(), g.id, g.message)
 }

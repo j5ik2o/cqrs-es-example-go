@@ -31,12 +31,11 @@ func Test_CreateGroupChat(t *testing.T) {
 	result, err := commandProcessor.CreateGroupChat(groupName, executorId).Get()
 	// Then
 	require.NoError(t, err)
-	require.True(t, result.IsCreated())
-	event, ok := result.(*events.GroupChatCreated)
-	require.True(t, ok)
-	_, ok = event.GetAggregateId().(*models.GroupChatId)
+	event, ok := result.V2.(*events.GroupChatCreated)
 	require.True(t, ok)
 	require.True(t, groupName.Equals(event.GetName()))
+	require.Equal(t, uint64(1), result.V1.GetSeqNr())
+	require.True(t, result.V1.GetGroupChatId().GetValue() != "")
 }
 
 func Test_DeleteGroupChat(t *testing.T) {
@@ -47,16 +46,14 @@ func Test_DeleteGroupChat(t *testing.T) {
 	groupName := models.NewGroupChatName("test").MustGet()
 	executorId := models.NewUserAccountId()
 	result, _ := commandProcessor.CreateGroupChat(groupName, executorId).Get()
-	groupChatId, _ := result.GetAggregateId().(*models.GroupChatId)
+	groupChatId := result.V1.GetGroupChatId()
 	// When
 	result, err = commandProcessor.DeleteGroupChat(groupChatId, executorId).Get()
 	// Then
 	require.NoError(t, err)
-	event, ok := result.(*events.GroupChatDeleted)
+	_, ok := result.V2.(*events.GroupChatDeleted)
 	require.True(t, ok)
-	actualGroupChatId, ok := event.GetAggregateId().(*models.GroupChatId)
-	require.True(t, ok)
-	require.True(t, groupChatId.Equals(actualGroupChatId))
+	require.True(t, groupChatId.Equals(result.V1.GetGroupChatId()))
 }
 
 func Test_RenameGroupChat(t *testing.T) {
@@ -67,17 +64,15 @@ func Test_RenameGroupChat(t *testing.T) {
 	groupName := models.NewGroupChatName("test").MustGet()
 	executorId := models.NewUserAccountId()
 	result, _ := commandProcessor.CreateGroupChat(groupName, executorId).Get()
-	groupChatId, _ := result.GetAggregateId().(*models.GroupChatId)
+	groupChatId := result.V1.GetGroupChatId()
 	newGroupName := models.NewGroupChatName("test2").MustGet()
 	// When
 	result, err = commandProcessor.RenameGroupChat(groupChatId, newGroupName, executorId).Get()
 	// Then
 	require.NoError(t, err)
-	event, ok := result.(*events.GroupChatRenamed)
+	event, ok := result.V2.(*events.GroupChatRenamed)
 	require.True(t, ok)
-	actualGroupChatId, ok := event.GetAggregateId().(*models.GroupChatId)
-	require.True(t, ok)
-	require.True(t, groupChatId.Equals(actualGroupChatId))
+	require.True(t, groupChatId.Equals(result.V1.GetGroupChatId()))
 	require.True(t, newGroupName.Equals(event.GetName()))
 }
 
@@ -89,18 +84,16 @@ func Test_AddMember(t *testing.T) {
 	groupName := models.NewGroupChatName("test").MustGet()
 	executorId := models.NewUserAccountId()
 	result, _ := commandProcessor.CreateGroupChat(groupName, executorId).Get()
-	groupChatId, _ := result.GetAggregateId().(*models.GroupChatId)
+	groupChatId := result.V1.GetGroupChatId()
 	memberUserAccountId := models.NewUserAccountId()
 	var memberRole models.Role = models.MemberRole
 	// When
 	result, err = commandProcessor.AddMember(groupChatId, memberUserAccountId, memberRole, executorId).Get()
 	// Then
 	require.NoError(t, err)
-	event, ok := result.(*events.GroupChatMemberAdded)
+	event, ok := result.V2.(*events.GroupChatMemberAdded)
 	require.True(t, ok)
-	actualGroupChatId, ok := event.GetAggregateId().(*models.GroupChatId)
-	require.True(t, ok)
-	require.True(t, groupChatId.Equals(actualGroupChatId))
+	require.True(t, groupChatId.Equals(result.V1.GetGroupChatId()))
 	require.Equal(t, memberRole, event.GetMember().GetRole())
 	require.True(t, memberUserAccountId.Equals(event.GetMember().GetUserAccountId()))
 }
@@ -113,7 +106,7 @@ func Test_RemoveMember(t *testing.T) {
 	groupName := models.NewGroupChatName("test").MustGet()
 	executorId := models.NewUserAccountId()
 	result, _ := commandProcessor.CreateGroupChat(groupName, executorId).Get()
-	groupChatId, _ := result.GetAggregateId().(*models.GroupChatId)
+	groupChatId := result.V1.GetGroupChatId()
 	memberUserAccountId := models.NewUserAccountId()
 	var memberRole models.Role = models.MemberRole
 	_, _ = commandProcessor.AddMember(groupChatId, memberUserAccountId, memberRole, executorId).Get()
@@ -121,11 +114,9 @@ func Test_RemoveMember(t *testing.T) {
 	result, err = commandProcessor.RemoveMember(groupChatId, memberUserAccountId, executorId).Get()
 	// Then
 	require.NoError(t, err)
-	event, ok := result.(*events.GroupChatMemberRemoved)
+	event, ok := result.V2.(*events.GroupChatMemberRemoved)
 	require.True(t, ok)
-	actualGroupChatId, ok := event.GetAggregateId().(*models.GroupChatId)
-	require.True(t, ok)
-	require.True(t, groupChatId.Equals(actualGroupChatId))
+	require.True(t, groupChatId.Equals(result.V1.GetGroupChatId()))
 	require.True(t, memberUserAccountId.Equals(event.GetUserAccountId()))
 }
 
@@ -137,7 +128,7 @@ func Test_PostMessage(t *testing.T) {
 	groupName := models.NewGroupChatName("test").MustGet()
 	executorId := models.NewUserAccountId()
 	result, _ := commandProcessor.CreateGroupChat(groupName, executorId).Get()
-	groupChatId, _ := result.GetAggregateId().(*models.GroupChatId)
+	groupChatId := result.V1.GetGroupChatId()
 	memberUserAccountId := models.NewUserAccountId()
 	var memberRole models.Role = models.MemberRole
 	_, _ = commandProcessor.AddMember(groupChatId, memberUserAccountId, memberRole, executorId).Get()
@@ -147,11 +138,9 @@ func Test_PostMessage(t *testing.T) {
 	result, err = commandProcessor.PostMessage(groupChatId, message, memberUserAccountId).Get()
 	// Then
 	require.NoError(t, err)
-	event, ok := result.(*events.GroupChatMessagePosted)
+	event, ok := result.V2.(*events.GroupChatMessagePosted)
 	require.True(t, ok)
-	actualGroupChatId, ok := event.GetAggregateId().(*models.GroupChatId)
-	require.True(t, ok)
-	require.True(t, groupChatId.Equals(actualGroupChatId))
+	require.True(t, groupChatId.Equals(result.V1.GetGroupChatId()))
 	require.True(t, message.Equals(event.GetMessage()))
 }
 
@@ -163,7 +152,7 @@ func Test_EditMessage(t *testing.T) {
 	groupName := models.NewGroupChatName("test").MustGet()
 	executorId := models.NewUserAccountId()
 	result, _ := commandProcessor.CreateGroupChat(groupName, executorId).Get()
-	groupChatId, _ := result.GetAggregateId().(*models.GroupChatId)
+	groupChatId := result.V1.GetGroupChatId()
 	memberUserAccountId := models.NewUserAccountId()
 	var memberRole models.Role = models.MemberRole
 	_, _ = commandProcessor.AddMember(groupChatId, memberUserAccountId, memberRole, executorId).Get()
@@ -174,11 +163,9 @@ func Test_EditMessage(t *testing.T) {
 	result, err = commandProcessor.EditMessage(groupChatId, message, memberUserAccountId).Get()
 
 	require.NoError(t, err)
-	event, ok := result.(*events.GroupChatMessageEdited)
+	event, ok := result.V2.(*events.GroupChatMessageEdited)
 	require.True(t, ok)
-	actualGroupChatId, ok := event.GetAggregateId().(*models.GroupChatId)
-	require.True(t, ok)
-	require.True(t, groupChatId.Equals(actualGroupChatId))
+	require.True(t, groupChatId.Equals(result.V1.GetGroupChatId()))
 	require.True(t, message.Equals(event.GetMessage()))
 }
 
@@ -190,7 +177,7 @@ func Test_DeleteMessage(t *testing.T) {
 	groupName := models.NewGroupChatName("test").MustGet()
 	executorId := models.NewUserAccountId()
 	result, _ := commandProcessor.CreateGroupChat(groupName, executorId).Get()
-	groupChatId, _ := result.GetAggregateId().(*models.GroupChatId)
+	groupChatId := result.V1.GetGroupChatId()
 	memberUserAccountId := models.NewUserAccountId()
 	var memberRole models.Role = models.MemberRole
 	_, _ = commandProcessor.AddMember(groupChatId, memberUserAccountId, memberRole, executorId).Get()
@@ -201,10 +188,8 @@ func Test_DeleteMessage(t *testing.T) {
 	result, err = commandProcessor.DeleteMessage(groupChatId, messageId, memberUserAccountId).Get()
 	// Then
 	require.NoError(t, err)
-	event, ok := result.(*events.GroupChatMessageDeleted)
+	event, ok := result.V2.(*events.GroupChatMessageDeleted)
 	require.True(t, ok)
-	actualGroupChatId, ok := event.GetAggregateId().(*models.GroupChatId)
-	require.True(t, ok)
-	require.True(t, groupChatId.Equals(actualGroupChatId))
+	require.True(t, groupChatId.Equals(result.V1.GetGroupChatId()))
 	require.True(t, messageId.Equals(event.GetMessageId()))
 }

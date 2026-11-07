@@ -22,9 +22,13 @@ func (s *SnapshotSerializer) Serialize(aggregate domain.GroupChat) ([]byte, erro
 }
 
 func (s *SnapshotSerializer) Deserialize(data []byte) (domain.GroupChat, error) {
-	var aggregateMap map[string]interface{}
-	if err := json.Unmarshal(data, &aggregateMap); err != nil {
+	aggregateMap, err := decodeJSONObject(data)
+	if err != nil {
 		return domain.GroupChat{}, &esa.SerializationError{Cause: err}
 	}
-	return SnapshotConverter(aggregateMap)
+	aggregate, err := SnapshotConverter(aggregateMap)
+	if err != nil {
+		return domain.GroupChat{}, &esa.SerializationError{Cause: err}
+	}
+	return aggregate, nil
 }
