@@ -40,8 +40,8 @@ if [ "${ENV_NAME}" = "dev" ]; then
   ENDPOINT_URL_OPTION=" --endpoint-url http://${DYNAMODB_ENDPOINT} "
 fi
 
-# The journal keeps Streams enabled only until the read model updater moves to
-# the head table in #668.
+# The change feed comes from the head table only. The journal has no Streams
+# because per-item Streams ordering is not guaranteed across aggregates (DY-3).
 # shellcheck disable=SC2086
 aws dynamodb create-table \
   ${ENDPOINT_URL_OPTION} \
@@ -53,8 +53,7 @@ aws dynamodb create-table \
     AttributeName=aid,KeyType=HASH \
     AttributeName=seq_nr,KeyType=RANGE \
   --provisioned-throughput \
-    ReadCapacityUnits=10,WriteCapacityUnits=10 \
-  --stream-specification StreamEnabled=true,StreamViewType=NEW_IMAGE
+    ReadCapacityUnits=10,WriteCapacityUnits=10
 
 # shellcheck disable=SC2086
 aws dynamodb create-table \

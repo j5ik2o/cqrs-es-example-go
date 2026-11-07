@@ -41,10 +41,15 @@ services:
       AWS_DYNAMODB_ENDPOINT_URL: http://localstack:4566
       AWS_DYNAMODB_ACCESS_KEY_ID: x
       AWS_DYNAMODB_SECRET_ACCESS_KEY: x
+      STREAM_HEAD_TABLE_NAME: head
       STREAM_JOURNAL_TABLE_NAME: journal
       STREAM_MAX_ITEM_COUNT: 32
       DATABASE_URL: ceer:ceer@tcp(mysql-local:3306)/ceer
     depends_on:
+      mysql:
+        condition: service_healthy
+      migration:
+        condition: service_completed_successfully
       localstack:
         condition: service_started
       dynamodb-admin:

@@ -4,7 +4,7 @@ import (
 	"context"
 	"cqrs-es-example-go/pkg/rmu"
 	"fmt"
-	"github.com/aws/aws-lambda-go/events"
+	dynamodbevents "github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
@@ -14,12 +14,11 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/olivere/env"
 	"github.com/samber/mo"
+	"github.com/spf13/cobra"
 	"log/slog"
 	"os"
 	"reflect"
 	"time"
-
-	"github.com/spf13/cobra"
 )
 
 const rmuDefaultPort = 28081
@@ -39,7 +38,8 @@ var localRmuCmd = &cobra.Command{
 		awsDynamoDBEndpointUrl := env.String("", "AWS_DYNAMODB_ENDPOINT_URL")
 		awsDynamoDBAccessKeyId := env.String("", "AWS_DYNAMODB_ACCESS_KEY_ID")
 		awsDynamoDBSecretKey := env.String("", "AWS_DYNAMODB_SECRET_ACCESS_KEY")
-		streamJournalTableName := env.String("journal", "STREAM_JOURNAL_TABLE_NAME")
+		headTableName := env.String("head", "STREAM_HEAD_TABLE_NAME")
+		journalTableName := env.String("journal", "STREAM_JOURNAL_TABLE_NAME")
 		streamMaxItemCount := env.Int64(100, "STREAM_MAX_ITEM_COUNT")
 
 		slog.Info(fmt.Sprintf("AWS_REGION = %v", awsRegion))
@@ -48,40 +48,11 @@ var localRmuCmd = &cobra.Command{
 		slog.Info(fmt.Sprintf("AWS_DYNAMODB_ENDPOINT_URL = %v", awsDynamoDBEndpointUrl))
 		slog.Info(fmt.Sprintf("AWS_DYNAMODB_ACCESS_KEY_ID = %v", awsDynamoDBAccessKeyId))
 		slog.Info(fmt.Sprintf("AWS_DYNAMODB_SECRET_ACCESS_KEY = %v", awsDynamoDBSecretKey))
-		slog.Info(fmt.Sprintf("STREAM_JOURNAL_TABLE_NAME = %v", streamJournalTableName))
+		slog.Info(fmt.Sprintf("STREAM_HEAD_TABLE_NAME = %v", headTableName))
+		slog.Info(fmt.Sprintf("STREAM_JOURNAL_TABLE_NAME = %v", journalTableName))
 		slog.Info(fmt.Sprintf("STREAM_MAX_ITEM_COUNT = %v", streamMaxItemCount))
 
-		var awsCfg aws.Config
-		var err error
-		if awsDynamoDBEndpointUrl == "" && awsDynamoDBAccessKeyId == "" && awsDynamoDBSecretKey == "" && awsRegion == "" {
-			awsCfg, err = config.LoadDefaultConfig(context.Background())
-		} else {
-			if awsRegion == "" {
-				panic("AWS_REGION is required")
-			}
-			if awsDynamoDBEndpointUrl == "" {
-				panic("AWS_DYNAMODB_ENDPOINT_URL is required")
-			}
-			if awsDynamoDBAccessKeyId == "" {
-				panic("AWS_DYNAMODB_ACCESS_KEY_ID is required")
-			}
-			if awsDynamoDBSecretKey == "" {
-				panic("AWS_DYNAMODB_SECRET_ACCESS_KEY is required")
-			}
-			customResolver := aws.EndpointResolverWithOptionsFunc(
-				func(service, region string, opts ...interface{}) (aws.Endpoint, error) {
-					return aws.Endpoint{
-						PartitionID:   "aws",
-						URL:           awsDynamoDBEndpointUrl,
-						SigningRegion: region,
-					}, nil
-				})
-			awsCfg, err = config.LoadDefaultConfig(context.Background(),
-				config.WithRegion(awsRegion),
-				config.WithEndpointResolverWithOptions(customResolver),
-				config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(awsDynamoDBAccessKeyId, awsDynamoDBSecretKey, "x")),
-			)
-		}
+		awsCfg, err := loadAWSConfig(awsRegion, awsDynamoDBEndpointUrl, awsDynamoDBAccessKeyId, awsDynamoDBSecretKey)
 		if err != nil {
 			panic(err)
 		}
@@ -106,11 +77,13 @@ var localRmuCmd = &cobra.Command{
 				}
 			}
 		}(db)
+
 		dao := rmu.NewGroupChatDaoImpl(db)
-		readModelUpdater := rmu.NewReadModelUpdater(&dao)
+		journalReader := rmu.NewDynamoDBJournalReader(dynamodbClient, journalTableName)
+		readModelUpdater := rmu.NewReadModelUpdater(dao, journalReader)
 
 		for {
-			err := streamDriver(dynamodbClient, dynamodbStreamsClient, streamJournalTableName, streamMaxItemCount, &readModelUpdater)
+			err := streamDriver(context.Background(), dynamodbClient, dynamodbStreamsClient, headTableName, int32(streamMaxItemCount), &readModelUpdater)
 			if err != nil {
 				slog.Warn(fmt.Sprintf("An error has occurred, but stream processing is restarted. "+
 					"If this error persists, the read model condition may be incorrect.: error = %v", err))
@@ -121,194 +94,228 @@ var localRmuCmd = &cobra.Command{
 	},
 }
 
-func streamDriver(dynamoDbClient *dynamodb.Client, dynamoDbStreamsClient *dynamodbstreams.Client, streamJournalTableName string, maxItemCount int64, readModelUpdater *rmu.ReadModelUpdater) error {
-	describeTable, err := describeTable(dynamoDbClient, streamJournalTableName)
+func loadAWSConfig(awsRegion, endpointUrl, accessKeyId, secretKey string) (aws.Config, error) {
+	if endpointUrl == "" && accessKeyId == "" && secretKey == "" && awsRegion == "" {
+		return config.LoadDefaultConfig(context.Background())
+	}
+	if awsRegion == "" {
+		return aws.Config{}, fmt.Errorf("AWS_REGION is required")
+	}
+	if endpointUrl == "" {
+		return aws.Config{}, fmt.Errorf("AWS_DYNAMODB_ENDPOINT_URL is required")
+	}
+	if accessKeyId == "" {
+		return aws.Config{}, fmt.Errorf("AWS_DYNAMODB_ACCESS_KEY_ID is required")
+	}
+	if secretKey == "" {
+		return aws.Config{}, fmt.Errorf("AWS_DYNAMODB_SECRET_ACCESS_KEY is required")
+	}
+	customResolver := aws.EndpointResolverWithOptionsFunc(
+		func(service, region string, opts ...interface{}) (aws.Endpoint, error) {
+			return aws.Endpoint{
+				PartitionID:   "aws",
+				URL:           endpointUrl,
+				SigningRegion: region,
+			}, nil
+		})
+	return config.LoadDefaultConfig(context.Background(),
+		config.WithRegion(awsRegion),
+		config.WithEndpointResolverWithOptions(customResolver),
+		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(accessKeyId, secretKey, "x")),
+	)
+}
+
+// streamDriver polls every shard of the head table's stream. The first iterator
+// starts at TRIM_HORIZON so a restart replays the retained records; the
+// read_model_positions table drops what was already applied.
+func streamDriver(ctx context.Context, dynamoDbClient *dynamodb.Client, dynamoDbStreamsClient *dynamodbstreams.Client, headTableName string, maxItemCount int32, readModelUpdater *rmu.ReadModelUpdater) error {
+	describeTable, err := describeTable(dynamoDbClient, headTableName)
 	if err != nil {
 		return err
 	}
+	if describeTable.Table == nil || describeTable.Table.LatestStreamArn == nil {
+		return fmt.Errorf("head table %q has no stream", headTableName)
+	}
 	streamArn := describeTable.Table.LatestStreamArn
-	lastEvaluatedShardId := ""
 
+	iterators := map[string]*string{}
+	completedShards := map[string]bool{}
 	for {
-		slog.Info(fmt.Sprintf("streamArn = %s", *streamArn))
-		slog.Info(fmt.Sprintf("maxItemCount = %d", maxItemCount))
-
-		describeStream, err := getDescribeStream(streamArn, lastEvaluatedShardId, dynamoDbStreamsClient)
-		if err != nil {
-			return err
-		}
-
-		for _, shard := range describeStream.StreamDescription.Shards {
-			getShardIterator, err := getShardIterator(dynamoDbStreamsClient, streamArn, shard)
+		var lastEvaluatedShardId *string
+		for {
+			describeStream, err := getDescribeStream(streamArn, lastEvaluatedShardId, dynamoDbStreamsClient)
 			if err != nil {
 				return err
 			}
-			shardIterator := getShardIterator.ShardIterator
-			processedRecordCount := 0
-			for shardIterator != nil && processedRecordCount < int(maxItemCount) {
-				getRecords, err := getRecords(dynamoDbStreamsClient, shardIterator)
-				if err != nil {
-					return err
+			for _, shard := range describeStream.StreamDescription.Shards {
+				shardId := aws.ToString(shard.ShardId)
+				if completedShards[shardId] {
+					continue
 				}
-				err = updateRecords(getRecords, readModelUpdater, streamArn)
-				if err != nil {
-					return err
+				iterator, ok := iterators[shardId]
+				if !ok {
+					getShardIterator, err := getShardIterator(dynamoDbStreamsClient, streamArn, shard)
+					if err != nil {
+						return err
+					}
+					iterator = getShardIterator.ShardIterator
 				}
-				processedRecordCount += len(getRecords.Records)
-				shardIterator = getRecords.NextShardIterator
+				for iterator != nil {
+					getRecords, err := getRecords(ctx, dynamoDbStreamsClient, iterator, maxItemCount)
+					if err != nil {
+						return err
+					}
+					if err := updateRecords(ctx, getRecords, readModelUpdater, streamArn); err != nil {
+						return err
+					}
+					if getRecords.NextShardIterator == nil {
+						delete(iterators, shardId)
+						completedShards[shardId] = true
+						break
+					}
+					iterators[shardId] = getRecords.NextShardIterator
+					iterator = getRecords.NextShardIterator
+					if len(getRecords.Records) == 0 {
+						break
+					}
+				}
 			}
+			if describeStream.StreamDescription.LastEvaluatedShardId == nil {
+				break
+			}
+			lastEvaluatedShardId = describeStream.StreamDescription.LastEvaluatedShardId
 		}
-
-		if describeStream.StreamDescription.LastEvaluatedShardId == nil {
-			break
-		}
-		lastEvaluatedShardId = *describeStream.StreamDescription.LastEvaluatedShardId
+		time.Sleep(1 * time.Second)
 	}
-	return nil
 }
 
-func describeTable(dynamoDbClient *dynamodb.Client, journalTableName string) (*dynamodb.DescribeTableOutput, error) {
-	describeTableResult, err := dynamoDbClient.DescribeTable(context.Background(), &dynamodb.DescribeTableInput{
-		TableName: aws.String(journalTableName),
+func describeTable(dynamoDbClient *dynamodb.Client, headTableName string) (*dynamodb.DescribeTableOutput, error) {
+	return dynamoDbClient.DescribeTable(context.Background(), &dynamodb.DescribeTableInput{
+		TableName: aws.String(headTableName),
 	})
-	return describeTableResult, err
 }
 
-func updateRecords(getRecords *dynamodbstreams.GetRecordsOutput, readModelUpdater *rmu.ReadModelUpdater, streamArn *string) error {
+func updateRecords(ctx context.Context, getRecords *dynamodbstreams.GetRecordsOutput, readModelUpdater *rmu.ReadModelUpdater, streamArn *string) error {
 	for _, record := range getRecords.Records {
-		keys, err := getKeys(record)
+		eventRecord, err := convertToEvent(record, streamArn)
 		if err != nil {
 			return err
 		}
-		item := getItem(record, err)
-		if err != nil {
-			return err
-		}
-		err = readModelUpdater.UpdateReadModel(context.Background(), convertToEvent(record, keys, item, streamArn))
-		if err != nil {
+		if err := readModelUpdater.UpdateReadModel(ctx, dynamodbevents.DynamoDBEvent{
+			Records: []dynamodbevents.DynamoDBEventRecord{eventRecord},
+		}); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func getItem(record types.Record, err error) map[string]events.DynamoDBAttributeValue {
-	itemMap := record.Dynamodb.NewImage
-	newItem, err := convertAttributeMap(itemMap)
-	return newItem
-}
-
-func getKeys(record types.Record) (map[string]events.DynamoDBAttributeValue, error) {
-	keysMap := record.Dynamodb.Keys
-	keys, err := convertAttributeMap(keysMap)
-	return keys, err
-}
-
-func getRecords(dynamoDbStreamsClient *dynamodbstreams.Client, shardIterator *string) (*dynamodbstreams.GetRecordsOutput, error) {
-	getRecordsResult, err := dynamoDbStreamsClient.GetRecords(context.Background(), &dynamodbstreams.GetRecordsInput{
+func getRecords(ctx context.Context, dynamoDbStreamsClient *dynamodbstreams.Client, shardIterator *string, maxItemCount int32) (*dynamodbstreams.GetRecordsOutput, error) {
+	return dynamoDbStreamsClient.GetRecords(ctx, &dynamodbstreams.GetRecordsInput{
 		ShardIterator: shardIterator,
+		Limit:         aws.Int32(maxItemCount),
 	})
-	return getRecordsResult, err
 }
 
 func getShardIterator(dynamoDbStreamsClient *dynamodbstreams.Client, streamArn *string, shard types.Shard) (*dynamodbstreams.GetShardIteratorOutput, error) {
-	getShardIterator, err := dynamoDbStreamsClient.GetShardIterator(context.Background(), &dynamodbstreams.GetShardIteratorInput{
+	return dynamoDbStreamsClient.GetShardIterator(context.Background(), &dynamodbstreams.GetShardIteratorInput{
 		StreamArn:         streamArn,
 		ShardId:           shard.ShardId,
-		ShardIteratorType: types.ShardIteratorTypeLatest,
+		ShardIteratorType: types.ShardIteratorTypeTrimHorizon,
 	})
-	return getShardIterator, err
 }
 
-func getDescribeStream(streamArn *string, lastEvaluatedShardId string, dynamoDbStreamsClient *dynamodbstreams.Client) (*dynamodbstreams.DescribeStreamOutput, error) {
-	describeStreamRequest := &dynamodbstreams.DescribeStreamInput{
+func getDescribeStream(streamArn *string, exclusiveStartShardId *string, dynamoDbStreamsClient *dynamodbstreams.Client) (*dynamodbstreams.DescribeStreamOutput, error) {
+	input := &dynamodbstreams.DescribeStreamInput{
 		StreamArn: streamArn,
 	}
-	if lastEvaluatedShardId != "" {
-		describeStreamRequest.ExclusiveStartShardId = &lastEvaluatedShardId
+	if exclusiveStartShardId != nil {
+		input.ExclusiveStartShardId = exclusiveStartShardId
 	}
-	describeStreamResponse, err := dynamoDbStreamsClient.DescribeStream(context.Background(), describeStreamRequest)
+	return dynamoDbStreamsClient.DescribeStream(context.Background(), input)
+}
+
+func convertToEvent(record types.Record, streamArn *string) (dynamodbevents.DynamoDBEventRecord, error) {
+	if record.Dynamodb == nil {
+		return dynamodbevents.DynamoDBEventRecord{}, fmt.Errorf("stream record %s has no dynamodb data", aws.ToString(record.EventID))
+	}
+	keys, err := convertAttributeMap(record.Dynamodb.Keys)
 	if err != nil {
-		return nil, err
+		return dynamodbevents.DynamoDBEventRecord{}, err
 	}
-	return describeStreamResponse, nil
-}
-
-func convertToEvent(record types.Record, keys map[string]events.DynamoDBAttributeValue, newItem map[string]events.DynamoDBAttributeValue, streamArn *string) events.DynamoDBEvent {
-	event := events.DynamoDBEvent{
-		Records: []events.DynamoDBEventRecord{
-			{
-				AWSRegion: *record.AwsRegion,
-				Change: events.DynamoDBStreamRecord{
-					ApproximateCreationDateTime: events.SecondsEpochTime{Time: *record.Dynamodb.ApproximateCreationDateTime},
-					Keys:                        keys,
-					NewImage:                    newItem,
-					SequenceNumber:              *record.Dynamodb.SequenceNumber,
-					SizeBytes:                   *record.Dynamodb.SizeBytes,
-					StreamViewType:              string(types.StreamViewTypeNewImage),
-				},
-				EventID:        *record.EventID,
-				EventName:      string(types.OperationTypeInsert),
-				EventSource:    *record.EventSource,
-				EventVersion:   *record.EventVersion,
-				EventSourceArn: *streamArn,
-				UserIdentity: &events.DynamoDBUserIdentity{
-					Type:        "Service",
-					PrincipalID: "dynamodb.amazonaws.com",
-				},
-			},
+	newImage, err := convertAttributeMap(record.Dynamodb.NewImage)
+	if err != nil {
+		return dynamodbevents.DynamoDBEventRecord{}, err
+	}
+	approximateCreationDateTime := time.Time{}
+	if record.Dynamodb.ApproximateCreationDateTime != nil {
+		approximateCreationDateTime = *record.Dynamodb.ApproximateCreationDateTime
+	}
+	return dynamodbevents.DynamoDBEventRecord{
+		AWSRegion: aws.ToString(record.AwsRegion),
+		Change: dynamodbevents.DynamoDBStreamRecord{
+			ApproximateCreationDateTime: dynamodbevents.SecondsEpochTime{Time: approximateCreationDateTime},
+			Keys:                        keys,
+			NewImage:                    newImage,
+			SequenceNumber:              aws.ToString(record.Dynamodb.SequenceNumber),
+			SizeBytes:                   aws.ToInt64(record.Dynamodb.SizeBytes),
+			StreamViewType:              string(record.Dynamodb.StreamViewType),
 		},
-	}
-	return event
+		EventID:        aws.ToString(record.EventID),
+		EventName:      string(record.EventName),
+		EventSource:    aws.ToString(record.EventSource),
+		EventVersion:   aws.ToString(record.EventVersion),
+		EventSourceArn: aws.ToString(streamArn),
+	}, nil
 }
 
-func convertTo(value types.AttributeValue) mo.Result[events.DynamoDBAttributeValue] {
-	var av events.DynamoDBAttributeValue
-	switch value.(type) {
+func convertTo(value types.AttributeValue) mo.Result[dynamodbevents.DynamoDBAttributeValue] {
+	var av dynamodbevents.DynamoDBAttributeValue
+	switch value := value.(type) {
 	case *types.AttributeValueMemberNULL:
-		av = events.NewNullAttribute()
+		av = dynamodbevents.NewNullAttribute()
 	case *types.AttributeValueMemberS:
-		av = events.NewStringAttribute(value.(*types.AttributeValueMemberS).Value)
+		av = dynamodbevents.NewStringAttribute(value.Value)
 	case *types.AttributeValueMemberN:
-		av = events.NewNumberAttribute(value.(*types.AttributeValueMemberN).Value)
+		av = dynamodbevents.NewNumberAttribute(value.Value)
 	case *types.AttributeValueMemberB:
-		av = events.NewBinaryAttribute(value.(*types.AttributeValueMemberB).Value)
+		av = dynamodbevents.NewBinaryAttribute(value.Value)
 	case *types.AttributeValueMemberBS:
-		av = events.NewBinarySetAttribute(value.(*types.AttributeValueMemberBS).Value)
+		av = dynamodbevents.NewBinarySetAttribute(value.Value)
 	case *types.AttributeValueMemberNS:
-		av = events.NewNumberSetAttribute(value.(*types.AttributeValueMemberNS).Value)
+		av = dynamodbevents.NewNumberSetAttribute(value.Value)
 	case *types.AttributeValueMemberSS:
-		av = events.NewStringSetAttribute(value.(*types.AttributeValueMemberSS).Value)
+		av = dynamodbevents.NewStringSetAttribute(value.Value)
 	case *types.AttributeValueMemberL:
-		var l []events.DynamoDBAttributeValue
-		for _, e := range value.(*types.AttributeValueMemberL).Value {
+		l := make([]dynamodbevents.DynamoDBAttributeValue, 0, len(value.Value))
+		for _, e := range value.Value {
 			result := convertTo(e)
 			if result.IsError() {
 				return result
 			}
 			l = append(l, result.MustGet())
 		}
-		av = events.NewListAttribute(l)
+		av = dynamodbevents.NewListAttribute(l)
 	case *types.AttributeValueMemberM:
-		m := make(map[string]events.DynamoDBAttributeValue)
-		for key, e := range value.(*types.AttributeValueMemberM).Value {
+		m := make(map[string]dynamodbevents.DynamoDBAttributeValue, len(value.Value))
+		for key, e := range value.Value {
 			result := convertTo(e)
 			if result.IsError() {
 				return result
 			}
 			m[key] = result.MustGet()
 		}
-		av = events.NewMapAttribute(m)
+		av = dynamodbevents.NewMapAttribute(m)
 	case *types.AttributeValueMemberBOOL:
-		av = events.NewBooleanAttribute(value.(*types.AttributeValueMemberBOOL).Value)
+		av = dynamodbevents.NewBooleanAttribute(value.Value)
 	default:
-		return mo.Err[events.DynamoDBAttributeValue](fmt.Errorf("unknown type: %s", reflect.TypeOf(value)))
+		return mo.Err[dynamodbevents.DynamoDBAttributeValue](fmt.Errorf("unknown type: %s", reflect.TypeOf(value)))
 	}
 	return mo.Ok(av)
 }
 
-func convertAttributeMap(recordMap map[string]types.AttributeValue) (map[string]events.DynamoDBAttributeValue, error) {
-	result := make(map[string]events.DynamoDBAttributeValue)
+func convertAttributeMap(recordMap map[string]types.AttributeValue) (map[string]dynamodbevents.DynamoDBAttributeValue, error) {
+	result := make(map[string]dynamodbevents.DynamoDBAttributeValue, len(recordMap))
 	for key, value := range recordMap {
 		v, err := convertTo(value).Get()
 		if err != nil {
