@@ -38,3 +38,45 @@ func TestRecoveryPass_ScheduledRunSkipsHeadScan(t *testing.T) {
 	require.Zero(t, result.Resync.Heads)
 	require.Zero(t, result.Recovery.Completed)
 }
+
+func TestRecoveryPass_ScheduledRunRetriesPendingTaskOnNextPass(t *testing.T) {
+	// A scheduled pass that cannot replay a task leaves it pending. The next
+	// tick must retry that same task and finish the replay, so a transient
+	// failure during one schedule run does not wait for another notification.
+	ctx := context.Background()
+	db := newReadModelTestDB(t)
+	fixture := newReadModelFixture(t)
+	journal := &fakeJournalReader{
+		events: map[string][]JournalEvent{
+			fixture.aid(): journalEvents(fixture.aid(), fixture.create, fixture.addMember),
+		},
+		errs: []error{errors.New("connection reset by peer")},
+	}
+	store := &fakeRecoveryTaskStore{tasks: []RecoveryTask{{
+		StoreID:           "store-1",
+		ProjectionName:    ProjectionName,
+		ProjectionVersion: ProjectionVersion,
+		AggregateID:       fixture.aid(),
+		SeqNr:             2,
+		FailureType:       FailureKindJournalGap,
+		ErrorMessage:      "simulated transient failure",
+	}}}
+	applier := NewApplier(NewGroupChatDaoImpl(db), journal, 1)
+	recovery := NewRecoveryService(store, staticStoreID{"store-1"}, applier)
+	pass := NewRecoveryPass(NewResyncer(applier, nil, recovery), recovery)
+
+	result, err := pass.RunScheduled(ctx)
+	require.ErrorContains(t, err, "read journal")
+	require.Zero(t, result.Recovery.Completed)
+	require.Equal(t, 1, result.Recovery.Failed)
+	require.Equal(t, 1, result.Recovery.Pending)
+	require.Equal(t, 0, countRows(t, db,
+		`SELECT COUNT(*) FROM read_model_positions WHERE aggregate_id = ?`, fixture.aid()))
+
+	result, err = pass.RunScheduled(ctx)
+	require.NoError(t, err)
+	require.Equal(t, 1, result.Recovery.Completed)
+	require.Zero(t, result.Recovery.Failed)
+	require.Zero(t, result.Recovery.Pending)
+	require.Equal(t, int64(2), readModelPosition(t, db, fixture.aid()))
+}

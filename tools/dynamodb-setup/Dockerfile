@@ -1,5 +1,5 @@
 FROM mesosphere/aws-cli
 
-ADD *.sh ./
+COPY *.sh ./
 
 ENTRYPOINT ["./create-tables.sh"]
