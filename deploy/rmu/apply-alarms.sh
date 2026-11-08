@@ -84,17 +84,9 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-require_set() {
-  if [[ -z "$2" ]]; then
-    echo "missing required option: $1" >&2
-    usage >&2
-    exit 2
-  fi
-}
-
-require_set --rmu-function "$RMU_FUNCTION"
-require_set --recovery-function "$RECOVERY_FUNCTION"
-require_set --failure-queue-url "$FAILURE_QUEUE_URL"
+require_flag --rmu-function "$RMU_FUNCTION"
+require_flag --recovery-function "$RECOVERY_FUNCTION"
+require_flag --failure-queue-url "$FAILURE_QUEUE_URL"
 
 for tool in aws jq; do
   if ! command -v "$tool" >/dev/null 2>&1; then

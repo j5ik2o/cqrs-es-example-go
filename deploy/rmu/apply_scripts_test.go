@@ -1,10 +1,12 @@
 package deploy_test
 
 import (
+	"context"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 )
@@ -12,6 +14,10 @@ import (
 const (
 	testHeadStreamARN = "arn:aws:dynamodb:ap-northeast-1:000000000000:table/head/stream/2026-01-01T00:00:00.000"
 	testQueueURL      = "http://localhost:4566/000000000000/cqrs-es-example-go-rmu-failure"
+
+	// scriptTimeout bounds one bash invocation so a hung script fails the test
+	// instead of blocking until the test binary's global timeout.
+	scriptTimeout = 30 * time.Second
 )
 
 func TestApplyScriptsDoNotCallAWSInDryRun(t *testing.T) {
@@ -69,9 +75,11 @@ func TestApplyScriptsHaveValidShellSyntax(t *testing.T) {
 
 	dir := scriptDir(t)
 	for _, script := range []string{"apply.sh", "apply-alarms.sh"} {
-		command := exec.Command("bash", "-n", script)
+		ctx, cancel := context.WithTimeout(t.Context(), scriptTimeout)
+		command := exec.CommandContext(ctx, "bash", "-n", script)
 		command.Dir = dir
 		output, err := command.CombinedOutput()
+		cancel()
 		require.NoErrorf(t, err, "%s: %s", script, output)
 	}
 }
@@ -100,13 +108,24 @@ func requireTool(t *testing.T, name string) {
 }
 
 // runScript runs a deploy script with bash and returns its combined output and
-// exit code. A non-zero exit is a result, not a test failure.
+// exit code. A non-zero exit is a result, not a test failure; a timeout or a
+// cancellation is. The context bounds the run so a hung script cannot block the
+// test binary.
 func runScript(t *testing.T, dir string, env []string, script string, args ...string) (string, int) {
 	t.Helper()
-	command := exec.Command("bash", append([]string{script}, args...)...)
+	ctx, cancel := context.WithTimeout(t.Context(), scriptTimeout)
+	defer cancel()
+	command := exec.CommandContext(ctx, "bash", append([]string{script}, args...)...)
+	// The scripts start jq, which inherits the output pipe. Once the context
+	// expires, wait only briefly for such children so CombinedOutput cannot
+	// block past the script timeout.
+	command.WaitDelay = time.Second
 	command.Dir = dir
 	command.Env = env
 	output, err := command.CombinedOutput()
+	if ctx.Err() != nil {
+		t.Fatalf("run %s: %v", script, ctx.Err())
+	}
 	if err == nil {
 		return string(output), 0
 	}
