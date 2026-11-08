@@ -74,3 +74,31 @@ services:
       - migration
       - write-api-server-1
       - read-model-updater-1
+  # recovery-worker runs the same handler as the Lambda recovery worker outside
+  # Lambda. The startup pass models the SQS OnFailure notification and the
+  # interval models the EventBridge schedule that replays pending tasks.
+  recovery-worker:
+    command: [ "localRecoveryWorker" ]
+    image: cqrs-es-example-go:latest
+    container_name: recovery-worker
+    environment:
+      AWS_REGION: ${AWS_REGION}
+      AWS_ENDPOINT_URL: http://localstack:4566
+      AWS_ACCESS_KEY_ID: x
+      AWS_SECRET_ACCESS_KEY: x
+      DATABASE_URL: ceer:ceer@tcp(mysql-local:3306)/ceer
+      PERSISTENCE_JOURNAL_TABLE_NAME: journal
+      PERSISTENCE_HEAD_TABLE_NAME: head
+      PERSISTENCE_MAX_EVENTS_PER_TRANSACTION: 1
+      RECOVERY_MAX_TASKS_PER_PASS: 10
+      RECOVERY_WORKER_INTERVAL: 2s
+    depends_on:
+      mysql:
+        condition: service_healthy
+      migration:
+        condition: service_completed_successfully
+      localstack:
+        condition: service_started
+      dynamodb-setup:
+        condition: service_completed_successfully
+    restart: on-failure

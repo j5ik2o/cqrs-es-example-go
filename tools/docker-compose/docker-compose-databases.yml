@@ -54,7 +54,7 @@ services:
       PORT_WEB_UI: ${PORT_WEB_UI- }
       PARITY_AWS_ACCESS_KEY_ID: 1
       EAGER_SERVICE_LOADING: 1
-      SERVICES: cloudwatch,dynamodb,dynamodbstreams
+      SERVICES: cloudwatch,dynamodb,dynamodbstreams,events,logs,sqs
       # SERVICES: cloudwatch,dynamodb,dynamodbstreams,lambda
       HOSTNAME_EXTERNAL: localstack-local
       DEFAULT_REGION: ap-northeast-1
