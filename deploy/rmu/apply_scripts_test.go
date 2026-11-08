@@ -116,6 +116,10 @@ func runScript(t *testing.T, dir string, env []string, script string, args ...st
 	ctx, cancel := context.WithTimeout(t.Context(), scriptTimeout)
 	defer cancel()
 	command := exec.CommandContext(ctx, "bash", append([]string{script}, args...)...)
+	// The scripts start jq, which inherits the output pipe. Once the context
+	// expires, wait only briefly for such children so CombinedOutput cannot
+	// block past the script timeout.
+	command.WaitDelay = time.Second
 	command.Dir = dir
 	command.Env = env
 	output, err := command.CombinedOutput()
