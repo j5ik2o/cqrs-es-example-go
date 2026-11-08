@@ -106,8 +106,12 @@ echo "Recovery worker restored the read model without duplicates"
 # running even when no SQS notification arrives.
 before_lines=$(compose logs --no-color recovery-worker | grep -c 'recovery pass finished' || true)
 [ "${before_lines}" -ge 1 ] || fail "the recovery worker has not logged a completion line"
-sleep 5
-after_lines=$(compose logs --no-color recovery-worker | grep -c 'recovery pass finished' || true)
+after_lines=${before_lines}
+for attempt in $(seq 1 30); do
+  after_lines=$(compose logs --no-color recovery-worker | grep -c 'recovery pass finished' || true)
+  [ "${after_lines}" -gt "${before_lines}" ] && break
+  sleep 1
+done
 [ "${after_lines}" -gt "${before_lines}" ] ||
   fail "the scheduled recovery pass did not run (lines before=${before_lines} after=${after_lines})"
 

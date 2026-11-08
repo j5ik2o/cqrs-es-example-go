@@ -34,7 +34,7 @@ CI の `e2e` ジョブは `make docker-compose-ci` を実行する。ローカ�
 
 `localRecoveryWorker` コマンドは、Lambda の復旧ワーカーと同じ `rmu.RecoveryWorker` を呼ぶ。
 
-- 起動時に 1 回、`HandleSQSEvent` を呼ぶ。これは SQS OnFailure の通知を受けたときと同じ経路で、head を強整合で Scan して journal から遅れを埋め、`read_model_recovery_tasks` の `pending` を再適用する。
+- 起動時に 1 回、`HandleSQSEvent` を呼ぶ。これは SQS OnFailure の通知を受けたときと同じ経路で、head を強整合で Scan して journal から遅れを埋め、`read_model_recovery_tasks` の `pending` を再適用する。再試行できる失敗ではバッチ項目の失敗が返るので、SQS の再配送に相当する処理として、次の tick で同じフルパスを再試行する。起動時の Scan が一時的に失敗しても、未走査の head が取り残されない。
 - その後、`RECOVERY_WORKER_INTERVAL`（既定 5 秒、compose では 2 秒）ごとに `HandleScheduledEvent` を呼ぶ。これは EventBridge の定期実行と同じ経路で、`pending` タスクだけを再適用する。
 - 完了ログは Lambda 版と同じ JSON の `recovery pass finished` である。`pending`、`deferred`、`task_failures`、`resync_failed` をメトリクスフィルタと同じ形で出す。
 

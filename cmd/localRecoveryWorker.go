@@ -58,12 +58,11 @@ func runLocalRecoveryWorker(ctx context.Context) error {
 	slog.Info("local recovery worker started", "interval", interval)
 
 	// The first pass is the SQS OnFailure equivalent: reconcile every head and
-	// replay the tasks a permanent failure recorded.
-	if _, err := worker.HandleSQSEvent(ctx, dynamodbevents.SQSEvent{
-		Records: []dynamodbevents.SQSMessage{{MessageId: "local-startup"}},
-	}); err != nil {
-		slog.Error("startup recovery pass failed", "error", err)
-	}
+	// replay the tasks a permanent failure recorded. A retryable failure
+	// returns batch item failures, which SQS would redeliver. Locally the next
+	// tick stands in for that redelivery; a scheduled pass would only replay
+	// pending tasks and could leave an unscanned head behind forever.
+	fullPassCompleted := runFullRecoveryPass(ctx, worker, "local-startup")
 
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
@@ -72,6 +71,13 @@ func runLocalRecoveryWorker(ctx context.Context) error {
 		case <-ctx.Done():
 			return nil
 		case <-ticker.C:
+			if !fullPassCompleted {
+				fullPassCompleted = runFullRecoveryPass(ctx, worker, "local-startup-retry")
+				if fullPassCompleted {
+					slog.Info("startup recovery pass completed after retry")
+				}
+				continue
+			}
 			// The schedule replays pending tasks only. It does not scan the
 			// head table, so a frequent tick stays cheap.
 			if err := worker.HandleScheduledEvent(ctx); err != nil {
@@ -79,6 +85,25 @@ func runLocalRecoveryWorker(ctx context.Context) error {
 			}
 		}
 	}
+}
+
+// runFullRecoveryPass runs the full recovery path and reports whether it
+// completed. Batch item failures mean the notification must be retried, the
+// same signal Lambda uses to redeliver an SQS batch.
+func runFullRecoveryPass(ctx context.Context, worker *rmu.RecoveryWorker, messageID string) bool {
+	response, err := worker.HandleSQSEvent(ctx, dynamodbevents.SQSEvent{
+		Records: []dynamodbevents.SQSMessage{{MessageId: messageID}},
+	})
+	if err != nil {
+		slog.Error("full recovery pass failed", "error", err)
+		return false
+	}
+	if len(response.BatchItemFailures) > 0 {
+		slog.Warn("full recovery pass reported item failures; retrying on the next tick",
+			"failures", len(response.BatchItemFailures))
+		return false
+	}
+	return true
 }
 
 // normalizeLocalRecoveryWorkerInterval keeps the local tick inside a range
