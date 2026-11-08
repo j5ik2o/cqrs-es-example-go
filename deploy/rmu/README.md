@@ -80,6 +80,11 @@ the alarms change state in the console but send no notification.
 
 ## Verify
 
+`make docker-compose-ci` checks these assets without touching a real AWS
+account: JSON and shell syntax, the no-AWS dry run, and the queue, schedule,
+metric filter, and alarm settings against LocalStack. The full procedure is in
+[local deploy verification](../../docs/LOCAL_DEPLOY_VERIFICATION.ja.md).
+
 ```sh
 aws lambda get-function-configuration --function-name cqrs-es-example-go-rmu \
   --query '{Timeout:Timeout,ImageConfig:ImageConfig}' --output json

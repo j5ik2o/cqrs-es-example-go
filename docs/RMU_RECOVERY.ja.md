@@ -160,7 +160,7 @@ Lambda 版の主な環境変数は次のとおりである。
 
 ## 8. 本番適用の手順
 
-設定の正本は `deploy/rmu/event-source-mapping.json` である。IaC を持たないため、AWS CLI で適用する。`deploy/rmu/apply.sh` は既定で計画だけを表示し、`--apply` を付けたときだけ変更する。設定値の根拠と各ファイルの役割は [deploy/rmu/README.md](../deploy/rmu/README.md) にまとめている。
+設定の正本は `deploy/rmu/event-source-mapping.json` である。IaC を持たないため、AWS CLI で適用する。`deploy/rmu/apply.sh` は既定で計画だけを表示し、`--apply` を付けたときだけ変更する。設定値の根拠と各ファイルの役割は [deploy/rmu/README.md](../deploy/rmu/README.md) にまとめている。実 AWS を作らないローカル検証の手順は [デプロイ資産のローカル検証](LOCAL_DEPLOY_VERIFICATION.ja.md) に書く。
 
 ### Lambda の配布物を作る
 

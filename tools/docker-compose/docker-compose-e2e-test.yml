@@ -5,8 +5,18 @@ services:
     environment:
       WRITE_API_SERVER_BASE_URL: http://write-api-server-1:8080
       READ_API_SERVER_BASE_URL: http://read-api-server-1:8080
+      AWS_REGION: ${AWS_REGION}
+      AWS_DEFAULT_REGION: ${AWS_REGION}
+      AWS_ACCESS_KEY_ID: x
+      AWS_SECRET_ACCESS_KEY: x
+      AWS_ENDPOINT_URL: http://localstack:4566
+      DEPLOY_CONFIG_DIR: /deploy/rmu
+    volumes:
+      - ../../deploy/rmu:/deploy/rmu:ro
     depends_on:
       write-api-server-1:
         condition: service_started
       read-api-server-1:
+        condition: service_started
+      localstack:
         condition: service_started

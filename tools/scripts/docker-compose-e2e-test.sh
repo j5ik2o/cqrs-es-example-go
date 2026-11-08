@@ -79,3 +79,17 @@ while read -r aggregate_id seq_nr; do
 done <<< "${positions_before}"
 
 echo "Post-restart replay verification passed"
+
+echo "Running the RMU recovery worker verification"
+if ! ./docker-compose-recovery-test.sh; then
+  echo "Recovery verification failed"
+  compose logs --no-color --tail=200 recovery-worker
+  exit 1
+fi
+
+echo "Running the deploy asset verification against LocalStack"
+if ! compose run -T --rm --no-deps --entrypoint ./verify-deploy-assets.sh e2e-test; then
+  echo "Deploy asset verification failed"
+  compose logs --no-color --tail=200 localstack
+  exit 1
+fi
