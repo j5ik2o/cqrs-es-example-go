@@ -44,6 +44,8 @@ var localRecoveryWorkerCmd = &cobra.Command{
 	},
 }
 
+// runLocalRecoveryWorker runs one full pass at startup and then a pending-task
+// pass on every tick until the context is cancelled.
 func runLocalRecoveryWorker(ctx context.Context) error {
 	pass, closeDB, err := newRecoveryPass(ctx)
 	if err != nil {
