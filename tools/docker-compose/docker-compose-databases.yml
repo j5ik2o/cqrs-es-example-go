@@ -77,7 +77,7 @@ services:
     environment:
       AWS_ACCESS_KEY_ID: x
       AWS_SECRET_ACCESS_KEY: x
-      AWS_DEFAULT_REGION: ap-northeast-1
+      AWS_DEFAULT_REGION: ${AWS_REGION:-ap-northeast-1}
       DYNAMODB_ENDPOINT: localstack:4566
       JOURNAL_TABLE_NAME: journal
       SNAPSHOT_TABLE_NAME: snapshot
@@ -96,6 +96,6 @@ services:
       - "28003:8001"
     environment:
       DYNAMO_ENDPOINT: http://localstack:4566
-      AWS_DEFAULT_REGION: ap-northeast-1
+      AWS_DEFAULT_REGION: ${AWS_REGION:-ap-northeast-1}
     depends_on:
       - dynamodb-setup
