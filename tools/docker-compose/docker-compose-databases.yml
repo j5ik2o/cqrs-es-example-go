@@ -42,7 +42,7 @@ services:
     depends_on:
       - mysql
   localstack:
-    image: localstack/localstack:2.3.2
+    image: localstack/localstack:4.14.0
     hostname: localstack-local
     ports:
       - "24566:4566"
@@ -70,7 +70,7 @@ services:
       # LAMBDA_DOCKER_FLAGS: --platform linux/amd64
     # privileged: true
     volumes:
-      - "${TMPDIR:-/tmp/localstack}:/tmp/localstack"
+      # LocalStack v4 wipes /tmp/localstack on startup, so it cannot be a bind mount.
       - "/var/run/docker.sock:/var/run/docker.sock"
   dynamodb-setup:
     image: mesosphere/aws-cli
@@ -88,7 +88,8 @@ services:
     entrypoint: [ "" ]
     command: [ "/setup/create-tables.sh", "-e", "dev" ]
     depends_on:
-      - localstack
+      localstack:
+        condition: service_healthy
   dynamodb-admin:
     image: aaronshaf/dynamodb-admin
     ports:

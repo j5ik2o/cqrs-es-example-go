@@ -26,7 +26,7 @@ import (
 
 func CreateMySQLContainer(ctx context.Context) (*testcontainermysql.MySQLContainer, error) {
 	container, err := testcontainermysql.Run(ctx,
-		"mysql:8.2",
+		"mysql:26.10",
 		// mysql.WithConfigFile(filepath.Join("testdata", "my_8.cnf")),
 		testcontainermysql.WithDatabase("ceer"),
 		testcontainermysql.WithUsername("ceer"),
@@ -39,7 +39,7 @@ func CreateMySQLContainer(ctx context.Context) (*testcontainermysql.MySQLContain
 func CreateLocalStackContainer(ctx context.Context) (*localstack.LocalStackContainer, error) {
 	container, err := localstack.Run(
 		ctx,
-		"localstack/localstack:2.1.0",
+		"localstack/localstack:4.14.0",
 		testcontainers.WithEnv(map[string]string{
 			"SERVICES":              "dynamodb,dynamodbstreams",
 			"DEFAULT_REGION":        "us-east-1",
