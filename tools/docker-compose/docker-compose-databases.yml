@@ -42,7 +42,7 @@ services:
     depends_on:
       - mysql
   localstack:
-    image: localstack/localstack:2.3.2
+    image: localstack/localstack:4.14.0
     hostname: localstack-local
     ports:
       - "24566:4566"
@@ -70,14 +70,14 @@ services:
       # LAMBDA_DOCKER_FLAGS: --platform linux/amd64
     # privileged: true
     volumes:
-      - "${TMPDIR:-/tmp/localstack}:/tmp/localstack"
+      # LocalStack v4 wipes /tmp/localstack on startup, so it cannot be a bind mount.
       - "/var/run/docker.sock:/var/run/docker.sock"
   dynamodb-setup:
     image: mesosphere/aws-cli
     environment:
       AWS_ACCESS_KEY_ID: x
       AWS_SECRET_ACCESS_KEY: x
-      AWS_DEFAULT_REGION: ap-northeast-1
+      AWS_DEFAULT_REGION: ${AWS_REGION:-ap-northeast-1}
       DYNAMODB_ENDPOINT: localstack:4566
       JOURNAL_TABLE_NAME: journal
       SNAPSHOT_TABLE_NAME: snapshot
@@ -88,13 +88,14 @@ services:
     entrypoint: [ "" ]
     command: [ "/setup/create-tables.sh", "-e", "dev" ]
     depends_on:
-      - localstack
+      localstack:
+        condition: service_healthy
   dynamodb-admin:
     image: aaronshaf/dynamodb-admin
     ports:
       - "28003:8001"
     environment:
       DYNAMO_ENDPOINT: http://localstack:4566
-      AWS_DEFAULT_REGION: ap-northeast-1
+      AWS_DEFAULT_REGION: ${AWS_REGION:-ap-northeast-1}
     depends_on:
       - dynamodb-setup
