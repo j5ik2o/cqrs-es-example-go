@@ -1,0 +1,204 @@
+{
+  "engines": [
+    "format",
+    "lint",
+    "code-quality",
+    "ai-slop",
+    "security"
+  ],
+  "missingToolsAllowed": {},
+  "accepted": [
+    {
+      "reason": "cmd パッケージは main.go から呼ばれる CLI の入口であり、公開ライブラリではない。起動時の不備を panic で止める既存の作りで、この規則が想定するライブラリコードではない（誤検出）。",
+      "findings": [
+        {
+          "engine": "ai-slop",
+          "rule": "ai-slop/go-library-panic",
+          "file": "cmd/localRmu.go",
+          "message": "`panic()` in package `cmd` (non-main, non-test). Library code should return errors, not unwind the goroutine."
+        },
+        {
+          "engine": "ai-slop",
+          "rule": "ai-slop/go-library-panic",
+          "file": "cmd/localRmu.go",
+          "message": "`panic()` in package `cmd` (non-main, non-test). Library code should return errors, not unwind the goroutine."
+        },
+        {
+          "engine": "ai-slop",
+          "rule": "ai-slop/go-library-panic",
+          "file": "cmd/localRmu.go",
+          "message": "`panic()` in package `cmd` (non-main, non-test). Library code should return errors, not unwind the goroutine."
+        },
+        {
+          "engine": "ai-slop",
+          "rule": "ai-slop/go-library-panic",
+          "file": "cmd/localRmu.go",
+          "message": "`panic()` in package `cmd` (non-main, non-test). Library code should return errors, not unwind the goroutine."
+        },
+        {
+          "engine": "ai-slop",
+          "rule": "ai-slop/go-library-panic",
+          "file": "cmd/localRmu.go",
+          "message": "`panic()` in package `cmd` (non-main, non-test). Library code should return errors, not unwind the goroutine."
+        },
+        {
+          "engine": "ai-slop",
+          "rule": "ai-slop/go-library-panic",
+          "file": "cmd/readApi.go",
+          "message": "`panic()` in package `cmd` (non-main, non-test). Library code should return errors, not unwind the goroutine."
+        },
+        {
+          "engine": "ai-slop",
+          "rule": "ai-slop/go-library-panic",
+          "file": "cmd/readApi.go",
+          "message": "`panic()` in package `cmd` (non-main, non-test). Library code should return errors, not unwind the goroutine."
+        },
+        {
+          "engine": "ai-slop",
+          "rule": "ai-slop/go-library-panic",
+          "file": "cmd/readApi.go",
+          "message": "`panic()` in package `cmd` (non-main, non-test). Library code should return errors, not unwind the goroutine."
+        },
+        {
+          "engine": "ai-slop",
+          "rule": "ai-slop/go-library-panic",
+          "file": "cmd/recoverRmu.go",
+          "message": "`panic()` in package `cmd` (non-main, non-test). Library code should return errors, not unwind the goroutine."
+        },
+        {
+          "engine": "ai-slop",
+          "rule": "ai-slop/go-library-panic",
+          "file": "cmd/recoverRmuWorker.go",
+          "message": "`panic()` in package `cmd` (non-main, non-test). Library code should return errors, not unwind the goroutine."
+        },
+        {
+          "engine": "ai-slop",
+          "rule": "ai-slop/go-library-panic",
+          "file": "cmd/rmu.go",
+          "message": "`panic()` in package `cmd` (non-main, non-test). Library code should return errors, not unwind the goroutine."
+        },
+        {
+          "engine": "ai-slop",
+          "rule": "ai-slop/go-library-panic",
+          "file": "cmd/rmu.go",
+          "message": "`panic()` in package `cmd` (non-main, non-test). Library code should return errors, not unwind the goroutine."
+        },
+        {
+          "engine": "ai-slop",
+          "rule": "ai-slop/go-library-panic",
+          "file": "cmd/rmu.go",
+          "message": "`panic()` in package `cmd` (non-main, non-test). Library code should return errors, not unwind the goroutine."
+        },
+        {
+          "engine": "ai-slop",
+          "rule": "ai-slop/go-library-panic",
+          "file": "cmd/rmu.go",
+          "message": "`panic()` in package `cmd` (non-main, non-test). Library code should return errors, not unwind the goroutine."
+        },
+        {
+          "engine": "ai-slop",
+          "rule": "ai-slop/go-library-panic",
+          "file": "cmd/writeApi.go",
+          "message": "`panic()` in package `cmd` (non-main, non-test). Library code should return errors, not unwind the goroutine."
+        },
+        {
+          "engine": "ai-slop",
+          "rule": "ai-slop/go-library-panic",
+          "file": "cmd/writeApi.go",
+          "message": "`panic()` in package `cmd` (non-main, non-test). Library code should return errors, not unwind the goroutine."
+        },
+        {
+          "engine": "ai-slop",
+          "rule": "ai-slop/go-library-panic",
+          "file": "cmd/writeApi.go",
+          "message": "`panic()` in package `cmd` (non-main, non-test). Library code should return errors, not unwind the goroutine."
+        },
+        {
+          "engine": "ai-slop",
+          "rule": "ai-slop/go-library-panic",
+          "file": "cmd/writeApi.go",
+          "message": "`panic()` in package `cmd` (non-main, non-test). Library code should return errors, not unwind the goroutine."
+        },
+        {
+          "engine": "ai-slop",
+          "rule": "ai-slop/go-library-panic",
+          "file": "cmd/writeApi.go",
+          "message": "`panic()` in package `cmd` (non-main, non-test). Library code should return errors, not unwind the goroutine."
+        },
+        {
+          "engine": "ai-slop",
+          "rule": "ai-slop/go-library-panic",
+          "file": "cmd/writeApi.go",
+          "message": "`panic()` in package `cmd` (non-main, non-test). Library code should return errors, not unwind the goroutine."
+        },
+        {
+          "engine": "ai-slop",
+          "rule": "ai-slop/go-library-panic",
+          "file": "cmd/writeApi.go",
+          "message": "`panic()` in package `cmd` (non-main, non-test). Library code should return errors, not unwind the goroutine."
+        }
+      ]
+    },
+    {
+      "reason": "MemberRole の未知ロールで panic する既存実装。既存の課題であり、修正は本 issue の範囲外。",
+      "findings": [
+        {
+          "engine": "ai-slop",
+          "rule": "ai-slop/go-library-panic",
+          "file": "pkg/command/domain/models/member_role.go",
+          "message": "`panic()` in package `models` (non-main, non-test). Library code should return errors, not unwind the goroutine."
+        }
+      ]
+    },
+    {
+      "reason": "numberAttribute のエラー戻り値を無視している既存実装。既存の課題であり、修正は本 issue の範囲外。",
+      "findings": [
+        {
+          "engine": "ai-slop",
+          "rule": "ai-slop/swallowed-exception",
+          "file": "pkg/rmu/update_read_model.go",
+          "message": "Error return value is being ignored"
+        }
+      ]
+    },
+    {
+      "reason": "既存の関数が長さのしきい値を超えている。既存の課題であり、修正は本 issue の範囲外。",
+      "findings": [
+        {
+          "engine": "code-quality",
+          "rule": "complexity/function-too-long",
+          "file": "pkg/command/interfaceAdaptor/repository/event_converter.go",
+          "message": "Function too long (limit: 80, flagged above 88 lines)"
+        }
+      ]
+    },
+    {
+      "reason": "既存の関数が引数数のしきい値を超えている。既存の課題であり、修正は本 issue の範囲外。",
+      "findings": [
+        {
+          "engine": "code-quality",
+          "rule": "complexity/too-many-params",
+          "file": "cmd/localRmu.go",
+          "message": "Function has too many parameters (max: 6)"
+        },
+        {
+          "engine": "code-quality",
+          "rule": "complexity/too-many-params",
+          "file": "cmd/localRmu.go",
+          "message": "Function has too many parameters (max: 6)"
+        }
+      ]
+    },
+    {
+      "reason": "ローカル開発用 docker-compose の固定接続情報であり、本番の秘密情報ではない（誤検出）。",
+      "findings": [
+        {
+          "engine": "security",
+          "rule": "security/hardcoded-secret",
+          "file": "tools/docker-compose/docker-compose-databases.yml",
+          "message": "Possible Database connection string with credentials detected in source code"
+        }
+      ]
+    }
+  ]
+}
