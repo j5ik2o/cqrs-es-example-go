@@ -1,8 +1,6 @@
 package main
 
-import (
-	"cqrs-es-example-go/cmd"
-)
+import "cqrs-es-example-go/cmd"
 
 // @title GroupChat Write API
 // @version 1.0
