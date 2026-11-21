@@ -1,3 +1,3 @@
 package main
 
-var _ = undefinedCIGateProbe
+// Temporary target-source change for CI gate validation.

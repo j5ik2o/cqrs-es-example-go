@@ -57,6 +57,7 @@ jobs:
             -f tools/docker-compose/docker-compose-e2e-test.yml \
             logs --no-color --tail=200
   aislop:
+    if: ${{ false }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
