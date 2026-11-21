@@ -1,3 +1,3 @@
 package main
 
-// Temporary target-source change for CI gate validation.
+const ciGateProbe = true

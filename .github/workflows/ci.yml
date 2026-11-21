@@ -11,8 +11,6 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - name: Wait for fixture cancellation
-        run: sleep 600
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
