@@ -8,11 +8,58 @@ on:
     # the same checks on every edit so an edit cannot publish skipped jobs.
     types: [opened, synchronize, reopened, edited]
 jobs:
+  checkout-revision:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    permissions: {}
+    outputs:
+      ref: ${{ steps.resolve.outputs.ref }}
+    steps:
+      - name: Resolve the edited PR's test merge
+        id: resolve
+        shell: bash
+        env:
+          PR_ACTION: ${{ github.event.action }}
+          PR_NUMBER: ${{ github.event.number }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if [[ "$PR_ACTION" != edited ]]; then
+            exit 0
+          fi
+          if [[ ! "$PR_NUMBER" =~ ^[1-9][0-9]*$ ||
+                ! "$BASE_SHA" =~ ^[0-9a-f]{40}$ || ! "$HEAD_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo '::error::Missing or invalid PR revision in the edited event'
+            exit 1
+          fi
+
+          # The event's test merge can still point at the old base after retargeting.
+          git init --quiet
+          remote="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git"
+          merge_ref="refs/pull/$PR_NUMBER/merge"
+          expected_parents="$BASE_SHA"$'\n'"$HEAD_SHA"
+          for attempt in {1..6}; do
+            if git fetch --quiet --no-tags --depth=1 "$remote" "$merge_ref"; then
+              parents=$(git cat-file commit FETCH_HEAD | awk 'NF == 0 { body = 1 } !body && $1 == "parent" { print $2 }')
+              if [[ "$parents" == "$expected_parents" ]]; then
+                commit=$(git rev-parse FETCH_HEAD)
+                printf 'Verified test merge %s (base %s, head %s)\n' "$commit" "$BASE_SHA" "$HEAD_SHA"
+                printf 'ref=%s\n' "$commit" >> "$GITHUB_OUTPUT"
+                exit 0
+              fi
+              printf 'Attempt %s: test merge parents: %s\n' "$attempt" "${parents//$'\n'/ }"
+            fi
+            sleep 5
+          done
+          printf '::error::No test merge for base %s and head %s\n' "$BASE_SHA" "$HEAD_SHA"
+          exit 1
   lint:
     runs-on: ubuntu-latest
+    needs: checkout-revision
     steps:
       - uses: actions/checkout@v7
         with:
+          ref: ${{ needs.checkout-revision.outputs.ref }}
           persist-credentials: false
       - uses: actions/setup-go@v7
         with:
@@ -27,10 +74,11 @@ jobs:
         run: make lint
   test:
     runs-on: ubuntu-latest
-    needs: lint
+    needs: [lint, checkout-revision]
     steps:
       - uses: actions/checkout@v7
         with:
+          ref: ${{ needs.checkout-revision.outputs.ref }}
           persist-credentials: false
       - uses: actions/setup-go@v7
         with:
@@ -38,10 +86,11 @@ jobs:
       - run: make test
   e2e:
     runs-on: ubuntu-latest
-    needs: test
+    needs: [test, checkout-revision]
     steps:
       - uses: actions/checkout@v7
         with:
+          ref: ${{ needs.checkout-revision.outputs.ref }}
           persist-credentials: false
       - uses: actions/setup-go@v7
         with:
@@ -58,9 +107,11 @@ jobs:
             logs --no-color --tail=200
   aislop:
     runs-on: ubuntu-latest
+    needs: checkout-revision
     steps:
       - uses: actions/checkout@v7
         with:
+          ref: ${{ needs.checkout-revision.outputs.ref }}
           persist-credentials: false
       - uses: actions/setup-go@v7
         with:
@@ -79,19 +130,20 @@ jobs:
     name: Required CI
     runs-on: ubuntu-latest
     permissions: {}
-    needs: [lint, test, e2e, aislop]
+    needs: [checkout-revision, lint, test, e2e, aislop]
     if: ${{ always() }}
     steps:
       - name: Require all CI jobs to succeed
         shell: bash
         env:
+          CHECKOUT_RESULT: ${{ needs.checkout-revision.result }}
           LINT_RESULT: ${{ needs.lint.result }}
           TEST_RESULT: ${{ needs.test.result }}
           E2E_RESULT: ${{ needs.e2e.result }}
           AISLOP_RESULT: ${{ needs.aislop.result }}
         run: |
           failed=0
-          for job in LINT TEST E2E AISLOP; do
+          for job in CHECKOUT LINT TEST E2E AISLOP; do
             result_var="${job}_RESULT"
             result="${!result_var}"
             if [[ "$result" != success ]]; then
