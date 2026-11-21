@@ -4,6 +4,9 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+    # A PR can be retargeted to main without changing its head commit. Run
+    # the same checks on every edit so an edit cannot publish skipped jobs.
+    types: [opened, synchronize, reopened, edited]
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -72,3 +75,28 @@ jobs:
         run: npm run check:aislop
       - name: Run aislop tests
         run: npm run test:aislop
+  required-ci:
+    name: Required CI
+    runs-on: ubuntu-latest
+    permissions: {}
+    needs: [lint, test, e2e, aislop]
+    if: ${{ always() }}
+    steps:
+      - name: Require all CI jobs to succeed
+        shell: bash
+        env:
+          LINT_RESULT: ${{ needs.lint.result }}
+          TEST_RESULT: ${{ needs.test.result }}
+          E2E_RESULT: ${{ needs.e2e.result }}
+          AISLOP_RESULT: ${{ needs.aislop.result }}
+        run: |
+          failed=0
+          for job in LINT TEST E2E AISLOP; do
+            result_var="${job}_RESULT"
+            result="${!result_var}"
+            if [[ "$result" != success ]]; then
+              printf '::error::%s result: %s (expected success)\n' "$job" "${result:-missing}"
+              failed=1
+            fi
+          done
+          exit "$failed"
