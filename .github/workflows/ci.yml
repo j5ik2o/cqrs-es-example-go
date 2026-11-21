@@ -36,9 +36,14 @@ jobs:
           # The event's test merge can still point at the old base after retargeting.
           git init --quiet
           remote="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git"
+          pull_api="$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER"
           merge_ref="refs/pull/$PR_NUMBER/merge"
           expected_parents="$BASE_SHA"$'\n'"$HEAD_SHA"
           for attempt in {1..6}; do
+            # A PR GET asks GitHub to compute the merge; a Git fetch alone does not.
+            if ! curl --fail --silent --show-error --max-time 10 --output /dev/null "$pull_api"; then
+              echo '::warning::Could not request test merge refresh'
+            fi
             if git fetch --quiet --no-tags --depth=1 "$remote" "$merge_ref"; then
               parents=$(git cat-file commit FETCH_HEAD | awk 'NF == 0 { body = 1 } !body && $1 == "parent" { print $2 }')
               if [[ "$parents" == "$expected_parents" ]]; then
