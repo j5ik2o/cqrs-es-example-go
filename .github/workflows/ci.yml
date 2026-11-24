@@ -10,63 +10,75 @@ on:
 jobs:
   checkout-revision:
     runs-on: ubuntu-latest
-    timeout-minutes: 3
-    permissions: {}
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
     outputs:
-      ref: ${{ steps.resolve.outputs.ref }}
+      ref: ${{ steps.resolve.outputs.checkout_ref }}
+      test_merge: ${{ steps.resolve.outputs.test_merge }}
+      bundle: ${{ steps.resolve.outputs.bundle_name }}
     steps:
-      - name: Resolve the edited PR's test merge
+      - uses: actions/checkout@v7
+        if: ${{ github.event_name == 'pull_request' }}
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Test the test merge resolution
+        if: ${{ github.event_name == 'pull_request' }}
+        run: node --test .github/scripts/pr-test-merge.test.mjs
+      # Check the current base tip and PR head, not the event's base SHA.
+      - name: Resolve the PR's test merge
         id: resolve
-        shell: bash
+        if: ${{ github.event_name == 'pull_request' }}
         env:
-          PR_ACTION: ${{ github.event.action }}
-          PR_NUMBER: ${{ github.event.number }}
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-        run: |
-          if [[ "$PR_ACTION" != edited ]]; then
-            exit 0
-          fi
-          if [[ ! "$PR_NUMBER" =~ ^[1-9][0-9]*$ ||
-                ! "$BASE_SHA" =~ ^[0-9a-f]{40}$ || ! "$HEAD_SHA" =~ ^[0-9a-f]{40}$ ]]; then
-            echo '::error::Missing or invalid PR revision in the edited event'
-            exit 1
-          fi
-
-          # The event's test merge can still point at the old base after retargeting.
-          git init --quiet
-          remote="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git"
-          pull_api="$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER"
-          merge_ref="refs/pull/$PR_NUMBER/merge"
-          expected_parents="$BASE_SHA"$'\n'"$HEAD_SHA"
-          for attempt in {1..6}; do
-            # A PR GET asks GitHub to compute the merge; a Git fetch alone does not.
-            if ! curl --fail --silent --show-error --max-time 10 --output /dev/null "$pull_api"; then
-              echo '::warning::Could not request test merge refresh'
-            fi
-            if git fetch --quiet --no-tags --depth=1 "$remote" "$merge_ref"; then
-              parents=$(git cat-file commit FETCH_HEAD | awk 'NF == 0 { body = 1 } !body && $1 == "parent" { print $2 }')
-              if [[ "$parents" == "$expected_parents" ]]; then
-                commit=$(git rev-parse FETCH_HEAD)
-                printf 'Verified test merge %s (base %s, head %s)\n' "$commit" "$BASE_SHA" "$HEAD_SHA"
-                printf 'ref=%s\n' "$commit" >> "$GITHUB_OUTPUT"
-                exit 0
-              fi
-              printf 'Attempt %s: test merge parents: %s\n' "$attempt" "${parents//$'\n'/ }"
-            fi
-            sleep 5
-          done
-          printf '::error::No test merge for base %s and head %s\n' "$BASE_SHA" "$HEAD_SHA"
-          exit 1
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          EVENT_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          GH_TOKEN: ${{ github.token }}
+        run: .github/scripts/pr-test-merge.sh
+      - uses: actions/upload-artifact@v7
+        if: ${{ steps.resolve.outputs.bundle_name != '' }}
+        with:
+          name: ${{ steps.resolve.outputs.bundle_name }}
+          path: ${{ runner.temp }}/pr-test-merge.bundle
+          if-no-files-found: error
+          retention-days: 1
   lint:
     runs-on: ubuntu-latest
     needs: checkout-revision
-    if: ${{ github.event.action != 'edited' || needs.checkout-revision.outputs.ref != '' }}
     steps:
-      - uses: actions/checkout@v7
+      - &checkout
+        uses: actions/checkout@v7
         with:
           ref: ${{ needs.checkout-revision.outputs.ref }}
+          # The bundle of a locally built test merge needs the base history.
+          fetch-depth: ${{ needs.checkout-revision.outputs.bundle != '' && '0' || '1' }}
           persist-credentials: false
+      - &download-test-merge
+        uses: actions/download-artifact@v7
+        if: ${{ needs.checkout-revision.outputs.bundle != '' }}
+        with:
+          name: ${{ needs.checkout-revision.outputs.bundle }}
+          path: ${{ runner.temp }}/pr-test-merge
+      - &verify-test-merge
+        name: Verify the checked out test merge
+        if: ${{ github.event_name == 'pull_request' }}
+        shell: bash
+        env:
+          TEST_MERGE: ${{ needs.checkout-revision.outputs.test_merge }}
+          BUNDLE: ${{ needs.checkout-revision.outputs.bundle }}
+        run: |
+          if [[ -n "$BUNDLE" ]]; then
+            git fetch --quiet --no-tags "$RUNNER_TEMP/pr-test-merge/pr-test-merge.bundle" refs/pr-ci/merge
+            git checkout --quiet --detach FETCH_HEAD
+          fi
+          actual=$(git show -s --format='%H %P' HEAD)
+          printf 'Checked out test merge (SHA, base, head): %s\n' "$actual"
+          if [[ -z "$TEST_MERGE" || "$actual" != "$TEST_MERGE" ]]; then
+            printf '::error::Expected test merge %s\n' "${TEST_MERGE:-missing}"
+            exit 1
+          fi
       - uses: actions/setup-go@v7
         with:
           go-version: '1.27'
@@ -81,12 +93,10 @@ jobs:
   test:
     runs-on: ubuntu-latest
     needs: [lint, checkout-revision]
-    if: ${{ github.event.action != 'edited' || needs.checkout-revision.outputs.ref != '' }}
     steps:
-      - uses: actions/checkout@v7
-        with:
-          ref: ${{ needs.checkout-revision.outputs.ref }}
-          persist-credentials: false
+      - *checkout
+      - *download-test-merge
+      - *verify-test-merge
       - uses: actions/setup-go@v7
         with:
           go-version: '1.27'
@@ -94,12 +104,10 @@ jobs:
   e2e:
     runs-on: ubuntu-latest
     needs: [test, checkout-revision]
-    if: ${{ github.event.action != 'edited' || needs.checkout-revision.outputs.ref != '' }}
     steps:
-      - uses: actions/checkout@v7
-        with:
-          ref: ${{ needs.checkout-revision.outputs.ref }}
-          persist-credentials: false
+      - *checkout
+      - *download-test-merge
+      - *verify-test-merge
       - uses: actions/setup-go@v7
         with:
           go-version: '1.27'
@@ -116,12 +124,10 @@ jobs:
   aislop:
     runs-on: ubuntu-latest
     needs: checkout-revision
-    if: ${{ github.event.action != 'edited' || needs.checkout-revision.outputs.ref != '' }}
     steps:
-      - uses: actions/checkout@v7
-        with:
-          ref: ${{ needs.checkout-revision.outputs.ref }}
-          persist-credentials: false
+      - *checkout
+      - *download-test-merge
+      - *verify-test-merge
       - uses: actions/setup-go@v7
         with:
           go-version: '1.27'
