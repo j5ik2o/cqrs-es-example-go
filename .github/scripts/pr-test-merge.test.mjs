@@ -188,6 +188,8 @@ test("product jobs reject a checkout that is not the resolved test merge", (t) =
 });
 
 test("every pull_request event resolves and verifies the test merge, and Required CI always runs", () => {
+  const resolver = workflow.split("\n  checkout-revision:\n")[1].split("\n  lint:\n")[0];
+  assert.match(resolver, /uses: actions\/checkout@\S+\n.*\n\s+with:\n\s+ref: \$\{\{ github\.workflow_sha \}\}/);
   assert.match(workflow, /types: \[opened, synchronize, reopened, edited\]/);
   for (const job of ["lint", "test", "e2e", "aislop"]) {
     const body = workflow.split(`\n  ${job}:\n`)[1].split(/\n  [a-z-]+:\n/)[0];

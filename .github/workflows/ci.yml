@@ -19,10 +19,12 @@ jobs:
       test_merge: ${{ steps.resolve.outputs.test_merge }}
       bundle: ${{ steps.resolve.outputs.bundle_name }}
     steps:
+      # Load the resolver from the revision that defines this workflow; a PR
+      # branch that predates it does not have the script.
       - uses: actions/checkout@v7
         if: ${{ github.event_name == 'pull_request' }}
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ github.workflow_sha }}
           fetch-depth: 0
           persist-credentials: false
       - name: Test the test merge resolution
@@ -43,6 +45,7 @@ jobs:
           name: ${{ steps.resolve.outputs.bundle_name }}
           path: ${{ runner.temp }}/pr-test-merge.bundle
           if-no-files-found: error
+          # After expiry, re-run all jobs so this job builds the bundle again.
           retention-days: 1
   lint:
     runs-on: ubuntu-latest
