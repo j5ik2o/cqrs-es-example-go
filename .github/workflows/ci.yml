@@ -73,7 +73,8 @@ jobs:
             git fetch --quiet --no-tags "$RUNNER_TEMP/pr-test-merge/pr-test-merge.bundle" refs/pr-ci/merge
             git checkout --quiet --detach FETCH_HEAD
           fi
-          actual=$(git show -s --format='%H %P' HEAD)
+          # A shallow checkout hides parents from %P; the commit object keeps them.
+          actual="$(git rev-parse HEAD)$(git cat-file commit HEAD | awk '!NF { exit } $1 == "parent" { printf " %s", $2 }')"
           printf 'Checked out test merge (SHA, base, head): %s\n' "$actual"
           if [[ -z "$TEST_MERGE" || "$actual" != "$TEST_MERGE" ]]; then
             printf '::error::Expected test merge %s\n' "${TEST_MERGE:-missing}"

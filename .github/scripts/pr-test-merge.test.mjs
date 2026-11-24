@@ -85,7 +85,8 @@ function fixture(t) {
   const productJob = (outputs) => {
     const job = join(dir, `job-${Math.random().toString(36).slice(2)}`);
     git(dir, "clone", "--quiet", "--no-checkout", origin, job);
-    git(job, "fetch", "--quiet", "origin", outputs.checkout_ref);
+    // Like actions/checkout, fetch only the tip unless a bundle needs the base history.
+    git(job, "fetch", "--quiet", ...(outputs.bundle_name ? [] : ["--depth=1"]), "origin", outputs.checkout_ref);
     git(job, "checkout", "--quiet", "--detach", outputs.checkout_ref);
     const download = join(dir, "pr-test-merge");
     execFileSync("mkdir", ["-p", download]);
