@@ -3,7 +3,8 @@ on:
   push:
     branches: [ "main" ]
   pull_request:
-    branches: [ "main" ]
+    # Validation only (PR #701): also run for the proof base branch.
+    branches: [ "main", "ci-proof/701-base" ]
     # A PR can be retargeted to main without changing its head commit. Run
     # the same checks on every edit so an edit cannot publish skipped jobs.
     types: [opened, synchronize, reopened, edited]
